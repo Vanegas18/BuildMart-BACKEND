@@ -29,7 +29,7 @@ Backend del proyecto BuildMart, desarrollado con Node.js, Express y MongoDB.
 
 2. Cambiar a la rama creada
 
-  git branch nombre-de-la-rama
+  git checkout nombre-de-la-rama
 
 3. Desde este momento ya puedes desarrollar normalmente pero fijándote que estés en la rama creada, Realizar Cambios y Confirmarlos
 
