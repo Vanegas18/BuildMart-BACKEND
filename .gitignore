@@ -24,3 +24,5 @@ Thumbs.db             # Windows
 
 # Archivos de construcción
 dist/                 # Carpeta de salida de builds
+.env
+package.json
