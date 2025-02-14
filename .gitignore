@@ -1,0 +1,26 @@
+# Node.js
+node_modules/         # Carpeta de dependencias de Node.js
+npm-debug.log*        # Logs de depuración de npm
+yarn-debug.log*       # Logs de depuración de yarn
+yarn-error.log*       # Logs de error de yarn
+
+# Environment variables
+.env                  # Variables de entorno (credenciales, URIs, etc.)
+
+# Logs
+logs                  # Carpeta de logs (si decides crear una)
+*.log                 # Cualquier archivo de logs
+pids                  # Archivos PID
+*.pid                 # Archivos PID
+
+# Editor/IDE
+.vscode/              # Configuración de VSCode
+.idea/                # Configuración de WebStorm/IntelliJ
+*.sublime-workspace   # Configuración de Sublime Text
+
+# Sistema operativo
+.DS_Store             # macOS
+Thumbs.db             # Windows
+
+# Archivos de construcción
+dist/                 # Carpeta de salida de builds

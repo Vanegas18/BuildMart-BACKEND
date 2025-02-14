@@ -1,0 +1,11 @@
+{
+  "name": "buildmart-back",
+  "version": "1.0.0",
+  "description": "Backend del proyecto formativo",
+  "main": "index.js",
+  "scripts": {
+    "test": "npm test"
+  },
+  "author": "Juan Vanegas, Gustavo Moncada, Miguel Doria",
+  "license": "ISC"
+}
