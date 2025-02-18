@@ -10,6 +10,9 @@ class Server {
     this.paths = {
       categoriesProducts: "/categoriasProductos",
     };
+    this.app.get("/", (req, res) => {
+      res.send("<h1>¡BIENVENIDO A API STORE!</h1>");
+    });
     this.conectarDB();
     this.middlewares();
     this.routes();
