@@ -11,7 +11,7 @@ class Server {
       categoriesProducts: "/categoriasProductos",
     };
     this.app.get("/", (req, res) => {
-      res.send("<h1>¡BIENVENIDO A API STORE!</h1>");
+      res.send("<h1>¡BIENVENIDO A API DE BUILD MART!</h1>");
     });
     this.conectarDB();
     this.middlewares();
