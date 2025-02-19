@@ -5,6 +5,7 @@ import categoryProductRoutes from "./routes/categoryProduct/categoryRoutes.js";
 import rolesRoutes from "./routes/rolesAndPermissions/rolesRoutes.js";
 import permissionsRoutes from "./routes/rolesAndPermissions/permissionsRouter.js";
 import userRoutes from "./routes/users/userRoutes.js";
+import productRoutes from "./routes/products/productsRoutes.js";
 
 class Server {
   constructor() {
@@ -15,6 +16,7 @@ class Server {
       roles: "/roles",
       permissions: "/permisos",
       users: "/usuarios",
+      products: "/productos",
     };
     this.app.get("/", (req, res) => {
       res.send("<h1>¡BIENVENIDO A LA API DE BUILD MART!</h1>");
@@ -38,6 +40,7 @@ class Server {
     this.app.use(this.paths.roles, rolesRoutes);
     this.app.use(this.paths.permissions, permissionsRoutes);
     this.app.use(this.paths.users, userRoutes);
+    this.app.use(this.paths.products, productRoutes);
   }
 
   listen() {
