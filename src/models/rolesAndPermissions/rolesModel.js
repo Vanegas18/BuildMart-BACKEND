@@ -13,7 +13,7 @@ const rolesSchema = new mongoose.Schema(
     permisos: [
       {
         type: Schema.Types.ObjectId,
-        ref: "Permissions",
+        ref: "permisos",
       },
     ],
     estado: { type: String, default: "Activo", enum: ["Activo", "Inactivo"] },
@@ -21,4 +21,4 @@ const rolesSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-export default mongoose.model("Roles", rolesSchema);
+export default mongoose.model("roles", rolesSchema);

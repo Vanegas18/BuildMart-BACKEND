@@ -17,4 +17,4 @@ const permissionsSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-export default mongoose.model("Permissions", permissionsSchema);
+export default mongoose.model("permisos", permissionsSchema);
