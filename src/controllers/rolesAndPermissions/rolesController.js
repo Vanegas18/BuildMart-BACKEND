@@ -25,7 +25,7 @@ export const newRol = async (req, res) => {
 // Obtener todos los roles
 export const getRoles = async (req, res) => {
   try {
-    const roles = await Roles.find();
+    const roles = await Roles.find().populate("permisos", "nombre");
     res.json(roles);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener los roles" });
@@ -36,7 +36,7 @@ export const getRoles = async (req, res) => {
 export const getRolByName = async (req, res) => {
   const { nombre } = req.params;
   try {
-    const rol = await Roles.findOne({ nombre });
+    const rol = await Roles.findOne({ nombre }).populate("permisos", "nombre");
     if (!rol) {
       return res.status(404).json({ error: "Rol no encontrado" });
     }
