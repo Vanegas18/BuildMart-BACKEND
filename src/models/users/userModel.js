@@ -10,7 +10,7 @@ const UserSchema = new mongoose.Schema(
     nombre: {
       type: String,
       required: [true, "El nombre es obligatorio"],
-      trim: true,
+      trim: true, 
     },
     correo: {
       type: String,
