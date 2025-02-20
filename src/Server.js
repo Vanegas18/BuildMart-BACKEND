@@ -11,10 +11,17 @@ class Server {
     this.port = process.env.PORT;
     this.paths = {
       categoriesProducts: "/categoriasProductos",
+      roles: "/roles",
+      permissions: "/permisos",
+      users: "/usuarios",
+      products: "/productos",
       categoriesSuppliers: "/categoriasProveedores",
       suppliers: "/proveedores"
       
     };
+    this.app.get("/", (req, res) => {
+      res.send("<h1>¡BIENVENIDO A LA API DE BUILD MART!</h1>");
+    });
     this.conectarDB();
     this.middlewares();
     this.routes();
@@ -30,6 +37,11 @@ class Server {
   }
 
   routes() {
+    this.app.use(this.paths.categoriesProducts, categoryProductRoutes);
+    this.app.use(this.paths.roles, rolesRoutes);
+    this.app.use(this.paths.permissions, permissionsRoutes);
+    this.app.use(this.paths.users, userRoutes);
+    this.app.use(this.paths.products, productRoutes);
     this.app.use(this.paths.categoriesProducts, categoryProduct);
     this.app.use(this.paths.categoriesSuppliers, categorySuppliers);
     this.app.use(this.paths.suppliers, suppliers);

@@ -2,7 +2,7 @@ import Categoria from "../../models/categoryProduct/categoryModel.js";
 import {
   categorySchema,
   updateCategorySchema,
-} from "../../validations/categoryProducto/categoryValidations.js";
+} from "../../middlewares/categoryProducto/categoryValidations.js";
 
 // Registrar una nueva categoría
 export const newCategory = async (req, res) => {

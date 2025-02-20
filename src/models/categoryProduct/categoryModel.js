@@ -26,4 +26,4 @@ CategorySchema.plugin(AutoIncrementFactory, {
   inc_field: "categoriaId",
 });
 
-export default mongoose.model("Category", CategorySchema);
+export default mongoose.model("categoriasProductos", CategorySchema);
