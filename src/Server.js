@@ -2,6 +2,8 @@ import express from "express";
 import cors from "cors";
 import { dbConnection } from "./config/db.js";
 import categoryProduct from "./routes/categoryProduct/categoryRoutes.js";
+import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js"
+import suppliers from "./routes/Suppliers/suppliersRoutes.js";
 
 class Server {
   constructor() {
@@ -9,6 +11,9 @@ class Server {
     this.port = process.env.PORT;
     this.paths = {
       categoriesProducts: "/categoriasProductos",
+      categoriesSuppliers: "/categoriasProveedores",
+      suppliers: "/proveedores"
+      
     };
     this.conectarDB();
     this.middlewares();
@@ -26,6 +31,10 @@ class Server {
 
   routes() {
     this.app.use(this.paths.categoriesProducts, categoryProduct);
+    this.app.use(this.paths.categoriesSuppliers, categorySuppliers);
+    this.app.use(this.paths.suppliers, suppliers);
+
+
   }
 
   listen() {
