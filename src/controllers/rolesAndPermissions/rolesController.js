@@ -18,6 +18,11 @@ export const newRol = async (req, res) => {
       data: nuevoRol,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: "El nombre del rol ya está en uso" });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };

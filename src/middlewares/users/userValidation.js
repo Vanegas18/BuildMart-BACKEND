@@ -12,7 +12,7 @@ export const UserSchema = z.object({
     .string()
     .min(8, { message: "La contraseña debe tener al menos 8 caracteres" }),
   telefono: z
-    .number()
+    .string()
     .min(10, { message: "El telefono debe tener al menos 10 caracteres" }),
   direccion: z
     .string()

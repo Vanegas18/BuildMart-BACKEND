@@ -17,6 +17,11 @@ export const newCategory = async (req, res) => {
       .status(201)
       .json({ message: "Categoría creada exitosamente", data: nuevaCategoria });
   } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: "El nombre de la categoria ya está en uso" });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };

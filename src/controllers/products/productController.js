@@ -16,6 +16,11 @@ export const newProduct = async (req, res) => {
       .status(201)
       .json({ message: "Producto creado exitosamente", data: producto });
   } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: "El nombre del producto ya está en uso" });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };

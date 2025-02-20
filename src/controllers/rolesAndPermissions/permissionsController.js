@@ -17,6 +17,11 @@ export const newPermissions = async (req, res) => {
       data: permiso,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: "El nombre del permiso ya está en uso" });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };

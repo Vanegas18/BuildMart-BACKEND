@@ -38,6 +38,10 @@ export const newUser = async (req, res) => {
       data: usuario,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0]; // Obtiene el campo duplicado
+      return res.status(400).json({ error: `El ${field} ya está en uso` });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };
