@@ -150,5 +150,5 @@ export const loginUser = async (req, res) => {
 
 export const logoutUser = async (req, res) => {
   res.cookie("token", "", { expires: new Date(0) });
-  return res.sendStatus(200);
+  return res.json("Usuario deslogueado correctamente");
 };
