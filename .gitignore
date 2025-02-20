@@ -15,4 +15,3 @@ sublime-workspace
 .DS_Store
 Thumbs.db
 dist/
-package-lock.json
