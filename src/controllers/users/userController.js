@@ -3,15 +3,36 @@ import {
   UserSchema,
   updateUserSchema,
 } from "../../middlewares/users/userValidation.js";
+import bcrypt from "bcrypt";
+import { createAccessToken } from "../../middlewares/users/jwt.js";
 
 // Registrar un nuevo usuario
 export const newUser = async (req, res) => {
+  const { nombre, correo, contraseña, telefono, direccion } = req.body;
   try {
-    UserSchema.parse(req.body);
+    const passwordHash = await bcrypt.hash(contraseña, 10);
 
-    const usuario = new User(req.body);
+    UserSchema.parse({
+      nombre,
+      correo,
+      contraseña,
+      telefono,
+      direccion,
+    });
+
+    const usuario = new User({
+      nombre,
+      correo,
+      telefono,
+      direccion,
+      contraseña: passwordHash,
+    });
     await usuario.save();
 
+    // TOKEN PARA EL REGISTRO
+    const token = await createAccessToken({ id: usuario.usuarioId });
+
+    res.cookie("token", token);
     res.status(201).json({
       message: "Usuario creado exitosamente",
       data: usuario,
@@ -90,4 +111,44 @@ export const updateStateUser = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Error al cambiar el estado de el usuario" });
   }
+};
+
+// Login de usuarios
+export const loginUser = async (req, res) => {
+  const { correo, contraseña } = req.body;
+  try {
+    const usuarioPorCorreo = await User.findOne({ correo });
+
+    if (!usuarioPorCorreo) {
+      return res.status(400).json({
+        message: "No se encontró a ningún usuario registrado con ese correo",
+      });
+    }
+
+    const passwordCompare = await bcrypt.compare(
+      contraseña,
+      usuarioPorCorreo.contraseña
+    );
+
+    if (!passwordCompare) {
+      return res.status(400).json({
+        message: "Contraseña incorrecta",
+      });
+    }
+
+    // TOKEN PARA EL INICIO DE SESIÓN
+    const token = await createAccessToken({ id: usuarioPorCorreo.usuarioId });
+
+    res.cookie("token", token);
+    res.status(201).json({
+      message: "Usuario logueado correctamente",
+    });
+  } catch (error) {
+    res.status(400).json({ error: error.errors || error.message });
+  }
+};
+
+export const logoutUser = async (req, res) => {
+  res.cookie("token", "", { expires: new Date(0) });
+  return res.sendStatus(200);
 };

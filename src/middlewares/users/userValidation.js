@@ -8,6 +8,9 @@ export const UserSchema = z.object({
     message:
       "El correo debe tener al menos 10 caracteres y cumplir con los estándares de correos electrónicos",
   }),
+  contraseña: z
+    .string()
+    .min(8, { message: "La contraseña debe tener al menos 8 caracteres" }),
   telefono: z
     .number()
     .min(10, { message: "El telefono debe tener al menos 10 caracteres" }),
@@ -20,6 +23,7 @@ export const UserSchema = z.object({
 export const updateUserSchema = z.object({
   nombre: z.string().min(3).optional(),
   correo: z.string().min(10).optional(),
+  contraseña: z.string().min(10).optional(),
   telefono: z.number().min(10).optional(),
   direccion: z.string().min(15).optional(),
   estado: z.enum(["Activo", "Inactivo"]).optional(),

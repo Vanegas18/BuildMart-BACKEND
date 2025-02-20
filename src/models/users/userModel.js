@@ -12,7 +12,17 @@ const UserSchema = new mongoose.Schema(
       required: [true, "El nombre es obligatorio"],
       trim: true,
     },
-    correo: { type: String, required: [true, "El correo es obligatorio"] },
+    correo: {
+      type: String,
+      required: [true, "El correo es obligatorio"],
+      unique: true,
+      trim: true,
+    },
+    contraseña: {
+      type: String,
+      required: [true, "La contraseña es obligatoria"],
+      trim: true,
+    },
     telefono: { type: Number, required: [true, "El telefono es obligatorio"] },
     direccion: {
       type: String,
