@@ -4,6 +4,11 @@ import { dbConnection } from "./config/db.js";
 import categoryProduct from "./routes/categoryProduct/categoryRoutes.js";
 import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js"
 import suppliers from "./routes/Suppliers/suppliersRoutes.js";
+import categoryProductRoutes from "./routes/categoryProduct/categoryRoutes.js";
+import rolesRoutes from "./routes/rolesAndPermissions/rolesRoutes.js";
+import permissionsRoutes from "./routes/rolesAndPermissions/permissionsRouter.js";
+import userRoutes from "./routes/users/userRoutes.js";
+import productRoutes from "./routes/products/productsRoutes.js";
 
 class Server {
   constructor() {
