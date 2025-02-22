@@ -84,6 +84,7 @@ export const updateStateRol = async (req, res) => {
       return res.status(404).json({ error: "Rol no encontrado" });
     }
 
+    // Validación para no poder desactivar un rol asignado a un usuario
     const usuarioConRol = await Usuarios.findOne({ rol: rol._id });
     
     if (usuarioConRol) {

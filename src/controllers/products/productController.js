@@ -11,6 +11,7 @@ export const newProduct = async (req, res) => {
 
     const producto = new Productos(req.body);
 
+    // Validación para el stock
     if (producto.stock < 10) {
       res
         .status(400)

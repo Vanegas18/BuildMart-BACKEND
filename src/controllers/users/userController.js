@@ -17,8 +17,10 @@ export const newUser = async (req, res) => {
   try {
     let { nombre, correo, contraseña, telefono, direccion, rol } = req.body;
 
+    // Hasheo de la contraseña
     const passwordHash = await bcrypt.hash(contraseña, 10);
 
+    // Validaciones con zod
     UserSchema.parse({
       nombre,
       correo,
