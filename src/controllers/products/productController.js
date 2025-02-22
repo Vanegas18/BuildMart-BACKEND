@@ -10,6 +10,13 @@ export const newProduct = async (req, res) => {
     ProductSchema.parse(req.body);
 
     const producto = new Productos(req.body);
+
+    if (producto.stock < 10) {
+      res
+        .status(400)
+        .json({ message: "El stock del producto debe ser mayor o igual a 10" });
+    }
+
     await producto.save();
 
     res
