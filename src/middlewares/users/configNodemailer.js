@@ -69,3 +69,28 @@ export const enviarCorreoRegistro = async (emailDestino, rol) => {
     throw error;
   }
 };
+
+export const generarHtmlRecuperacion = () => {
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+      <h2 style="color: #333; text-align: center;">Restablecimiento de Contraseña en <span style="color: #007bff;">Build Mart</span> 🔑</h2>
+      <p style="color: #555; font-size: 16px; text-align: center;">
+        Su contraseña ha sido actualizada correctamente. Ahora puede iniciar sesión con su nueva contraseña.
+      </p>
+      
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="http://localhost:3000/views/Login.html" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
+          🔐 Iniciar Sesión
+        </a>
+      </div>
+
+      <p style="color: #777; font-size: 14px; text-align: center;">
+        Si no ha solicitado este cambio, contacte con soporte inmediatamente.
+      </p>
+      <hr style="border: none; border-top: 1px solid #ddd;">
+      <p style="color: #aaa; font-size: 12px; text-align: center;">
+        © 2025 Build Mart. Todos los derechos reservados.
+      </p>
+    </div>
+  `;
+};

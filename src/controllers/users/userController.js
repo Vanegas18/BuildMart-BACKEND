@@ -6,8 +6,11 @@ import {
   UserSchema,
   updateUserSchema,
 } from "../../middlewares/users/userValidation.js";
-import {enviarCorreoRegistro } from "../../middlewares/users/configNodemailer.js"
-
+import {
+  transporter,
+  enviarCorreoRegistro,
+  generarHtmlRecuperacion,
+} from "../../middlewares/users/configNodemailer.js";
 
 // Registrar un nuevo usuario
 export const newUser = async (req, res) => {
@@ -180,7 +183,45 @@ export const loginUser = async (req, res) => {
   }
 };
 
+// Cerrar sesión
 export const logoutUser = async (req, res) => {
   res.cookie("token", "", { expires: new Date(0) });
   return res.json("Usuario deslogueado correctamente");
+};
+
+// Solicitar recuperar contraseña
+export const forgotPassword = async (req, res) => {
+  const { correo, nuevaContraseña } = req.body;
+  try {
+    const usuario = await User.findOne({ correo });
+
+    if (!usuario) {
+      return res
+        .status(404)
+        .json({ error: "No existe una cuenta con ese correo" });
+    }
+
+    // Hasher la nueva contraseña
+    const passwordHash = await bcrypt.hash(nuevaContraseña, 10);
+    usuario.contraseña = passwordHash;
+    await usuario.save();
+
+    // Opciones de correo
+    const mailOptions = {
+      from: process.env.userGmail,
+      to: usuario.correo,
+      subject: "🔑 Contraseña Restablecida",
+      html: generarHtmlRecuperacion(),
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({
+      message:
+        "Contraseña restablecida correctamente. Ahora puedes iniciar sesión.",
+    });
+  } catch (error) {
+    console.error("Error al solicitar recuperación de contraseña:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
 };
