@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  forgotPassword,
   getUserById,
   getUsers,
   loginUser,
@@ -17,5 +18,6 @@ router.put("/:usuarioId", updateUser);
 router.patch("/:usuarioId/estado", updateStateUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
+router.post("/restablecer-contrasena", forgotPassword);
 
 export default router;

@@ -28,7 +28,7 @@ const ProductSchema = new mongoose.Schema(
       required: [true, "El precio es requerido"],
       min: 0,
     },
-    stock: { type: Number, default: 0, min: 0 },
+    stock: { type: Number, default: 10, min: 0 },
     img: {
       type: String,
       required: [true, "La URL de la imagen es obligatoria"],

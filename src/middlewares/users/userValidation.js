@@ -4,15 +4,17 @@ export const UserSchema = z.object({
   nombre: z
     .string()
     .min(3, { message: "El nombre debe tener al menos 3 caracteres" }),
-  correo: z.string().min(10, {
-    message:
-      "El correo debe tener al menos 10 caracteres y cumplir con los estándares de correos electrónicos",
-  }),
+  correo: z
+    .string()
+    .min(10, {
+      message: "El correo debe tener al menos 10 caracteres",
+    })
+    .email({ message: "El correo es invalido" }),
   contraseña: z
     .string()
     .min(8, { message: "La contraseña debe tener al menos 8 caracteres" }),
   telefono: z
-    .string()
+    .number()
     .min(10, { message: "El telefono debe tener al menos 10 caracteres" }),
   direccion: z
     .string()

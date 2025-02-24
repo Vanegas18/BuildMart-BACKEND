@@ -1,92 +1,26 @@
 import User from "../../models/users/userModel.js";
+import bcrypt from "bcrypt";
+import Role from "../../models/rolesAndPermissions/rolesModel.js";
+import { createAccessToken } from "../../middlewares/users/jwt.js";
 import {
   UserSchema,
   updateUserSchema,
 } from "../../middlewares/users/userValidation.js";
-import bcrypt from "bcrypt";
-import dotenv from "dotenv";
-import nodemailer from "nodemailer";
-import { createAccessToken } from "../../middlewares/users/jwt.js";
-import Role from "../../models/rolesAndPermissions/rolesModel.js";
-
-dotenv.config();
-
-// CONFIGURACIÓN NODEMAILER
-const transporter = nodemailer.createTransport({
-  service: "gmail",
-  auth: {
-    user: process.env.userGmail,
-    pass: process.env.passAppGmail,
-  },
-});
-
-// Función para generar HTML dinámico del correo según el rol
-const generarHtmlCorreo = (nombreRol) => {
-  let resetUrl = "http://localhost:3000/views/Usuario/usuario.html"; // Mejor usar una variable de entorno
-
-  return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-      <h2 style="color: #333; text-align: center;">Bienvenido a <span style="color: #007bff;">Build Mart</span> 🎉</h2>
-      <p style="color: #555; font-size: 16px;">
-        ¡Su registro fue exitoso! 
-        ${
-          nombreRol === "Administrador"
-            ? "Para gestionar la plataforma, inicie sesión y configure sus preferencias. Además, le recomendamos cambiar su contraseña:"
-            : "Gracias por registrarse en nuestra tienda. ¡Esperamos que disfrute su experiencia con nosotros!"
-        }
-      </p>
-      
-      ${
-        nombreRol === "Administrador"
-          ? `
-      <div style="text-align: center; margin: 20px 0;">
-        <a href="${resetUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
-          🔐 Cambiar Contraseña
-        </a>
-      </div>`
-          : ""
-      }
-
-      <p style="color: #777; font-size: 14px; text-align: center;">
-        Si no ha solicitado este registro, ignore este mensaje.
-      </p>
-      <hr style="border: none; border-top: 1px solid #ddd;">
-      <p style="color: #aaa; font-size: 12px; text-align: center;">
-        © 2025 Build Mart. Todos los derechos reservados.
-      </p>
-    </div>
-  `;
-};
-
-// Función para enviar el correo de registro
-const enviarCorreoRegistro = async (emailDestino, rol) => {
-  try {
-    const { userGmail } = process.env;
-    const htmlCorreo = generarHtmlCorreo(rol);
-
-    const mailOptions = {
-      from: userGmail,
-      to: emailDestino,
-      subject: `🎉 Build Mart - Registro Exitoso`,
-      html: htmlCorreo,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log(`✅ Correo enviado a ${emailDestino}: ${info.response}`);
-    return info;
-  } catch (error) {
-    console.error(`❌ Error al enviar el correo a ${emailDestino}:`, error);
-    throw error;
-  }
-};
+import {
+  transporter,
+  enviarCorreoRegistro,
+  generarHtmlRecuperacion,
+} from "../../middlewares/users/configNodemailer.js";
 
 // Registrar un nuevo usuario
 export const newUser = async (req, res) => {
   try {
     let { nombre, correo, contraseña, telefono, direccion, rol } = req.body;
 
+    // Hasheo de la contraseña
     const passwordHash = await bcrypt.hash(contraseña, 10);
 
+    // Validaciones con zod
     UserSchema.parse({
       nombre,
       correo,
@@ -251,7 +185,45 @@ export const loginUser = async (req, res) => {
   }
 };
 
+// Cerrar sesión
 export const logoutUser = async (req, res) => {
   res.cookie("token", "", { expires: new Date(0) });
   return res.json("Usuario deslogueado correctamente");
+};
+
+// Solicitar recuperar contraseña
+export const forgotPassword = async (req, res) => {
+  const { correo, nuevaContraseña } = req.body;
+  try {
+    const usuario = await User.findOne({ correo });
+
+    if (!usuario) {
+      return res
+        .status(404)
+        .json({ error: "No existe una cuenta con ese correo" });
+    }
+
+    // Hasher la nueva contraseña
+    const passwordHash = await bcrypt.hash(nuevaContraseña, 10);
+    usuario.contraseña = passwordHash;
+    await usuario.save();
+
+    // Opciones de correo
+    const mailOptions = {
+      from: process.env.userGmail,
+      to: usuario.correo,
+      subject: "🔑 Contraseña Restablecida",
+      html: generarHtmlRecuperacion(),
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.json({
+      message:
+        "Contraseña restablecida correctamente. Ahora puedes iniciar sesión.",
+    });
+  } catch (error) {
+    console.error("Error al solicitar recuperación de contraseña:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
 };

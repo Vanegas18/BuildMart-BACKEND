@@ -24,10 +24,10 @@ const UserSchema = new mongoose.Schema(
       trim: true,
     },
     telefono: {
-      type: String,
+      type: Number,
       required: [true, "El telefono es obligatorio"],
       unique: true,
-      trim: true
+      trim: true,
     },
     direccion: {
       type: String,

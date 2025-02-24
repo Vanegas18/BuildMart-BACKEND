@@ -1,4 +1,5 @@
 import Roles from "../../models/rolesAndPermissions/rolesModel.js";
+import Usuarios from "../../models/users/userModel.js";
 import {
   rolesSchema,
   updateRolesSchema,
@@ -81,6 +82,16 @@ export const updateStateRol = async (req, res) => {
     const rol = await Roles.findOne({ nombre });
     if (!rol) {
       return res.status(404).json({ error: "Rol no encontrado" });
+    }
+
+    // Validación para no poder desactivar un rol asignado a un usuario
+    const usuarioConRol = await Usuarios.findOne({ rol: rol._id });
+    
+    if (usuarioConRol) {
+      return res.status(400).json({
+        error:
+          "No se puede desactivar el rol porque está asignado a un usuario",
+      });
     }
 
     // Alternar estado entre Activo o Inactivo
