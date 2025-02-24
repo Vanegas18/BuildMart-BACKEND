@@ -15,3 +15,5 @@ sublime-workspace
 .DS_Store
 Thumbs.db
 dist/
+# Ignorar el archivo suppliersController.js en la carpeta Suppliers
+src/controllers/Suppliers/suppliersController.js

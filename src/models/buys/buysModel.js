@@ -1,33 +1,46 @@
 import mongoose from "mongoose";
 import mongooseSequence from "mongoose-sequence";
+import Producto from "../products/productModel.js";
+import Proveedor from "../Suppliers/suppliersModel.js";
+
 
 const AutoIncrementFactory = mongooseSequence(mongoose);
 
-
-const CompraSchema = new mongoose.Schema(
+const ShoppingSchema = new mongoose.Schema(
   {
-    compraId: { type: Number, unique: true },
-    proveedorId: { 
-      type: mongoose.Schema.Types.ObjectId, 
-      required: true, 
-      ref: 'Proveedor' 
+    nit: { 
+      type: String, 
+      required: [true, "El NIT es obligatorio"],
+      unique: [true]
     },
-    fecha: { 
-      type: Date,
-      default: Date.now 
+    supplier: { 
+      type: String, 
+      required: [true, "El nombre del proveedor es obligatorio"]
     },
-    productos: [ProductoSchema],
-    total_compra: { 
+    date: { 
+      type: Date, 
+      required: [true, "La fecha es obligatoria"] 
+    },
+    products: [
+      {
+        type: mongoose.Schema.Types.Mixed,
+        validate: {
+          validator: (value) => ShoppingSchema.shape.products.check(value),
+          message: "Producto no válido"
+        }
+      }
+    ],
+    total: { 
       type: Number, 
-      required: true 
-    },
-    estado: {type: String, default: "Activo", enum: ["Activo", "Inactivo"]},
+      required: [true, "El total es obligatorio"] 
+    }
   },
-  {timestamps: true, versionKey: false},
+  { timestamps: true, versionKey: false }
 );
-CompraSchema.plugin(AutoIncrementFactory, {
-  inc_field: "compraId"
-})
-const Compra = mongoose.model('Compra', CompraSchema);
 
+ShoppingSchema.plugin(AutoIncrementFactory, {
+  inc_field: "compraId",
+});
+
+const Compra = mongoose.model("Compras", ShoppingSchema);
 export default Compra;
