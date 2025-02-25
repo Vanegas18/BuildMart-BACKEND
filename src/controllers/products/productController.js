@@ -13,9 +13,11 @@ export const newProduct = async (req, res) => {
 
     // Validación para el stock
     if (producto.stock < 10) {
-      res
-        .status(400)
-        .json({ message: "El stock del producto debe ser mayor o igual a 10" });
+      return res.status(201).json({
+        message:
+          "Producto creado correctamente. ALERTA: El stock del producto debe ser mayor a 10",
+        data: producto,
+      });
     }
 
     await producto.save();
