@@ -9,7 +9,11 @@ import rolesRoutes from "./routes/rolesAndPermissions/rolesRoutes.js";
 import permissionsRoutes from "./routes/rolesAndPermissions/permissionsRouter.js";
 import userRoutes from "./routes/users/userRoutes.js";
 import productRoutes from "./routes/products/productsRoutes.js";
-import buysRoutes from "./routes/buys/buysRoutes.js"
+import buysRoutes from "./routes/buys/buysRoutes.js";
+import orderRoutes from "./routes/orders/ordersRoutes.js"
+import saleRoutes from "./routes/sales/saleRoutes.js"
+import clientRoutes from "./routes/customers/clientRoutes.js"
+// const productRoutes = require('./routes/productRoutes'
 // import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js";
 // import suppliers from "./routes/suppliers/supplierRoutes.js";
 
@@ -56,7 +60,9 @@ class Server {
     this.app.use(this.paths.users, userRoutes);
     this.app.use(this.paths.products, productRoutes);
     this.app.use(this.paths.compras, buysRoutes);
-
+    this.app.use('/api/orders', orderRoutes);
+    this.app.use('/api/sales', saleRoutes);
+    this.app.use('/api/clients', clientRoutes);
     // this.app.use(this.paths.categoriesSuppliers, categorySuppliers);
     // this.app.use(this.paths.suppliers, suppliers);
   }
