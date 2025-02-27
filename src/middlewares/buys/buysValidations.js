@@ -17,19 +17,14 @@ const ProductInCompraSchema = z.object({
 
 // Validación del esquema de compras
 export const compraSchema = z.object({
-  nit: z
-    .string()
-    .nonempty({ message: "El NIT es obligatorio" })
-    .regex(/^[0-9]+$/, { message: "El NIT debe contener solo números" }),
   supplier: z
     .string()
     .nonempty({ message: "El ID del proveedor es obligatorio" })
     .refine((value) => mongoose.Types.ObjectId.isValid(value), {
       message: "El ID del proveedor no es válido",
     }),
-  date: z.string().datetime({ message: "La fecha debe ser una cadena de fecha y hora válida" }), // Cambiado a z.string().datetime()
-  products: z
-    .array(ProductInCompraSchema)
-    .nonempty({ message: "Debe haber al menos un producto" }),
+  date: z.string().datetime({
+    message: "La fecha debe ser una cadena de fecha y hora válida",
+  }), // Cambiado a z.string().datetime()
   estado: z.enum(["Activa", "Inactiva"]).optional(),
 });

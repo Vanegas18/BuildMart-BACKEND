@@ -34,8 +34,9 @@ export const crearCompra = async (req, res) => {
 
     // Verificar que el proveedor es un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(supplier)) {
-      return res.status(400).json({ error: "Proveedor no válido" });
+      return res.status(400).json({ error: "Proveedor no válido", });
     }
+    
     const proveedor = await Proveedor.findById(supplier);
     if (!proveedor) {
       return res.status(400).json({ error: "Proveedor no encontrado" });
