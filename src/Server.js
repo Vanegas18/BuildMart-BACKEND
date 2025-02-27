@@ -2,16 +2,17 @@ import express from "express";
 import cors from "cors";
 import { dbConnection } from "./config/db.js";
 import categoryProduct from "./routes/categoryProduct/categoryRoutes.js";
-import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js"
+import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js";
 import suppliers from "./routes/Suppliers/suppliersRoutes.js";
 import categoryProductRoutes from "./routes/categoryProduct/categoryRoutes.js";
 import rolesRoutes from "./routes/rolesAndPermissions/rolesRoutes.js";
 import permissionsRoutes from "./routes/rolesAndPermissions/permissionsRouter.js";
 import userRoutes from "./routes/users/userRoutes.js";
 import productRoutes from "./routes/products/productsRoutes.js";
-import buysRoutes from "./routes/buys/buysRoutes.js"
-// import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js";
-// import suppliers from "./routes/suppliers/supplierRoutes.js";
+import buysRoutes from "./routes/buys/buysRoutes.js";
+import orderRoutes from "./routes/orders/ordersRoutes.js";
+import saleRoutes from "./routes/sales/saleRoutes.js";
+import clientRoutes from "./routes/customers/clientRoutes.js";
 
 class Server {
   constructor() {
@@ -25,9 +26,10 @@ class Server {
       permissions: "/permisos",
       users: "/usuarios",
       products: "/productos",
-      compras: "/compras"
-      // categoriesSuppliers: "/categoriasProveedores",
-      // suppliers: "/proveedores",
+      compras: "/compras",
+      clientes: "/clientes",
+      ordenes: "/ordenes",
+      ventas: "/ventas",
     };
     this.app.get("/", (req, res) => {
       res.send("<h1>¡BIENVENIDO A LA API DE BUILD MART!</h1>");
@@ -56,7 +58,9 @@ class Server {
     this.app.use(this.paths.users, userRoutes);
     this.app.use(this.paths.products, productRoutes);
     this.app.use(this.paths.compras, buysRoutes);
-
+    this.app.use(this.paths.ordenes, orderRoutes);
+    this.app.use(this.paths.ventas, saleRoutes);
+    this.app.use(this.paths.clientes, clientRoutes);
     // this.app.use(this.paths.categoriesSuppliers, categorySuppliers);
     // this.app.use(this.paths.suppliers, suppliers);
   }
