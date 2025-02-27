@@ -1,7 +1,7 @@
 import User from "../../models/users/userModel.js";
 import bcrypt from "bcrypt";
 import Role from "../../models/rolesAndPermissions/rolesModel.js";
-import { createAccessToken } from "../../middlewares/users/jwt.js";
+import { createAccessToken } from "../../services/users/jwt.js";
 import {
   UserSchema,
   updateUserSchema,
@@ -10,7 +10,7 @@ import {
   transporter,
   enviarCorreoRegistro,
   generarHtmlRecuperacion,
-} from "../../middlewares/users/configNodemailer.js";
+} from "../../services/users/configNodemailer.js";
 
 // Registrar un nuevo usuario
 export const newUser = async (req, res) => {

@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import { dbConnection } from "./config/db.js";
 import categoryProduct from "./routes/categoryProduct/categoryRoutes.js";
-import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js"
+import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js";
 import suppliers from "./routes/Suppliers/suppliersRoutes.js";
 import categoryProductRoutes from "./routes/categoryProduct/categoryRoutes.js";
 import rolesRoutes from "./routes/rolesAndPermissions/rolesRoutes.js";
@@ -10,12 +10,9 @@ import permissionsRoutes from "./routes/rolesAndPermissions/permissionsRouter.js
 import userRoutes from "./routes/users/userRoutes.js";
 import productRoutes from "./routes/products/productsRoutes.js";
 import buysRoutes from "./routes/buys/buysRoutes.js";
-import orderRoutes from "./routes/orders/ordersRoutes.js"
-import saleRoutes from "./routes/sales/saleRoutes.js"
-import clientRoutes from "./routes/customers/clientRoutes.js"
-// const productRoutes = require('./routes/productRoutes'
-// import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js";
-// import suppliers from "./routes/suppliers/supplierRoutes.js";
+import orderRoutes from "./routes/orders/ordersRoutes.js";
+import saleRoutes from "./routes/sales/saleRoutes.js";
+import clientRoutes from "./routes/customers/clientRoutes.js";
 
 class Server {
   constructor() {
@@ -32,9 +29,7 @@ class Server {
       compras: "/compras",
       clientes: "/clientes",
       ordenes: "/ordenes",
-      ventas: "/ventas"
-      // categoriesSuppliers: "/categoriasProveedores",
-      // suppliers: "/proveedores",
+      ventas: "/ventas",
     };
     this.app.get("/", (req, res) => {
       res.send("<h1>¡BIENVENIDO A LA API DE BUILD MART!</h1>");
