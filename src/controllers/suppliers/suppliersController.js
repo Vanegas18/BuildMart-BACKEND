@@ -1,4 +1,4 @@
-import Supplier from "../../models/Suppliers/suppliersModel.js";
+import Supplier from "../../models/Suppliers/supplierModel.js";
 import {
   supplierSchema,
   updateSupplierSchema,

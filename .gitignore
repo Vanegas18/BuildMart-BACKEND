@@ -16,3 +16,4 @@ sublime-workspace
 .DS_Store
 Thumbs.db
 dist/
+src/models/Suppliers/suppliersModel.js

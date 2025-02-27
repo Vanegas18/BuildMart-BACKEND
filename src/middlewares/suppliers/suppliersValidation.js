@@ -1,6 +1,14 @@
 import { z } from "zod";
 
 export const supplierSchema = z.object({
+  nit: z
+  .int()
+  .min(10, { message: "El nit debe tener al menos 10 caracteres" })
+  .trim()
+  .nonempty({ message: "El nit es obligatorio" })
+  .regex(/^[a-fA-F0-9]{24}$/, {
+    message: "El nit debe ser un nit válido",
+  }),
   nombre: z
     .string()
     .min(3, { message: "El nombre debe tener al menos 3 caracteres" })

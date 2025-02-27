@@ -5,11 +5,6 @@ const AutoIncrementFactory = mongooseSequence(mongoose);
 
 const ShoppingSchema = new mongoose.Schema(
   {
-    nit: {
-      type: String,
-      required: [true, "El NIT es obligatorio"],
-      unique: true,
-    },
     supplier: {
       type: mongoose.Schema.Types.ObjectId, // Referencia al modelo Proveedor
       ref: "Proveedor", // Nombre del modelo referenciado
@@ -36,7 +31,12 @@ const ShoppingSchema = new mongoose.Schema(
       type: Number,
       required: [true, "El total es obligatorio"],
     },
+  estado: 
+  {type: String,
+    default: "Activo",
+    enum: ["Activo", "Inactivo"]
   },
+},
   { timestamps: true, versionKey: false }
 );
 
