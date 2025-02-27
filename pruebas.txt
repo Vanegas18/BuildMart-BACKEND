@@ -16,18 +16,18 @@ JSON:
 
 Cliente (PUT /api/clients)
 
-http://localhost:3000/api/clients/:id
+http://localhost:3000/clientes/:id
 
 Pedido (POST /api/orders)
 
-http://localhost:3000/api/orders
+http://localhost:3000/ordenes
 
 {
-    "products": [
-        { "productId": "63efb6235b5d82c0f3f5f4e3", "quantity": 2 },
-        { "productId": "63efb6235b5d82c0f3f5f4e4", "quantity": 1 }
-    ],
-    "total": 300.00
+    "clientId": "67bf04867070fc76b9396de1",
+    "productos": [
+        { "productoId": "67bdaf1304c84de5925479e1", "quantity": 2 },
+        { "productoId": "67bdaf38ea8a2d8fcb43ee98", "quantity": 1 }
+    ]
 }
 
 Pedido (PUT /api/orders/:id)

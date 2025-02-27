@@ -16,7 +16,7 @@ export const createClient = async (req, res) => {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, phone, address, department, city, status } = req.body;
+    const { name, email, phone, address, department, city } = req.body;
 
     try {
         const newClient = new Client({
@@ -25,8 +25,7 @@ export const createClient = async (req, res) => {
             phone,
             address,
             department,
-            city,
-            status
+            city
         });
 
         await newClient.save();

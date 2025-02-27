@@ -29,7 +29,10 @@ class Server {
       permissions: "/permisos",
       users: "/usuarios",
       products: "/productos",
-      compras: "/compras"
+      compras: "/compras",
+      clientes: "/clientes",
+      ordenes: "/ordenes",
+      ventas: "/ventas"
       // categoriesSuppliers: "/categoriasProveedores",
       // suppliers: "/proveedores",
     };
@@ -60,9 +63,9 @@ class Server {
     this.app.use(this.paths.users, userRoutes);
     this.app.use(this.paths.products, productRoutes);
     this.app.use(this.paths.compras, buysRoutes);
-    this.app.use('/api/orders', orderRoutes);
-    this.app.use('/api/sales', saleRoutes);
-    this.app.use('/api/clients', clientRoutes);
+    this.app.use(this.paths.ordenes, orderRoutes);
+    this.app.use(this.paths.ventas, saleRoutes);
+    this.app.use(this.paths.clientes, clientRoutes);
     // this.app.use(this.paths.categoriesSuppliers, categorySuppliers);
     // this.app.use(this.paths.suppliers, suppliers);
   }

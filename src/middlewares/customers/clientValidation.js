@@ -8,5 +8,4 @@ export const validateClient = [
     body('address').notEmpty().withMessage('La dirección es obligatoria'),
     body('department').notEmpty().withMessage('El departamento es obligatorio'),
     body('city').notEmpty().withMessage('La ciudad es obligatoria'),
-    body('status').isIn(['activo', 'inactivo']).withMessage('El estado debe ser "activo" o "inactivo"')
 ];
