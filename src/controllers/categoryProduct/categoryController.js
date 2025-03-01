@@ -8,7 +8,7 @@ import {
 export const newCategory = async (req, res) => {
   try {
     // Validar datos con Zod
-    categorySchema.parse(req.body);
+    categorySchema.safeParse(req.body);
 
     const nuevaCategoria = new Categoria(req.body);
     await nuevaCategoria.save();
@@ -54,7 +54,7 @@ export const getCategoryById = async (req, res) => {
 export const updateCategoria = async (req, res) => {
   const { categoriaId } = req.params;
   try {
-    updateCategorySchema.parse(req.body);
+    updateCategorySchema.safeParse(req.body);
 
     const categoria = await Categoria.findOneAndUpdate(
       { categoriaId },
@@ -70,6 +70,11 @@ export const updateCategoria = async (req, res) => {
       data: categoria,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: "El nombre de la categoria ya está en uso" });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -88,7 +93,7 @@ export const updateStateCategory = async (req, res) => {
     await categoria.save();
 
     res.json({
-      message: `Cambio de estado exitosamente`,
+      message: `Estado de categoría actualizado exitosamente`,
       data: categoria,
     });
   } catch (error) {

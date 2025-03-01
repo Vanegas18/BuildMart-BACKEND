@@ -7,7 +7,7 @@ import {
 // Registrar un nuevo permiso
 export const newPermissions = async (req, res) => {
   try {
-    permissionsSchema.parse(req.body);
+    permissionsSchema.safeParse(req.body);
 
     const permiso = new Permisos(req.body);
     await permiso.save();
@@ -54,11 +54,15 @@ export const getPermissionsByName = async (req, res) => {
 export const updatePermissions = async (req, res) => {
   const { nombre } = req.params;
   try {
-    updatePermissionsSchema.parse(req.body);
+    updatePermissionsSchema.safeParse(req.body);
 
-    const permiso = await Permisos.findOneAndUpdate({ nombre }, req.body, {
-      new: true,
-    });
+    const permiso = await Permisos.findOneAndUpdate(
+      { nombre: nombre.trim() },
+      req.body,
+      {
+        new: true,
+      }
+    );
 
     if (!permiso) {
       return res.status(404).json({ error: "Permiso no encontrado" });
@@ -77,7 +81,7 @@ export const updatePermissions = async (req, res) => {
 export const updateStatePermissions = async (req, res) => {
   const { nombre } = req.params;
   try {
-    const permiso = await Permisos.findOne({ nombre });
+    const permiso = await Permisos.findOne({ nombre: nombre.trim() });
 
     if (!permiso) {
       return res.status(404).json({ error: "Permiso no encontrado" });
@@ -87,7 +91,7 @@ export const updateStatePermissions = async (req, res) => {
     await permiso.save();
 
     res.json({
-      message: `Cambio de estado exitosamente`,
+      message: `Cambio de estado exitoso`,
       data: permiso,
     });
   } catch (error) {

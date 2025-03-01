@@ -109,7 +109,7 @@ export const getUserById = async (req, res) => {
 export const updateUser = async (req, res) => {
   const { usuarioId } = req.params;
   try {
-    updateUserSchema.parse(req.params);
+    updateUserSchema.safeParse(req.body);
 
     const usuario = await User.findOneAndUpdate({ usuarioId }, req.body, {
       new: true,
@@ -162,10 +162,9 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    const passwordCompare = await bcrypt.compare(
-      contraseña,
-      usuarioPorCorreo.contraseña
-    );
+    const passwordCompare = usuarioPorCorreo
+      ? await bcrypt.compare(contraseña, usuarioPorCorreo.contraseña)
+      : false;
 
     if (!passwordCompare) {
       return res.status(400).json({
