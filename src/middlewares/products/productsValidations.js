@@ -5,10 +5,11 @@ const objectIdRegex = /^[a-fA-F0-9]{24}$/; // Patrón para validar MongoDB Objec
 export const ProductSchema = z.object({
   nombre: z
     .string()
-    .min(3, { message: "El nombre debe tener al menos 3 caracteres" }),
+    .min(5, { message: "El nombre debe tener al menos 5 caracteres" })
+    .trim(),
   descripcion: z
     .string()
-    .min(3, { message: "La descripción debe tener al menos 3 caracteres" }),
+    .min(5, { message: "La descripción debe tener al menos 5 caracteres" }),
   categoriaId: z
     .string()
     .regex(objectIdRegex, { message: "El ID de la categoría no es válido" }),
@@ -22,14 +23,23 @@ export const ProductSchema = z.object({
 });
 
 export const updateProductSchema = z.object({
-  nombre: z.string().min(3).optional(),
-  descripcion: z.string().min(3).optional(),
+  nombre: z
+    .string()
+    .min(5, { message: "El nombre debe tener al menos 5 caracteres" })
+    .optional(),
+  descripcion: z
+    .string()
+    .min(5, { message: "La descripción debe tener al menos 5 caracteres" })
+    .optional(),
   categoriaId: z
     .string()
     .regex(objectIdRegex, { message: "El ID de la categoría no es válido" })
     .optional(),
   precio: z.number().min(0).optional(),
-  stock: z.number().min(10).optional(),
-  img: z.string().url().optional(),
+  stock: z
+    .number()
+    .min(10, { message: "El stock debe ser mayor o igual a 10" })
+    .optional(),
+  img: z.string().url("Debe ser una URL válida").optional(),
   estado: z.enum(["Activo", "Inactivo"]).optional(),
 });

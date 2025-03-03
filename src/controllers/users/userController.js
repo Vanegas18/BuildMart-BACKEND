@@ -21,13 +21,18 @@ export const newUser = async (req, res) => {
     const passwordHash = await bcrypt.hash(contraseña, 10);
 
     // Validaciones con zod
-    UserSchema.parse({
+    const userValidate = UserSchema.safeParse({
       nombre,
       correo,
       contraseña,
       telefono,
       direccion,
     });
+    if (!userValidate.success) {
+      return res.status(400).json({
+        error: userValidate.error,
+      });
+    }
 
     // Si el usuario no envía un rol, asignamos "Cliente" por defecto
     if (!rol) {
@@ -109,7 +114,12 @@ export const getUserById = async (req, res) => {
 export const updateUser = async (req, res) => {
   const { usuarioId } = req.params;
   try {
-    updateUserSchema.safeParse(req.body);
+    const updateUserValidate = updateUserSchema.safeParse(req.body);
+    if (!updateUserValidate.success) {
+      return res.status(400).json({
+        error: updateUserValidate.error,
+      });
+    }
 
     const usuario = await User.findOneAndUpdate({ usuarioId }, req.body, {
       new: true,
@@ -131,11 +141,18 @@ export const updateUser = async (req, res) => {
 // Actualizar estado de usuario
 export const updateStateUser = async (req, res) => {
   const { usuarioId } = req.params;
+  const { rol } = req.body;
   try {
     const usuario = await User.findOne({ usuarioId });
 
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    // Verificar que el rol exista
+    const rolExistente = await Role.findById(rol);
+    if (!rolExistente) {
+      return res.status(400).json({ error: "El rol especificado no existe" });
     }
 
     usuario.estado = usuario.estado === "Activo" ? "Inactivo" : "Activo";

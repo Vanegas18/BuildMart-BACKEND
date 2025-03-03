@@ -1,5 +1,6 @@
 import Roles from "../../models/rolesAndPermissions/rolesModel.js";
 import Usuarios from "../../models/users/userModel.js";
+import Permisos from "../../models/rolesAndPermissions/permissionsModel.js";
 import {
   rolesSchema,
   updateRolesSchema,
@@ -7,11 +8,22 @@ import {
 
 // Registrar un nuevo rol
 export const newRol = async (req, res) => {
+  const { permisos } = req.body;
   try {
     // Validar datos con ZOD
-    const validationResult = rolesSchema.safeParse(req.body);
-    if (!validationResult.success) {
-      return res.status(400).json({ error: validationResult.error.errors });
+    const rolesValidate = rolesSchema.safeParse(req.body);
+    if (!rolesValidate.success) {
+      return res.status(400).json({
+        error: rolesValidate.error,
+      });
+    }
+
+    // Verificar que los permisos existan
+    const permisoExistente = await Permisos.findById(permisos);
+    if (!permisoExistente) {
+      return res
+        .status(400)
+        .json({ error: `El permiso con ID ${permisos} no existe` });
     }
 
     const nuevoRol = new Roles(req.body);
@@ -58,8 +70,24 @@ export const getRolByName = async (req, res) => {
 // Actualizar rol
 export const updateRol = async (req, res) => {
   const { nombre } = req.params;
+  const { permisos } = req.body;
   try {
-    updateRolesSchema.safeParse(req.body);
+    const updateRolesValidate = updateRolesSchema.safeParse(req.body);
+    if (!updateRolesValidate.success) {
+      return res.status(400).json({
+        error: updateRolesValidate.error,
+      });
+    }
+
+    // Verificar que los permisos existan
+    if (permisos) {
+      const permisoExistente = await Permisos.findById(permisos);
+      if (!permisoExistente) {
+        return res
+          .status(400)
+          .json({ error: `El permiso con ID ${permisos} no existe` });
+      }
+    }
 
     const rol = await Roles.findOneAndUpdate({ nombre }, req.body, {
       new: true,
