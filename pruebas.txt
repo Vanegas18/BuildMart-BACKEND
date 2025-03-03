@@ -11,7 +11,6 @@ JSON:
         "address": "Cr 29 #71B 29",
         "department": "Antioquia",
         "city": "Medellín",
-        "status": "activo"
     }
 
 Cliente (PUT /api/clients)
@@ -43,11 +42,17 @@ Venta (POST /api/sales)
 http://localhost:3000/api/sales
 
 {
-    "clientId": "63efb6235b5d82c0f3f5f4e2",
-    "products": [
-        { "productId": "63efb6235b5d82c0f3f5f4e3", "quantity": 2 }
-    ],
-    "total": 200.00
+  "clientId": "613b56c56b3f8b0bc3b6e8b3",  // ID de un cliente existente en tu base de datos
+  "productos": [
+    {
+      "productId": "613b58f86b3f8b0bc3b6e8b4",  // ID de un producto existente en tu base de datos
+      "quantity": 2
+    },
+    {
+      "productId": "613b58f86b3f8b0bc3b6e8b5",  // ID de otro producto existente en tu base de datos
+      "quantity": 1
+    }
+  ]
 }
 
 
