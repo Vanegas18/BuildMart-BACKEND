@@ -1,4 +1,5 @@
 import Productos from "../../models/products/productModel.js";
+import Categorias from "../../models/categoryProduct/categoryModel.js";
 import {
   ProductSchema,
   updateProductSchema,
@@ -6,14 +7,18 @@ import {
 
 // Agregar nuevo producto
 export const newProduct = async (req, res) => {
+  const { categoriaId } = req.body;
   try {
-    ProductSchema.safeParse(req.body);
-
-    // Validación para el stock
-    if (req.body.stock < 10) {
+    const productValidator = ProductSchema.safeParse(req.body);
+    if (!productValidator.success) {
       return res.status(400).json({
-        error: "El stock del producto debe ser mayor o igual a 10",
+        error: productValidator.error,
       });
+    }
+
+    const categoriaExistente = await Categorias.findById(categoriaId);
+    if (!categoriaExistente) {
+      return res.status(404).json({ error: "La categoría no existe" });
     }
 
     const producto = new Productos(req.body);
@@ -63,14 +68,20 @@ export const getProductById = async (req, res) => {
 // Actualizar productos
 export const updateProduct = async (req, res) => {
   const { productoId } = req.params;
+  const { categoriaId } = req.body;
   try {
-    updateProductSchema.safeParse(req.body);
-
-    // Validación para el stock
-    if (req.body.stock < 10) {
+    const updateProductValidator = updateProductSchema.safeParse(req.body);
+    if (!updateProductValidator.success) {
       return res.status(400).json({
-        error: "El stock del producto debe ser mayor o igual a 10",
+        error: updateProductValidator.error,
       });
+    }
+
+    if (categoriaId) {
+      const categoriaExistente = await Categorias.findById(categoriaId);
+      if (!categoriaExistente) {
+        return res.status(404).json({ error: "La categoría no existe" });
+      }
     }
 
     const producto = await Productos.findOneAndUpdate(

@@ -7,7 +7,12 @@ import {
 // Registrar un nuevo permiso
 export const newPermissions = async (req, res) => {
   try {
-    permissionsSchema.safeParse(req.body);
+    const permissionsValidate = permissionsSchema.safeParse(req.body);
+    if (!permissionsValidate.success) {
+      return res.status(400).json({
+        error: permissionsValidate.error,
+      });
+    }
 
     const permiso = new Permisos(req.body);
     await permiso.save();
@@ -54,7 +59,14 @@ export const getPermissionsByName = async (req, res) => {
 export const updatePermissions = async (req, res) => {
   const { nombre } = req.params;
   try {
-    updatePermissionsSchema.safeParse(req.body);
+    const updatePermissionsValidate = updatePermissionsSchema.safeParse(
+      req.body
+    );
+    if (!updatePermissionsValidate.success) {
+      return res.status(400).json({
+        error: updatePermissionsValidate.error,
+      });
+    }
 
     const permiso = await Permisos.findOneAndUpdate(
       { nombre: nombre.trim() },

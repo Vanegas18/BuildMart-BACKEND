@@ -11,7 +11,7 @@ const permissionsSchema = new mongoose.Schema(
     descripcion: {
       type: String,
       trim: true,
-      required: [true, "La descripción del permiso es obligatoria"],
+      required: false,
       trim: true,
     },
     estado: { type: String, default: "Activo", enum: ["Activo", "Inactivo"] },

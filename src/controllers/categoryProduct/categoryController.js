@@ -8,7 +8,12 @@ import {
 export const newCategory = async (req, res) => {
   try {
     // Validar datos con Zod
-    categorySchema.safeParse(req.body);
+    const categoryValidator = categorySchema.safeParse(req.body);
+    if (!categoryValidator.success) {
+      return res.status(400).json({
+        error: categoryValidator.error,
+      });
+    }
 
     const nuevaCategoria = new Categoria(req.body);
     await nuevaCategoria.save();
@@ -54,8 +59,12 @@ export const getCategoryById = async (req, res) => {
 export const updateCategoria = async (req, res) => {
   const { categoriaId } = req.params;
   try {
-    updateCategorySchema.safeParse(req.body);
-
+    const updateCategoryValidate = updateCategorySchema.safeParse(req.body);
+    if (!updateCategoryValidate.success) {
+      return res.status(400).json({
+        error: updateCategoryValidate.error,
+      });
+    }
     const categoria = await Categoria.findOneAndUpdate(
       { categoriaId },
       req.body,
