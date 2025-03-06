@@ -6,7 +6,7 @@ const router = express.Router();
 
 // Usamos las validaciones antes de ejecutar el controlador
 router.post('/', validateOrder, createOrder);
-router.get('/', getOrders);
+router.get('/:id?', getOrders);
 router.put('/:id', validateOrderStatus, updateOrderStatus);
 
 export default router;

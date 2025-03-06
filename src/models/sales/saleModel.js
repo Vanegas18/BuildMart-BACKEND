@@ -1,6 +1,7 @@
 import mongoose from 'mongoose';
 
 const saleSchema = new mongoose.Schema({
+    saleId: { type: Number, unique: true },
     clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
     date: { type: Date, default: Date.now },
     productos: [

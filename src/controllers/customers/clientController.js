@@ -3,12 +3,26 @@ import Client from '../../models/customers/clientModel.js';
 
 export const getClients = async (req, res) => {
     try {
+        // Verificamos si existe un ID en los parámetros de la URL
+        const { id } = req.params;
+
+        // Si hay un ID, buscamos el cliente por su ID
+        if (id) {
+            const client = await Client.findById(id);
+            if (!client) {
+                return res.status(404).json({ message: 'Cliente no encontrado' });
+            }
+            return res.status(200).json(client);
+        }
+
+        // Si no hay un ID, devolvemos todos los clientes
         const clients = await Client.find();
         res.status(200).json(clients);
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
 };
+
 
 export const createClient = async (req, res) => {
     const errors = validationResult(req);

@@ -2,22 +2,32 @@ import { validationResult } from 'express-validator';
 import Order from '../../models/orders/orderModel.js';
 import Product from '../../models/products/productModel.js';
 import Client from '../../models/customers/clientModel.js';
+import Sale from "../../models/sales/saleModel.js"
 import mongoose from 'mongoose'; // Asegúrate de importar mongoose
 
 
-//Metodo GET
+// Metodo GET
 export const getOrders = async (req, res) => {
     try {
-        const orders = await Order.find();
-        res.status(200).json(orders);
+        const { id } = req.params; // Obtenemos el id de los parámetros de la URL
+
+        if (id) {
+            const order = await Order.findById(id); // Buscamos el pedido por su id
+            if(!order) {
+                return res.status(404).json({ message: 'Orden no encontrada'})  // Si no se encuentra el pedido
+            }
+            return res.status(202).json(order);
+        }
+
+         const Orders = await Order.find();
+         res.status(200).json(Orders);
     } catch (error) {
-        console.error(error.message); // Para debug
-        res.status(500).json({ message: 'Error al obtener los pedidos, intente nuevamente.' });
+        res.status(500).json({ message: error.message });
     }
 };
 
-//Metodo POST
 
+//Metodo POST
 export const createOrder = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -72,7 +82,6 @@ export const createOrder = async (req, res) => {
         res.status(500).json({ message: 'Error al crear el pedido, intente nuevamente.' });
     }
 };
-
 
 //Metodo PUT
 export const updateOrderStatus = async (req, res) => {

@@ -6,13 +6,34 @@ import mongoose from 'mongoose';
 
 export const getSales = async (req, res) => {
     try {
-        const sales = await Sale.find().populate('clientId'); 
-        res.status(200).json(sales);
+        const { id } = req.params;
+
+        // Si hay un id en los parámetros, buscamos una venta específica
+        if (id) {
+            // Verificar si el id es un ObjectId válido
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).json({ message: 'ID de venta no válido.' });
+            }
+
+            const sale = await Sale.findById(id).populate('saleId'); // Buscamos la venta por su id y poblamos la relación con el cliente
+
+            if (!sale) {
+                return res.status(404).json({ message: 'Venta no encontrada.' }); // Si no se encuentra la venta
+            }
+
+            return res.status(200).json(sale); // Si se encuentra la venta
+        }
+
+        // Si no hay id, obtenemos todas las ventas
+        const sales = await Sale.find().populate('saleId'); // Traemos todas las ventas y poblamos los clientes
+
+        res.status(200).json(sales); // Devolvemos todas las ventas
     } catch (error) {
-        console.error(error.message); 
+        console.error(error.message); // Para debug
         res.status(500).json({ message: 'Error al obtener las ventas, intente nuevamente.' });
     }
 };
+
 
 export const createSale = async (req, res) => {
     const errors = validationResult(req);
@@ -21,6 +42,11 @@ export const createSale = async (req, res) => {
     }
 
     const { clientId, productos } = req.body;
+
+    // Verificamos si productos es un array y tiene al menos un elemento
+    if (!Array.isArray(productos) || productos.length === 0) {
+        return res.status(400).json({ message: 'Debe proporcionar al menos un producto en la venta.' });
+    }
 
     try {
         // Verificar si el clientId es un ObjectId válido
@@ -40,12 +66,12 @@ export const createSale = async (req, res) => {
         for (const producto of productos) {
             const productData = await Product.findById(producto.productId);
             if (!productData) {
-                return res.status(404).json({ message: `Producto con ID ${producto.productId} no encontrado` });
+                return res.status(404).json({ message: `Producto con ID ${producto.productId} no encontrado.` });
             }
 
             // Verificamos que haya suficiente stock
             if (productData.stock < producto.quantity) {
-                return res.status(400).json({ message: `No hay suficiente stock para el producto ${productData.nombre}` });
+                return res.status(400).json({ message: `No hay suficiente stock para el producto ${productData.nombre}.` });
             }
 
             // Calculamos el total de la venta
@@ -55,6 +81,10 @@ export const createSale = async (req, res) => {
             productData.stock -= producto.quantity;
             await productData.save();
         }
+
+        // Generar un saleId único (asegurándonos de que no se repita)
+        const lastSale = await Sale.findOne().sort({ saleId: -1 }).limit(1);
+        const newSaleId = lastSale ? lastSale.saleId + 1 : 1; // Si no hay ventas previas, empieza desde 1
 
         // Crear la venta
         const newSale = new Sale({
