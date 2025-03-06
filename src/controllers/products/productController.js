@@ -18,7 +18,9 @@ export const newProduct = async (req, res) => {
 
     const categoriaExistente = await Categorias.findById(categoriaId);
     if (!categoriaExistente) {
-      return res.status(404).json({ error: "La categoría no existe" });
+      return res
+        .status(404)
+        .json({ error: `La categoría con ID ${categoriaId} no existe` });
     }
 
     const producto = new Productos(req.body);
