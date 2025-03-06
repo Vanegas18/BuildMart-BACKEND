@@ -1,6 +1,5 @@
-import mongoose from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import mongooseSequence from "mongoose-sequence";
-import Schema from "mongoose";
 
 const AutoIncrementFactory = mongooseSequence(mongoose);
 
@@ -26,12 +25,16 @@ const ProductSchema = new mongoose.Schema(
     precio: {
       type: Number,
       required: [true, "El precio es requerido"],
-      min: 0,
+      min: [0, "El precio no puede ser negativo"],
     },
-    stock: { type: Number, default: 10, min: 0 },
+    stock: {
+      type: Number,
+      default: 10,
+      min: [0, "El stock no puede ser negativo"],
+    },
     img: {
       type: String,
-      required: [true, "La URL de la imagen es obligatoria"],
+      required: false,
     },
     estado: { type: String, default: "Activo", enum: ["Activo", "Inactivo"] },
   },

@@ -44,6 +44,6 @@ SuppliersSchema.plugin(AutoIncrementFactory, {
     inc_field: "proveedorId",
 });
 
-const Supplier = mongoose.model('Supplier', SuppliersSchema);
+const Supplier = mongoose.model('Proveedor', SuppliersSchema);
 
 export default Supplier;

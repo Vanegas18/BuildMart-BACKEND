@@ -9,7 +9,10 @@ import {
 export const newRol = async (req, res) => {
   try {
     // Validar datos con ZOD
-    rolesSchema.parse(req.body);
+    const validationResult = rolesSchema.safeParse(req.body);
+    if (!validationResult.success) {
+      return res.status(400).json({ error: validationResult.error.errors });
+    }
 
     const nuevoRol = new Roles(req.body);
     await nuevoRol.save();
@@ -56,7 +59,7 @@ export const getRolByName = async (req, res) => {
 export const updateRol = async (req, res) => {
   const { nombre } = req.params;
   try {
-    updateRolesSchema.parse(req.body);
+    updateRolesSchema.safeParse(req.body);
 
     const rol = await Roles.findOneAndUpdate({ nombre }, req.body, {
       new: true,
@@ -86,7 +89,7 @@ export const updateStateRol = async (req, res) => {
 
     // Validación para no poder desactivar un rol asignado a un usuario
     const usuarioConRol = await Usuarios.findOne({ rol: rol._id });
-    
+
     if (usuarioConRol) {
       return res.status(400).json({
         error:

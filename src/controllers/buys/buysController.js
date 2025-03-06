@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Compra from "../../models/buys/buysModel.js";
 import Producto from "../../models/products/productModel.js";
-import Proveedor from "../../models/Suppliers/suppliersModel.js";
+import Proveedor from "../../models/Suppliers/supplierModel.js";
 import { compraSchema } from "../../middlewares/buys/buysValidations.js";
 
 // Crear una nueva compra
@@ -26,16 +26,17 @@ export const crearCompra = async (req, res) => {
       if (!producto) {
         return res.status(400).json({ error: "Producto no encontrado" });
       }
-      if (item.cantidad <= 0) {
+      if (item.quantity <= 0) {
         return res.status(400).json({ error: "Cantidad no válida para el producto" });
       }
-      total += producto.precio * item.cantidad; // Calcular el total
+      total += producto.precio * item.quantity; // Calcular el total
     }
 
     // Verificar que el proveedor es un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(supplier)) {
-      return res.status(400).json({ error: "Proveedor no válido" });
+      return res.status(400).json({ error: "Proveedor no válido", });
     }
+    
     const proveedor = await Proveedor.findById(supplier);
     if (!proveedor) {
       return res.status(400).json({ error: "Proveedor no encontrado" });
@@ -43,7 +44,6 @@ export const crearCompra = async (req, res) => {
 
     // Crear la compra
     const nuevaCompra = new Compra({
-      nit,
       supplier,
       date: fechaCompra,
       products,
@@ -73,7 +73,7 @@ export const actualizarCompra = async (req, res) => {
       req.body.date = new Date(req.body.date);
     }
 
-    const { nit, supplier, date, products } = req.body;
+    const { supplier, date, products } = req.body;
 
     let total = 0;
 
@@ -105,7 +105,6 @@ export const actualizarCompra = async (req, res) => {
     const compraActualizada = await Compra.findByIdAndUpdate(
       compraId,
       {
-        nit,
         supplier,
         date,
         products,

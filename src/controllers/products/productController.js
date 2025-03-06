@@ -7,19 +7,16 @@ import {
 // Agregar nuevo producto
 export const newProduct = async (req, res) => {
   try {
-    ProductSchema.parse(req.body);
-
-    const producto = new Productos(req.body);
+    ProductSchema.safeParse(req.body);
 
     // Validación para el stock
-    if (producto.stock < 10) {
-      return res.status(201).json({
-        message:
-          "Producto creado correctamente. ALERTA: El stock del producto debe ser mayor a 10",
-        data: producto,
+    if (req.body.stock < 10) {
+      return res.status(400).json({
+        error: "El stock del producto debe ser mayor o igual a 10",
       });
     }
 
+    const producto = new Productos(req.body);
     await producto.save();
 
     res
@@ -67,7 +64,14 @@ export const getProductById = async (req, res) => {
 export const updateProduct = async (req, res) => {
   const { productoId } = req.params;
   try {
-    updateProductSchema.parse(req.body);
+    updateProductSchema.safeParse(req.body);
+
+    // Validación para el stock
+    if (req.body.stock < 10) {
+      return res.status(400).json({
+        error: "El stock del producto debe ser mayor o igual a 10",
+      });
+    }
 
     const producto = await Productos.findOneAndUpdate(
       { productoId },
@@ -83,6 +87,11 @@ export const updateProduct = async (req, res) => {
       data: producto,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: "El nombre del producto ya está en uso" });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };

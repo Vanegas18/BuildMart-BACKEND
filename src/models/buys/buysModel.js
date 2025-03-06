@@ -1,40 +1,42 @@
 import mongoose from "mongoose";
 import mongooseSequence from "mongoose-sequence";
-import Producto from "../products/productModel.js";
-import Proveedor from "../Suppliers/suppliersModel.js";
-
 
 const AutoIncrementFactory = mongooseSequence(mongoose);
 
 const ShoppingSchema = new mongoose.Schema(
   {
-    nit: { 
-      type: String, 
-      required: [true, "El NIT es obligatorio"],
-      unique: [true]
+    supplier: {
+      type: mongoose.Schema.Types.ObjectId, // Referencia al modelo Proveedor
+      ref: "Proveedor", // Nombre del modelo referenciado
+      required: [true, "El proveedor es obligatorio"],
     },
-    supplier: { 
-      type: String, 
-      required: [true, "El nombre del proveedor es obligatorio"]
-    },
-    date: { 
-      type: Date, 
-      required: [true, "La fecha es obligatoria"] 
+    date: {
+      type: Date,
+      required: [true, "La fecha es obligatoria"],
     },
     products: [
       {
-        type: mongoose.Schema.Types.Mixed,
-        validate: {
-          validator: (value) => ShoppingSchema.shape.products.check(value),
-          message: "Producto no válido"
-        }
-      }
+        product: {
+          type: mongoose.Schema.Types.ObjectId, // Referencia al modelo Producto
+          ref: "Producto", // Nombre del modelo referenciado
+          required: [true, "El producto es obligatorio"],
+        },
+        quantity: {
+          type: Number,
+          required: [true, "La cantidad es obligatoria"],
+        },
+      },
     ],
-    total: { 
-      type: Number, 
-      required: [true, "El total es obligatorio"] 
-    }
+    total: {
+      type: Number,
+      required: [true, "El total es obligatorio"],
+    },
+  estado: 
+  {type: String,
+    default: "Activo",
+    enum: ["Activo", "Inactivo"]
   },
+},
   { timestamps: true, versionKey: false }
 );
 

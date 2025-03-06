@@ -1,5 +1,4 @@
-import mongoose from "mongoose";
-import Schema from "mongoose";
+import mongoose, { Schema } from "mongoose";
 
 const rolesSchema = new mongoose.Schema(
   {
@@ -14,6 +13,7 @@ const rolesSchema = new mongoose.Schema(
       {
         type: Schema.Types.ObjectId,
         ref: "permisos",
+        required: [true, "El permiso es requerido"],
       },
     ],
     estado: { type: String, default: "Activo", enum: ["Activo", "Inactivo"] },
