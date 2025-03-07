@@ -1,4 +1,5 @@
 import Categoria from "../../models/categoryProduct/categoryModel.js";
+import LogAuditoria from "../../models/logs/LogAudit.js";
 import {
   categorySchema,
   updateCategorySchema,
@@ -17,6 +18,19 @@ export const newCategory = async (req, res) => {
 
     const nuevaCategoria = new Categoria(req.body);
     await nuevaCategoria.save();
+
+    // Generar log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : null,
+      fecha: new Date(),
+      accion: "crear",
+      entidad: "Categoria",
+      entidadId: nuevaCategoria._id,
+      cambios: {
+        previo: null,
+        nuevo: nuevaCategoria,
+      },
+    });
 
     res
       .status(201)
@@ -60,19 +74,39 @@ export const updateCategoria = async (req, res) => {
   const { categoriaId } = req.params;
   try {
     const updateCategoryValidate = updateCategorySchema.safeParse(req.body);
+
     if (!updateCategoryValidate.success) {
       return res.status(400).json({
         error: updateCategoryValidate.error,
       });
     }
+
+    // Obtener la categoría antes de actualizarla para el log
+    const categoriaAnterior = await Categoria.findOne({ categoriaId });
+
+    if (!categoriaAnterior) {
+      return res.status(404).json({ error: "Categoría no encontrada" });
+    }
+
+    // Actualizar la categoría
     const categoria = await Categoria.findOneAndUpdate(
       { categoriaId },
       req.body,
       { new: true }
     );
-    if (!categoria) {
-      return res.status(404).json({ error: "Categoría no encontrada" });
-    }
+
+    // Generar log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : null,
+      fecha: new Date(),
+      accion: "actualizar",
+      entidad: "Categoria",
+      entidadId: categoriaId,
+      cambios: {
+        previo: categoriaAnterior,
+        nuevo: categoria,
+      },
+    });
 
     res.json({
       message: "Categoría actualizada exitosamente",
