@@ -1,6 +1,7 @@
 import Roles from "../../models/rolesAndPermissions/rolesModel.js";
 import Usuarios from "../../models/users/userModel.js";
 import Permisos from "../../models/rolesAndPermissions/permissionsModel.js";
+import LogAuditoria from "../../models/logs/LogAudit.js";
 import {
   rolesSchema,
   updateRolesSchema,
@@ -28,6 +29,19 @@ export const newRol = async (req, res) => {
 
     const nuevoRol = new Roles(req.body);
     await nuevoRol.save();
+
+    // Generar log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : null,
+      fecha: new Date(),
+      accion: "crear",
+      entidad: "Rol",
+      entidadId: nuevoRol._id,
+      cambios: {
+        previo: null,
+        nuevo: nuevoRol,
+      },
+    });
 
     res.status(201).json({
       message: "Rol creado exitosamente",
@@ -89,19 +103,45 @@ export const updateRol = async (req, res) => {
       }
     }
 
+    const rolAnterior = await Roles.findOne({ nombre });
+
+    if (!rolAnterior) {
+      return res.status(404).json({ error: "Rol no encontrado" });
+    }
+
+    if (rolAnterior.estado === "Inactivo") {
+      return res
+        .status(400)
+        .json({ error: "No se puede modificar el Rol ya que esta Inactivo" });
+    }
+
     const rol = await Roles.findOneAndUpdate({ nombre }, req.body, {
       new: true,
     });
 
-    if (!rol) {
-      return res.status(404).json({ error: "Rol no encontrado" });
-    }
+    // Generar log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : null,
+      fecha: new Date(),
+      accion: "actualizar",
+      entidad: "Rol",
+      entidadId: nombre,
+      cambios: {
+        previo: rolAnterior,
+        nuevo: rol,
+      },
+    });
 
     res.json({
       message: "Rol actualizado exitosamente",
       data: rol,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      return res
+        .status(400)
+        .json({ error: "El nombre del rol ya está en uso" });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };
