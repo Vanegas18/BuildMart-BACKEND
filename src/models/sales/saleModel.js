@@ -1,17 +1,27 @@
-import mongoose from 'mongoose';
+import mongoose, {Schema} from "mongoose";
+import { createAutoIncrementModel } from "../../services/utils/modelHelper.js";
 
 const saleSchema = new mongoose.Schema({
-    saleId: { type: Number, unique: true },
-    clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
-    date: { type: Date, default: Date.now },
-    productos: [
-        {
-            productId: { type: mongoose.Schema.Types.ObjectId, ref: 'productos', required: true },
-            quantity: { type: Number, required: true }
-        }
-    ],
-    total: { type: Number, required: true }
+  ventaId: { type: Number, unique: true },
+  clienteId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "clientes",
+    required: true,
+  },
+  fecha: { type: Date, default: Date.now },
+  productos: [
+    {
+      productoId: {
+        type: Schema.Types.ObjectId,
+        ref: "productos",
+        required: true,
+      },
+      cantidad: { type: Number, required: true },
+    },
+  ],
+  total: { type: Number, required: true },
 });
 
-const Sale = mongoose.model('Sale', saleSchema);
-export default Sale;
+const Ventas = createAutoIncrementModel("ventas", saleSchema, "ventaId");
+
+export default Ventas;

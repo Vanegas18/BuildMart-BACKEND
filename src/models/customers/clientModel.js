@@ -1,23 +1,25 @@
-import mongoose from 'mongoose';
-import mongooseSequence from "mongoose-sequence";
+import mongoose from "mongoose";
+import { createAutoIncrementModel } from "../../services/utils/modelHelper.js";
 
-const AutoIncrementFactory = mongooseSequence(mongoose);
-
-const clientSchema = new mongoose.Schema({
-    clientId: { type: Number, unique: true },
-    name: { type: String, required: true },
-    email: { type: String, required: true, unique: true, match: [/\S+@\S+\.\S+/, 'is invalid'] },
-    phone: { type: String, required: true },
-    address: { type: String, required: true },
-    department: { type: String, required: true },
-    city: { type: String, required: true },
-    status: { type: String, enum: ['activo', 'inactivo'], default: 'activo' }
-},
-{ timestamps: true, versionKey: false }
+const clientSchema = new mongoose.Schema(
+  {
+    clienteId: { type: Number, unique: true },
+    nombre: { type: String, required: true },
+    correo: {
+      type: String,
+      required: true,
+      unique: true,
+      match: [/\S+@\S+\.\S+/, "is invalid"],
+    },
+    telefono: { type: String, required: true },
+    direccion: { type: String, required: true },
+    departamento: { type: String, required: true },
+    ciudad: { type: String, required: true },
+    estado: { type: String, enum: ["activo", "inactivo"], default: "activo" },
+  },
+  { timestamps: true, versionKey: false }
 );
 
-clientSchema.plugin(AutoIncrementFactory, {
-    inc_field: "clientId",
-  });
+const Clients = createAutoIncrementModel("clientes", clientSchema, "clienteId");
 
-export default mongoose.model("Clients", clientSchema);
+export default Clients;

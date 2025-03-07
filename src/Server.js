@@ -28,7 +28,7 @@ class Server {
       products: "/productos",
       compras: "/compras",
       clientes: "/clientes",
-      ordenes: "/ordenes",
+      ordenes: "/pedidos",
       ventas: "/ventas",
     };
     this.app.get("/", (req, res) => {

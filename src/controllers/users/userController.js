@@ -113,12 +113,19 @@ export const getUserById = async (req, res) => {
 // Actualizar usuario
 export const updateUser = async (req, res) => {
   const { usuarioId } = req.params;
+  const { rol } = req.body;
   try {
     const updateUserValidate = updateUserSchema.safeParse(req.body);
     if (!updateUserValidate.success) {
       return res.status(400).json({
         error: updateUserValidate.error,
       });
+    }
+
+    // Verificar que el rol exista
+    const rolExistente = await Role.findById(rol);
+    if (!rolExistente) {
+      return res.status(400).json({ error: "El rol especificado no existe" });
     }
 
     const usuario = await User.findOneAndUpdate({ usuarioId }, req.body, {
@@ -141,18 +148,11 @@ export const updateUser = async (req, res) => {
 // Actualizar estado de usuario
 export const updateStateUser = async (req, res) => {
   const { usuarioId } = req.params;
-  const { rol } = req.body;
   try {
     const usuario = await User.findOne({ usuarioId });
 
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
-    }
-
-    // Verificar que el rol exista
-    const rolExistente = await Role.findById(rol);
-    if (!rolExistente) {
-      return res.status(400).json({ error: "El rol especificado no existe" });
     }
 
     usuario.estado = usuario.estado === "Activo" ? "Inactivo" : "Activo";

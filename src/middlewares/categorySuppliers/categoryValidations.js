@@ -10,8 +10,4 @@ export const categorySchema = z.object({
   estado: z.enum(["Activo", "Inactivo"]).optional(),
 });
 
-export const updateCategorySchema = z.object({
-  nombre: z.string().min(3).optional(),
-  descripcion: z.string().min(3).optional(),
-  estado: z.enum(["Activo", "Inactivo"]).optional(), // Para actualización también
-});
+export const updateCategorySchema = categorySchema.partial();

@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const permissionsSchema = z.object({
+export const categorySchema = z.object({
   nombre: z
     .string()
     .trim()
@@ -8,9 +8,8 @@ export const permissionsSchema = z.object({
   descripcion: z
     .string()
     .trim()
-    .min(5, { message: "La descripción debe tener al menos 5 caracteres" })
-    .optional(),
+    .min(5, { message: "La descripción debe tener al menos 5 caracteres" }),
   estado: z.enum(["Activo", "Inactivo"]).optional(),
 });
 
-export const updatePermissionsSchema = permissionsSchema.partial();
+export const updateCategorySchema = categorySchema.partial();

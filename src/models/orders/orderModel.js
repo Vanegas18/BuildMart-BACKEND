@@ -1,30 +1,35 @@
-import mongoose from 'mongoose';
-import mongooseSequence from "mongoose-sequence";
+import mongoose, { Schema } from "mongoose";
+import { createAutoIncrementModel } from "../../services/utils/modelHelper.js";
 
-const AutoIncrementFactory = mongooseSequence(mongoose);
-
-const orderSchema = new mongoose.Schema({
-    orderId: { type: Number, unique: true },
-    date: { type: Date, default: Date.now },
-    clientId: { type: mongoose.Schema.Types.ObjectId, ref: 'Client', required: true },
+const orderSchema = new mongoose.Schema(
+  {
+    pedidoId: { type: Number, unique: true },
+    fecha: { type: Date, default: Date.now },
+    clienteId: {
+      type: Schema.Types.ObjectId,
+      ref: "clientes",
+      required: true,
+    },
     productos: [
-        {
-            productoId: { type: mongoose.Schema.Types.ObjectId, ref: 'productos', required: true },
-            quantity: { type: Number, required: true }
-        }
+      {
+        productoId: {
+          type: Schema.Types.ObjectId,
+          ref: "productos",
+          required: true,
+        },
+        cantidad: { type: Number, required: true },
+      },
     ],
     total: { type: Number, required: true },
-    status: {
-        type: String,
-        enum: ['pendiente', 'pagado', 'cancelado'],
-        default: 'pendiente'
-    }
-},
-{ timestamps: true, versionKey: false }
+    estado: {
+      type: String,
+      enum: ["pendiente", "pagado", "cancelado"],
+      default: "pendiente",
+    },
+  },
+  { timestamps: true, versionKey: false }
 );
 
-orderSchema.plugin(AutoIncrementFactory, {
-    inc_field: "orderId",
-  });
+const Orders = createAutoIncrementModel("pedidos", orderSchema, "pedidoId");
 
-export default mongoose.model("Orders", orderSchema);
+export default Orders;

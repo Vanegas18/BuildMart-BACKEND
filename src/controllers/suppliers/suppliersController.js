@@ -1,4 +1,4 @@
-import Supplier from "../../models/Suppliers/supplierModel.js";
+import Supplier from "../../models/suppliers/supplierModel.js";
 import {
   supplierSchema,
   updateSupplierSchema,
@@ -7,7 +7,12 @@ import {
 //Registrar un nuevo proveedor
 export const newSupplier = async (req, res) => {
   try {
-    supplierSchema.parse(req.body);
+    const supplierValidate = supplierSchema.safeParse(req.body);
+    if (!supplierValidate.success) {
+      return res.status(400).json({
+        error: supplierValidate.error,
+      });
+    }
 
     const nuevoProveedor = new Supplier(req.body);
     await nuevoProveedor.save();
@@ -48,7 +53,12 @@ export const getSuppliersById = async (req, res) => {
 export const updateSupplier = async (req, res) => {
   const { proveedorId } = req.params;
   try {
-    updateSupplierSchema.parse(req.body);
+    const updateSupplierValidate = updateSupplierSchema.safeParse(req.body);
+    if (!updateSupplierValidate.success) {
+      return res.status(400).json({
+        error: updateSupplierValidate.error,
+      });
+    }
 
     const supplier = await Supplier.findOneAndUpdate(
       { proveedorId },

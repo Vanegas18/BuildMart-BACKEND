@@ -1,7 +1,5 @@
 import mongoose from "mongoose";
-import mongooseSequence from "mongoose-sequence";
-
-const AutoIncrementFactory = mongooseSequence(mongoose);
+import { createAutoIncrementModel } from "../../services/utils/modelHelper.js";
 
 const CategorySchema = new mongoose.Schema(
   {
@@ -22,8 +20,10 @@ const CategorySchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-CategorySchema.plugin(AutoIncrementFactory, {
-  inc_field: "categoriaId",
-});
+const Categoria_Products = createAutoIncrementModel(
+  "categorias_Productos",
+  CategorySchema,
+  "categoriaId"
+);
 
-export default mongoose.model("categoriasProductos", CategorySchema);
+export default Categoria_Products;

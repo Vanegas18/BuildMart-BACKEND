@@ -35,15 +35,4 @@ export const supplierSchema = z.object({
     }),
 });
 
-export const updateSupplierSchema = z.object({
-  nombre: z.string().min(3).trim().optional(),
-  direccion: z.string().min(5).trim().optional(),
-  telefono: z.string().min(10).trim().optional(),
-  correo: z.string().email().optional(),
-  categoriaProveedorId: z
-    .string()
-    .regex(/^[a-fA-F0-9]{24}$/, {
-      message: "El ID de la categoría debe ser un ObjectId válido",
-    })
-    .optional(),
-});
+export const updateSupplierSchema = supplierSchema.partial();

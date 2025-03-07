@@ -1,9 +1,9 @@
-import { z } from "zod";
 import mongoose from "mongoose";
+import { z } from "zod";
 
 // Validación para productos en una compra con cantidad
 const ProductInCompraSchema = z.object({
-  product: z
+  producto: z
     .string()
     .nonempty({ message: "El ID del producto es obligatorio" })
     .refine((value) => mongoose.Types.ObjectId.isValid(value), {
@@ -17,14 +17,25 @@ const ProductInCompraSchema = z.object({
 
 // Validación del esquema de compras
 export const compraSchema = z.object({
-  supplier: z
+  proveedor: z
     .string()
     .nonempty({ message: "El ID del proveedor es obligatorio" })
     .refine((value) => mongoose.Types.ObjectId.isValid(value), {
       message: "El ID del proveedor no es válido",
     }),
-  date: z.string().datetime({
+  fecha: z.string().datetime({
     message: "La fecha debe ser una cadena de fecha y hora válida",
-  }), // Cambiado a z.string().datetime()
-  estado: z.enum(["Activa", "Inactiva"]).optional(),
+  }),
+  productos: z.array(ProductInCompraSchema).nonempty({
+    message: "Debe incluir al menos un producto",
+  }),
+  total: z
+    .number()
+    .positive({
+      message: "El total debe ser un número positivo",
+    })
+    .optional(),
+  estado: z.enum(["Activo", "Inactivo"]).default("Activo"),
 });
+
+export const updateCompraSchema = compraSchema.partial();

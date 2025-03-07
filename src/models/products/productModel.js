@@ -1,7 +1,5 @@
 import mongoose, { Schema } from "mongoose";
-import mongooseSequence from "mongoose-sequence";
-
-const AutoIncrementFactory = mongooseSequence(mongoose);
+import { createAutoIncrementModel } from "../../services/utils/modelHelper.js";
 
 const ProductSchema = new mongoose.Schema(
   {
@@ -19,7 +17,7 @@ const ProductSchema = new mongoose.Schema(
     },
     categoriaId: {
       type: Schema.Types.ObjectId,
-      ref: "categoriasProductos",
+      ref: "categorias_Productos",
       required: [true, "Se debe categorizar el producto"],
     },
     precio: {
@@ -41,8 +39,10 @@ const ProductSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-ProductSchema.plugin(AutoIncrementFactory, {
-  inc_field: "productoId",
-});
+const Products = createAutoIncrementModel(
+  "productos",
+  ProductSchema,
+  "productoId"
+);
 
-export default mongoose.model("productos", ProductSchema);
+export default Products;

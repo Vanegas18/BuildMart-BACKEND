@@ -7,7 +7,12 @@ import {
 //Registrar una categoria de proveedor
 export const newCategorySup = async (req, res) => {
   try {
-    categorySchema.parse(req.body);
+    const catSupplierValidate = categorySchema.safeParse(req.body);
+    if (!catSupplierValidate.success) {
+      return res.status(400).json({
+        error: catSupplierValidate.error,
+      });
+    }
 
     const newCategoria = new CategoriasProveedor(req.body);
     await newCategoria.save();
@@ -57,7 +62,12 @@ export const getCategoriesProvById = async (req, res) => {
 export const updateCategoriesProv = async (req, res) => {
   const { categoriesProvId } = req.params;
   try {
-    updateCategorySchema.parse(req.body);
+    const updateCatProveedorValidate = updateCategorySchema.safeParse(req.body);
+    if (!updateCatProveedorValidate.success) {
+      return res.status(400).json({
+        error: updateCatProveedorValidate.error,
+      });
+    }
 
     const categoriesProv = await CategoriasProveedor.findOneAndUpdate(
       { categoriaProveedorId: categoriesProvId },
