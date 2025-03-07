@@ -1,5 +1,5 @@
 import mongoose, {Schema} from "mongoose";
-import { createAutoIncrementModel } from "../../services/utils/modelHelper.js";
+import { createAutoIncrementModel } from "../../middlewares/modelHelper/modelHelper.js";
 
 const saleSchema = new mongoose.Schema({
   ventaId: { type: Number, unique: true },

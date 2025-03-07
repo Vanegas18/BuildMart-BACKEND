@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import { createAutoIncrementModel } from "../../services/utils/modelHelper.js";
+import { createAutoIncrementModel } from "../../middlewares/modelHelper/modelHelper.js";
 
 const SuppliersSchema = new mongoose.Schema(
   {

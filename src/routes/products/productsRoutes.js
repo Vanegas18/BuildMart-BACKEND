@@ -6,12 +6,15 @@ import {
   updateProduct,
   updateStateProduct,
 } from "../../controllers/products/productController.js";
+import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
+
 const router = express.Router();
 
-router.post("/", newProduct);
 router.get("/", getProductos);
 router.get("/:productoId", getProductById);
-router.put("/:productoId", updateProduct);
-router.patch("/:productoId/estado", updateStateProduct);
+
+router.post("/", verificarAdmin, newProduct);
+router.put("/:productoId", verificarAdmin, updateProduct);
+router.patch("/:productoId/estado", verificarAdmin, updateStateProduct);
 
 export default router;

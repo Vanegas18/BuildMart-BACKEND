@@ -1,7 +1,6 @@
 import mongoose, { Schema } from "mongoose";
-import mongooseSequence from "mongoose-sequence";
+import { createAutoIncrementModel } from "../../middlewares/modelHelper/modelHelper.js";
 
-const AutoIncrementFactory = mongooseSequence(mongoose);
 
 const UserSchema = new mongoose.Schema(
   {
@@ -49,8 +48,10 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-UserSchema.plugin(AutoIncrementFactory, {
-  inc_field: "usuarioId",
-});
+const User = createAutoIncrementModel(
+  "usuarios",
+  UserSchema,
+  "usuarioId"
+);
 
-export default mongoose.model("usuarios", UserSchema);
+export default User;

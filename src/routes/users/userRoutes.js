@@ -9,13 +9,16 @@ import {
   updateStateUser,
   updateUser,
 } from "../../controllers/users/userController.js";
+import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
+
 const router = express.Router();
 
-router.post("/", newUser);
-router.get("/", getUsers);
+router.get("/", verificarAdmin, getUsers);
 router.get("/:usuarioId", getUserById);
+
+router.post("/", newUser);
 router.put("/:usuarioId", updateUser);
-router.patch("/:usuarioId/estado", updateStateUser);
+router.patch("/:usuarioId/estado", verificarAdmin, updateStateUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.post("/restablecer-contrasena", forgotPassword);

@@ -1,4 +1,5 @@
 import express from "express";
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import { dbConnection } from "./config/db.js";
 import categoryProduct from "./routes/categoryProduct/categoryRoutes.js";
@@ -46,6 +47,7 @@ class Server {
   middlewares() {
     this.app.use(cors());
     this.app.use(express.json());
+    this.app.use(cookieParser());
   }
 
   routes() {

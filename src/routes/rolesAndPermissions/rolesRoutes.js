@@ -6,13 +6,16 @@ import {
   updateRol,
   updateStateRol,
 } from "../../controllers/rolesAndPermissions/rolesController.js";
+import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
+
 
 const router = express.Router();
 
-router.post("/", newRol);
-router.get("/", getRoles);
-router.get("/:nombre", getRolByName);
-router.put("/:nombre", updateRol);
-router.patch("/:nombre/estado", updateStateRol);
+router.get("/", verificarAdmin, getRoles);
+router.get("/:nombre", verificarAdmin, getRolByName);
+
+router.post("/", verificarAdmin, newRol);
+router.put("/:nombre", verificarAdmin, updateRol);
+router.patch("/:nombre/estado", verificarAdmin, updateStateRol);
 
 export default router;

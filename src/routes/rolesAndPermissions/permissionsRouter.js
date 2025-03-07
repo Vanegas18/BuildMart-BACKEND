@@ -6,12 +6,15 @@ import {
   updatePermissions,
   updateStatePermissions,
 } from "../../controllers/rolesAndPermissions/permissionsController.js";
+import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
+
 const router = express.Router();
 
-router.post("/", newPermissions);
-router.get("/", getPermissions);
-router.get("/:nombre", getPermissionsByName);
-router.put("/:nombre", updatePermissions);
-router.patch("/:nombre/estado", updateStatePermissions);
+router.post("/", verificarAdmin, newPermissions);
+router.get("/:nombre", verificarAdmin, getPermissionsByName);
 
-export default router
+router.get("/", verificarAdmin, getPermissions);
+router.put("/:nombre", verificarAdmin, updatePermissions);
+router.patch("/:nombre/estado", verificarAdmin, updateStatePermissions);
+
+export default router;

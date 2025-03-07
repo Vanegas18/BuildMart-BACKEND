@@ -7,11 +7,13 @@ import {
   updateCategoria,
   updateStateCategory,
 } from "../../controllers/categoryProduct/categoryController.js";
+import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 
-router.post("/", newCategory);
 router.get("/", getCategories);
 router.get("/:categoriaId", getCategoryById);
-router.put("/:categoriaId", updateCategoria);
-router.patch("/:categoriaId/estado", updateStateCategory);
+
+router.post("/", verificarAdmin, newCategory);
+router.put("/:categoriaId", verificarAdmin, updateCategoria);
+router.patch("/:categoriaId/estado", verificarAdmin, updateStateCategory);
 
 export default router;
