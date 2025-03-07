@@ -4,7 +4,8 @@ export const permissionsSchema = z.object({
   nombre: z
     .string()
     .trim()
-    .min(5, { message: "El nombre debe tener al menos 5 caracteres" }),
+    .min(5, { message: "El nombre debe tener al menos 5 caracteres" })
+    .regex(/^[a-zA-Z\s]+$/, { message: "Nombre solo puede contener letras" }),
   descripcion: z
     .string()
     .trim()
