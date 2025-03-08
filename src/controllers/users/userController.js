@@ -2,6 +2,7 @@ import User from "../../models/users/userModel.js";
 import bcrypt from "bcrypt";
 import Role from "../../models/rolesAndPermissions/rolesModel.js";
 import { createAccessToken } from "../../middlewares/users/jwt.js";
+import LogAuditoria from "../../models/logs/LogAudit.js";
 import {
   UserSchema,
   updateUserSchema,
@@ -15,19 +16,33 @@ import {
 // Registrar un nuevo usuario
 export const newUser = async (req, res) => {
   try {
-    let { nombre, correo, contraseña, telefono, direccion, rol } = req.body;
+    let { cedula, nombre, correo, contraseña, telefono, direccion, rol } =
+      req.body;
+
+    // Verificar unicidad manualmente antes de procesar
+    const cedulaExistente = await User.findOne({ cedula });
+    if (cedulaExistente) {
+      return res.status(400).json({ error: "La cédula ya está registrada" });
+    }
+
+    const nombreExistente = await User.findOne({ nombre });
+    if (nombreExistente) {
+      return res.status(400).json({ error: "El nombre ya está registrado" });
+    }
 
     // Hasheo de la contraseña
     const passwordHash = await bcrypt.hash(contraseña, 10);
 
     // Validaciones con zod
     const userValidate = UserSchema.safeParse({
+      cedula,
       nombre,
       correo,
       contraseña,
       telefono,
       direccion,
     });
+
     if (!userValidate.success) {
       return res.status(400).json({
         error: userValidate.error,
@@ -52,6 +67,7 @@ export const newUser = async (req, res) => {
     }
 
     const usuario = new User({
+      cedula,
       nombre,
       correo,
       telefono,
@@ -61,6 +77,20 @@ export const newUser = async (req, res) => {
     });
 
     await usuario.save();
+
+    // Generar log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : "SISTEMA",
+      fecha: new Date(),
+      accion: "crear",
+      entidad: "Usuario",
+      entidadId: usuario._id,
+      cambios: {
+        previo: null,
+        nuevo: usuario,
+      },
+    });
+
     await enviarCorreoRegistro(correo, rolEncontrado.nombre);
 
     // TOKEN PARA EL REGISTRO
@@ -113,13 +143,30 @@ export const getUserById = async (req, res) => {
 // Actualizar usuario
 export const updateUser = async (req, res) => {
   const { usuarioId } = req.params;
-  const { rol } = req.body;
+  const { rol, nombre, cedula } = req.body;
   try {
     const updateUserValidate = updateUserSchema.safeParse(req.body);
     if (!updateUserValidate.success) {
       return res.status(400).json({
         error: updateUserValidate.error,
       });
+    }
+
+    const usuarioAnterior = await User.findOne({ usuarioId });
+
+    if (!usuarioAnterior) {
+      return res.status(404).json({ error: "Usuario no encontrado" });
+    }
+
+    // Verificar unicidad manualmente antes de procesar
+    const cedulaExistente = await User.findOne({ cedula });
+    if (cedulaExistente) {
+      return res.status(400).json({ error: "La cédula ya está registrada" });
+    }
+
+    const nombreExistente = await User.findOne({ nombre });
+    if (nombreExistente) {
+      return res.status(400).json({ error: "El nombre ya está registrado" });
     }
 
     // Verificar que el rol exista
@@ -132,15 +179,29 @@ export const updateUser = async (req, res) => {
       new: true,
     });
 
-    if (!usuario) {
-      return res.status(404).json({ error: "Usuario no encontrado" });
-    }
+    // Generar log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : "SISTEMA",
+      fecha: new Date(),
+      accion: "actualizar",
+      entidad: "Usuario",
+      entidadId: usuarioId,
+      cambios: {
+        previo: usuarioAnterior,
+        nuevo: usuario,
+      },
+    });
 
     res.json({
       message: "Usuario actualizado exitosamente",
       data: usuario,
     });
   } catch (error) {
+    // Validaciones de unicidad
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({ error: `El ${field} ya está en uso` });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -197,6 +258,11 @@ export const loginUser = async (req, res) => {
       message: "Usuario logueado correctamente",
     });
   } catch (error) {
+    // Validaciones de unicidad
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({ error: `El ${field} ya está en uso` });
+    }
     res.status(400).json({ error: error.errors || error.message });
   }
 };

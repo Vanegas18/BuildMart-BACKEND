@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 export const UserSchema = z.object({
+  cedula: z.string().regex(/^\d{7,15}$/, {
+    message: "La cedula debe contener entre 7 y 15 dígitos numéricos",
+  }),
   nombre: z
     .string()
     .trim()
