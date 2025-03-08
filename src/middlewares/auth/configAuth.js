@@ -60,7 +60,7 @@ export const verificarAdmin = async (req, res, next) => {
     // Verificar si es administrador (probablemente necesites ajustar esto según tu modelo)
     // Parece que usas un ObjectId para el rol, así que debes comparar con el ID correcto
     // o implementar una función para verificar si el rol es de administrador
-    if (usuario.rol.toString() !== "67ca3cad97cdae1f2b812a95") {
+    if (usuario.rol.toString() !== "67cb9a4fa5866273d8830fad") {
       // Ajusta este ID al ObjectId del rol admin
       return res.status(403).json({
         error: "Acceso denegado. Se requiere rol de administrador",
