@@ -1,5 +1,6 @@
 import Productos from "../../models/products/productModel.js";
 import Categorias from "../../models/categoryProduct/categoryModel.js";
+import LogAuditoria from "../../models/logs/LogAudit.js";
 import {
   ProductSchema,
   updateProductSchema,
@@ -25,6 +26,19 @@ export const newProduct = async (req, res) => {
 
     const producto = new Productos(req.body);
     await producto.save();
+
+    // Generar log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : "SISTEMA",
+      fecha: new Date(),
+      accion: "crear",
+      entidad: "Producto",
+      entidadId: producto._id,
+      cambios: {
+        previo: null,
+        nuevo: producto,
+      },
+    });
 
     res
       .status(201)
@@ -79,6 +93,12 @@ export const updateProduct = async (req, res) => {
       });
     }
 
+    const productoAnterior = await Productos.findOne({ productoId });
+
+    if (!productoAnterior) {
+      return res.status(404).json({ error: "Producto no encontrada" });
+    }
+
     if (categoriaId) {
       const categoriaExistente = await Categorias.findById(categoriaId);
       if (!categoriaExistente) {
@@ -91,6 +111,20 @@ export const updateProduct = async (req, res) => {
       req.body,
       { new: true }
     );
+
+    // Generar log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : "SISTEMA",
+      fecha: new Date(),
+      accion: "actualizar",
+      entidad: "Producto",
+      entidadId: productoId,
+      cambios: {
+        previo: productoAnterior,
+        nuevo: producto,
+      },
+    });
+
     if (!producto) {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
