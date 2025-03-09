@@ -16,6 +16,7 @@ export const newCategory = async (req, res) => {
       });
     }
 
+    // Crear y guardar la nueva categoría
     const nuevaCategoria = new Categoria(req.body);
     await nuevaCategoria.save();
 
@@ -32,15 +33,18 @@ export const newCategory = async (req, res) => {
       },
     });
 
+    // Responder con éxito y datos de la categoría creada
     res
       .status(201)
       .json({ message: "Categoría creada exitosamente", data: nuevaCategoria });
   } catch (error) {
+    // Manejar error de duplicación
     if (error.code === 11000) {
       return res
         .status(400)
         .json({ error: "El nombre de la categoria ya está en uso" });
     }
+    // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -73,8 +77,8 @@ export const getCategoryById = async (req, res) => {
 export const updateCategoria = async (req, res) => {
   const { categoriaId } = req.params;
   try {
+    // Validar datos de actualización con Zod
     const updateCategoryValidate = updateCategorySchema.safeParse(req.body);
-
     if (!updateCategoryValidate.success) {
       return res.status(400).json({
         error: updateCategoryValidate.error,
@@ -83,7 +87,6 @@ export const updateCategoria = async (req, res) => {
 
     // Obtener la categoría antes de actualizarla para el log
     const categoriaAnterior = await Categoria.findOne({ categoriaId });
-
     if (!categoriaAnterior) {
       return res.status(404).json({ error: "Categoría no encontrada" });
     }
@@ -92,7 +95,7 @@ export const updateCategoria = async (req, res) => {
     const categoria = await Categoria.findOneAndUpdate(
       { categoriaId },
       req.body,
-      { new: true }
+      { new: true } // Devuelve el documento actualizado
     );
 
     // Generar log de auditoría
@@ -108,16 +111,19 @@ export const updateCategoria = async (req, res) => {
       },
     });
 
+    // Responder con éxito y datos actualizados
     res.json({
       message: "Categoría actualizada exitosamente",
       data: categoria,
     });
   } catch (error) {
+    // Manejar error de duplicación
     if (error.code === 11000) {
       return res
         .status(400)
         .json({ error: "El nombre de la categoria ya está en uso" });
     }
+    // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -126,22 +132,42 @@ export const updateCategoria = async (req, res) => {
 export const updateStateCategory = async (req, res) => {
   const { categoriaId } = req.params;
   try {
+    // Buscar la categoría por ID
     const categoria = await Categoria.findOne({ categoriaId });
     if (!categoria) {
       return res.status(404).json({ error: "Categoría no encontrada" });
     }
 
+    // Guardar estado anterior para el log de auditoría
+    const estadoAnterior = categoria.estado;
+
     // Alternar el estado entre "activo" e "inactivo"
-    categoria.estado = categoria.estado === "Activo" ? "Inactivo" : "Activo";
+    categoria.estado = categoria.estado === "Activa" ? "Inactiva" : "Activa";
+
+    // Guarda la categoria
     await categoria.save();
 
+    // Registrar cambio en log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : null,
+      fecha: new Date(),
+      accion: "cambiar_estado",
+      entidad: "Categoria",
+      entidadId: categoriaId,
+      cambios: {
+        previo: { estado: estadoAnterior },
+        nuevo: { estado: categoria.estado },
+      },
+    });
+
+    // Responder con éxito y datos actualizados
     res.json({
-      message: `Estado de categoría actualizado exitosamente`,
+      message: `Cambio de estado exitosamente`,
       data: categoria,
     });
   } catch (error) {
     res
       .status(500)
-      .json({ error: "Error al cambiar el estado de la categoría" });
+      .json({ error: "Error al cambiar el estado de la categoría", error });
   }
 };

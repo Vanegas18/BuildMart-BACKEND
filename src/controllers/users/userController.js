@@ -8,23 +8,24 @@ import {
   updateUserSchema,
 } from "../../middlewares/users/userValidation.js";
 import {
-  transporter,
   enviarCorreoRegistro,
-  generarHtmlRecuperacion,
+  enviarCorreoRecuperacion,
 } from "../../middlewares/users/configNodemailer.js";
 
 // Registrar un nuevo usuario
 export const newUser = async (req, res) => {
   try {
+    // Datos requeridos en la petición
     let { cedula, nombre, correo, contraseña, telefono, direccion, rol } =
       req.body;
 
-    // Verificar unicidad manualmente antes de procesar
+    // Verificar unicidad de la cedula
     const cedulaExistente = await User.findOne({ cedula });
     if (cedulaExistente) {
       return res.status(400).json({ error: "La cédula ya está registrada" });
     }
 
+    // Verificar unicidad de el nombre
     const nombreExistente = await User.findOne({ nombre });
     if (nombreExistente) {
       return res.status(400).json({ error: "El nombre ya está registrado" });
@@ -42,16 +43,15 @@ export const newUser = async (req, res) => {
       telefono,
       direccion,
     });
-
     if (!userValidate.success) {
       return res.status(400).json({
         error: userValidate.error,
       });
     }
 
-    // Si el usuario no envía un rol, asignamos "Cliente" por defecto
+    // Asignar rol por defecto "Cliente" si no se especifica
     if (!rol) {
-      const rolCliente = await Role.findOne({ nombre: "Cliente" }); // Buscar el ID del rol "Cliente"
+      const rolCliente = await Role.findOne({ nombre: "Cliente" });
       if (!rolCliente) {
         return res.status(500).json({
           error: "El rol por defecto 'Cliente' no existe en la base de datos",
@@ -59,13 +59,13 @@ export const newUser = async (req, res) => {
       }
       rol = rolCliente._id; // Asignamos su ID
     }
-
     // Va a buscar el rol mandado por el body, en caso de que lo encuentre lo asigna
     const rolEncontrado = await Role.findById(rol);
     if (!rolEncontrado) {
       return res.status(400).json({ error: "El rol especificado no existe" });
     }
 
+    // Crear y guardar el nuevo usuario
     const usuario = new User({
       cedula,
       nombre,
@@ -75,7 +75,6 @@ export const newUser = async (req, res) => {
       contraseña: passwordHash,
       rol,
     });
-
     await usuario.save();
 
     // Generar log de auditoría
@@ -91,15 +90,16 @@ export const newUser = async (req, res) => {
       },
     });
 
+    // Enviar correo de bienvenida al usuario
     await enviarCorreoRegistro(correo, rolEncontrado.nombre);
 
-    // TOKEN PARA EL REGISTRO
+    // Generar token JWT para la sesión
     const token = await createAccessToken({ id: usuario.usuarioId });
 
-    // Se crea la cookie con el nombre cookie, y con el valor de la cookie
+    /// Establecer cookie de autenticación
     res.cookie("token", token);
 
-    // Respuesta
+    // Respuesta exitosa
     res.status(201).json({
       message: "Usuario creado exitosamente",
       data: usuario,
@@ -110,6 +110,7 @@ export const newUser = async (req, res) => {
       const field = Object.keys(error.keyValue)[0];
       return res.status(400).json({ error: `El ${field} ya está en uso` });
     }
+    // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -129,7 +130,6 @@ export const getUserById = async (req, res) => {
   const { usuarioId } = req.params;
   try {
     const usuario = await User.findOne({ usuarioId }).populate("rol", "nombre");
-
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
@@ -145,6 +145,7 @@ export const updateUser = async (req, res) => {
   const { usuarioId } = req.params;
   const { rol, nombre, cedula } = req.body;
   try {
+    // Validar datos de actualización con Zod
     const updateUserValidate = updateUserSchema.safeParse(req.body);
     if (!updateUserValidate.success) {
       return res.status(400).json({
@@ -152,32 +153,52 @@ export const updateUser = async (req, res) => {
       });
     }
 
+    // Obtener usuario antes de actualizar para el log
     const usuarioAnterior = await User.findOne({ usuarioId });
-
     if (!usuarioAnterior) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
-    // Verificar unicidad manualmente antes de procesar
-    const cedulaExistente = await User.findOne({ cedula });
-    if (cedulaExistente) {
-      return res.status(400).json({ error: "La cédula ya está registrada" });
+    // Verificar unicidad de cédula (solo si se está cambiando)
+    if (cedula && cedula !== usuarioAnterior.cedula) {
+      const cedulaExistente = await User.findOne({
+        cedula,
+        usuarioId: { $ne: usuarioId },
+      });
+
+      if (cedulaExistente) {
+        return res.status(400).json({ error: "La cédula ya está registrada" });
+      }
     }
 
-    const nombreExistente = await User.findOne({ nombre });
-    if (nombreExistente) {
-      return res.status(400).json({ error: "El nombre ya está registrado" });
+    // Verificar unicidad de nombre (solo si se está cambiando)
+    if (nombre && nombre !== usuarioAnterior.nombre) {
+      const nombreExistente = await User.findOne({
+        nombre,
+        usuarioId: { $ne: usuarioId },
+      });
+
+      if (nombreExistente) {
+        return res.status(400).json({ error: "El nombre ya está registrado" });
+      }
     }
 
-    // Verificar que el rol exista
-    const rolExistente = await Role.findById(rol);
-    if (!rolExistente) {
-      return res.status(400).json({ error: "El rol especificado no existe" });
+    // Verificar que el rol exista (si se está actualizando)
+    if (rol) {
+      const rolExistente = await Role.findById(rol);
+      if (!rolExistente) {
+        return res.status(400).json({ error: "El rol especificado no existe" });
+      }
     }
 
-    const usuario = await User.findOneAndUpdate({ usuarioId }, req.body, {
-      new: true,
-    });
+    // Actualizar usuario y obtener documento actualizado
+    const usuario = await User.findOneAndUpdate(
+      { usuarioId },
+      req.body,
+      {
+        new: true,
+      } // Devuelve el documento actualizado
+    );
 
     // Generar log de auditoría
     await LogAuditoria.create({
@@ -192,6 +213,7 @@ export const updateUser = async (req, res) => {
       },
     });
 
+    // Responder con éxito y datos actualizados
     res.json({
       message: "Usuario actualizado exitosamente",
       data: usuario,
@@ -202,6 +224,7 @@ export const updateUser = async (req, res) => {
       const field = Object.keys(error.keyValue)[0];
       return res.status(400).json({ error: `El ${field} ya está en uso` });
     }
+    // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -210,15 +233,35 @@ export const updateUser = async (req, res) => {
 export const updateStateUser = async (req, res) => {
   const { usuarioId } = req.params;
   try {
+    // Buscar usuario por ID
     const usuario = await User.findOne({ usuarioId });
-
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
+    // Guardar estado anterior para el log
+    const estadoAnterior = usuario.estado;
+
+    // Alternar estado entre "Activo" e "Inactivo"
     usuario.estado = usuario.estado === "Activo" ? "Inactivo" : "Activo";
+
+    // Guarda el usuario
     await usuario.save();
 
+    // Generar log de auditoría para el cambio de estado
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : "SISTEMA",
+      fecha: new Date(),
+      accion: "cambiar_estado",
+      entidad: "Usuario",
+      entidadId: usuario._id,
+      cambios: {
+        previo: { estado: estadoAnterior },
+        nuevo: { estado: usuario.estado },
+      },
+    });
+
+    // Responder con éxito y datos actualizados
     res.json({
       message: `Cambio de estado exitosamente`,
       data: usuario,
@@ -232,14 +275,23 @@ export const updateStateUser = async (req, res) => {
 export const loginUser = async (req, res) => {
   const { correo, contraseña } = req.body;
   try {
+    // Buscar usuario por correo
     const usuarioPorCorreo = await User.findOne({ correo });
-
     if (!usuarioPorCorreo) {
       return res.status(400).json({
         message: "No se encontró a ningún usuario registrado con ese correo",
       });
     }
 
+    // Verificar si el usuario está activo
+    if (usuarioPorCorreo.estado !== "Activo") {
+      return res.status(403).json({
+        message:
+          "Esta cuenta se encuentra inactiva. Contacte al administrador.",
+      });
+    }
+
+    // Verificar contraseña
     const passwordCompare = usuarioPorCorreo
       ? await bcrypt.compare(contraseña, usuarioPorCorreo.contraseña)
       : false;
@@ -250,55 +302,104 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // TOKEN PARA EL INICIO DE SESIÓN
+    // Registrar evento de inicio de sesión
+    await LogAuditoria.create({
+      usuario: usuarioPorCorreo._id,
+      fecha: new Date(),
+      accion: "iniciar_sesion",
+      entidad: "Usuario",
+      entidadId: usuarioPorCorreo._id,
+      cambios: null,
+    });
+
+    // Generar token JWT para la sesión
     const token = await createAccessToken({ id: usuarioPorCorreo.usuarioId });
 
-    res.cookie("token", token);
-    res.status(201).json({
+    // Establecer cookie de autenticación
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    res.status(200).json({
       message: "Usuario logueado correctamente",
+      usuario: {
+        nombre: usuarioPorCorreo.nombre,
+        correo: usuarioPorCorreo.correo,
+      },
     });
   } catch (error) {
-    // Validaciones de unicidad
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyValue)[0];
-      return res.status(400).json({ error: `El ${field} ya está en uso` });
-    }
-    res.status(400).json({ error: error.errors || error.message });
+    console.error("Error en login:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
   }
 };
 
 // Cerrar sesión
 export const logoutUser = async (req, res) => {
-  res.cookie("token", "", { expires: new Date(0) });
-  return res.json("Usuario deslogueado correctamente");
+  try {
+    // Registrar evento de cierre de sesión si hay un usuario autenticado
+    if (req.usuario) {
+      await LogAuditoria.create({
+        usuario: req.usuario.id,
+        fecha: new Date(),
+        accion: "cerrar_sesion",
+        entidad: "Usuario",
+        entidadId: req.usuario.id,
+        cambios: null,
+      });
+    }
+
+    // Invalidar la cookie de sesión
+    res.cookie("token", "", {
+      expires: new Date(0),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+
+    return res.json({ message: "Sesión cerrada correctamente" });
+  } catch (error) {
+    console.error("Error en logout:", error);
+    res.status(500).json({ error: "Error al cerrar sesión" });
+  }
 };
 
 // Solicitar recuperar contraseña
 export const forgotPassword = async (req, res) => {
   const { correo, nuevaContraseña } = req.body;
   try {
+    // Verificar que el usuario exista
     const usuario = await User.findOne({ correo });
-
     if (!usuario) {
       return res
         .status(404)
         .json({ error: "No existe una cuenta con ese correo" });
     }
 
+    // Guardar contraseña anterior para el log (hash)
+    const contraseñaAnterior = usuario.contraseña;
+
     // Hasher la nueva contraseña
     const passwordHash = await bcrypt.hash(nuevaContraseña, 10);
     usuario.contraseña = passwordHash;
     await usuario.save();
 
-    // Opciones de correo
-    const mailOptions = {
-      from: process.env.userGmail,
-      to: usuario.correo,
-      subject: "🔑 Contraseña Restablecida",
-      html: generarHtmlRecuperacion(),
-    };
+    // Registrar cambio de contraseña en el log de auditoría
+    await LogAuditoria.create({
+      usuario: usuario._id,
+      fecha: new Date(),
+      accion: "recuperar_contraseña",
+      entidad: "Usuario",
+      entidadId: usuario._id,
+      cambios: {
+        previo: { contraseña: contraseñaAnterior },
+        nuevo: { contraseña: passwordHash },
+      },
+    });
 
-    await transporter.sendMail(mailOptions);
+    // Enviar correo de bienvenida al usuario
+    await enviarCorreoRecuperacion(correo);
 
     res.json({
       message:

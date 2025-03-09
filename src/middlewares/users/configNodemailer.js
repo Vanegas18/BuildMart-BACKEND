@@ -13,7 +13,8 @@ export const transporter = nodemailer.createTransport({
 
 // Función para generar HTML dinámico del correo según el rol
 export const generarHtmlCorreo = (nombreRol) => {
-  let resetUrl = "http://localhost:3000/views/Usuario/usuario.html"; // Mejor usar una variable de entorno
+  const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+  const resetUrl = `${baseUrl}/views/Usuario/usuario.html`;
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
@@ -43,7 +44,7 @@ export const generarHtmlCorreo = (nombreRol) => {
       </p>
       <hr style="border: none; border-top: 1px solid #ddd;">
       <p style="color: #aaa; font-size: 12px; text-align: center;">
-        © 2025 Build Mart. Todos los derechos reservados.
+        © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
       </p>
     </div>
   `;
@@ -55,7 +56,7 @@ export const enviarCorreoRegistro = async (emailDestino, rol) => {
     const htmlCorreo = generarHtmlCorreo(rol);
 
     const mailOptions = {
-      from: userGmail,
+      from: `"Build Mart" <${userGmail}>`,
       to: emailDestino,
       subject: `🎉 Build Mart - Registro Exitoso`,
       html: htmlCorreo,
@@ -71,6 +72,9 @@ export const enviarCorreoRegistro = async (emailDestino, rol) => {
 };
 
 export const generarHtmlRecuperacion = () => {
+  const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+  const loginUrl = `${baseUrl}/views/Login.html`;
+
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
       <h2 style="color: #333; text-align: center;">Restablecimiento de Contraseña en <span style="color: #007bff;">Build Mart</span> 🔑</h2>
@@ -79,7 +83,7 @@ export const generarHtmlRecuperacion = () => {
       </p>
       
       <div style="text-align: center; margin: 20px 0;">
-        <a href="http://localhost:3000/views/Login.html" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
+        <a href="${loginUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
           🔐 Iniciar Sesión
         </a>
       </div>
@@ -89,8 +93,39 @@ export const generarHtmlRecuperacion = () => {
       </p>
       <hr style="border: none; border-top: 1px solid #ddd;">
       <p style="color: #aaa; font-size: 12px; text-align: center;">
-        © 2025 Build Mart. Todos los derechos reservados.
+        © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
       </p>
     </div>
   `;
+};
+
+export const enviarCorreoRecuperacion = async (emailDestino) => {
+  if (!emailDestino) {
+    throw new Error("El email del destinatario es obligatorio");
+  }
+
+  try {
+    const { userGmail } = process.env;
+    const htmlCorreo = generarHtmlRecuperacion();
+
+    const mailOptions = {
+      from: `"Build Mart" <${userGmail}>`,
+      to: emailDestino,
+      subject: `🔐 Build Mart - Contraseña Restablecida`,
+      html: htmlCorreo,
+      text: `Su contraseña en Build Mart ha sido actualizada correctamente. Ahora puede iniciar sesión con su nueva contraseña.`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(
+      `✅ Correo de recuperación enviado a ${emailDestino}: ${info.messageId}`
+    );
+    return info;
+  } catch (error) {
+    console.error(
+      `❌ Error al enviar el correo de recuperación a ${emailDestino}:`,
+      error
+    );
+    throw error;
+  }
 };

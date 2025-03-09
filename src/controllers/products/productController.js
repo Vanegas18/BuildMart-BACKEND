@@ -10,6 +10,7 @@ import {
 export const newProduct = async (req, res) => {
   const { categoriaId } = req.body;
   try {
+    // Validar datos con Zod
     const productValidator = ProductSchema.safeParse(req.body);
     if (!productValidator.success) {
       return res.status(400).json({
@@ -17,6 +18,7 @@ export const newProduct = async (req, res) => {
       });
     }
 
+    // Validar si el ID a asociar existe
     const categoriaExistente = await Categorias.findById(categoriaId);
     if (!categoriaExistente) {
       return res
@@ -24,6 +26,7 @@ export const newProduct = async (req, res) => {
         .json({ error: `La categoría con ID ${categoriaId} no existe` });
     }
 
+    // Crear y guardar el nuevo producto
     const producto = new Productos(req.body);
     await producto.save();
 
@@ -40,15 +43,18 @@ export const newProduct = async (req, res) => {
       },
     });
 
+    // Responder con éxito y datos del producto guardado
     res
       .status(201)
       .json({ message: "Producto creado exitosamente", data: producto });
   } catch (error) {
+    // Manejar error de duplicación
     if (error.code === 11000) {
       return res
         .status(400)
         .json({ error: "El nombre del producto ya está en uso" });
     }
+    // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -86,6 +92,7 @@ export const updateProduct = async (req, res) => {
   const { productoId } = req.params;
   const { categoriaId } = req.body;
   try {
+    // Validar datos de actualización con Zod
     const updateProductValidator = updateProductSchema.safeParse(req.body);
     if (!updateProductValidator.success) {
       return res.status(400).json({
@@ -93,23 +100,27 @@ export const updateProduct = async (req, res) => {
       });
     }
 
+    // Obtener la categoría antes de actualizarla para el log
     const productoAnterior = await Productos.findOne({ productoId });
-
     if (!productoAnterior) {
       return res.status(404).json({ error: "Producto no encontrada" });
     }
 
+    // Validar si el ID a asociar existe
     if (categoriaId) {
       const categoriaExistente = await Categorias.findById(categoriaId);
       if (!categoriaExistente) {
-        return res.status(404).json({ error: "La categoría no existe" });
+        return res
+          .status(404)
+          .json({ error: `La categoría con ID ${categoriaId} no existe` });
       }
     }
 
+    // Actualizar el producto
     const producto = await Productos.findOneAndUpdate(
       { productoId },
       req.body,
-      { new: true }
+      { new: true } // Devuelve el documento actualizado
     );
 
     // Generar log de auditoría
@@ -125,20 +136,19 @@ export const updateProduct = async (req, res) => {
       },
     });
 
-    if (!producto) {
-      return res.status(404).json({ error: "Producto no encontrado" });
-    }
-
+    // Responder con éxito y datos actualizados
     res.json({
       message: "Producto actualizado exitosamente",
       data: producto,
     });
   } catch (error) {
+    // Manejar error de duplicación
     if (error.code === 11000) {
       return res
         .status(400)
         .json({ error: "El nombre del producto ya está en uso" });
     }
+    // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -147,14 +157,36 @@ export const updateProduct = async (req, res) => {
 export const updateStateProduct = async (req, res) => {
   const { productoId } = req.params;
   try {
+    // Buscar el producto por ID
     const producto = await Productos.findOne({ productoId });
     if (!producto) {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
 
-    producto.estado = producto.estado === "Activo" ? "Inactivo" : "Activo";
+    // Guardar estado anterior para el log de auditoría
+    const estadoAnterior = producto.estado;
+
+    // Alternar el estado entre "Disponible" y "No disponible"
+    producto.estado =
+      producto.estado === "Disponible" ? "No disponible" : "Disponible";
+
+    // Guarda el producto
     await producto.save();
 
+    // Registrar cambio en log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : null,
+      fecha: new Date(),
+      accion: "cambiar_estado",
+      entidad: "Producto",
+      entidadId: productoId,
+      cambios: {
+        previo: { estado: estadoAnterior },
+        nuevo: { estado: producto.estado },
+      },
+    });
+
+    // Responder con éxito y datos actualizados
     res.json({
       message: `Cambio de estado exitosamente`,
       data: producto,

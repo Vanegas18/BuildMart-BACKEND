@@ -12,7 +12,7 @@ export const categorySchema = z.object({
     .string()
     .trim()
     .min(5, { message: "La descripción debe tener al menos 5 caracteres" }),
-  estado: z.enum(["Activo", "Inactivo"]).optional(),
+  estado: z.enum(["Activa", "Inactiva"]).optional(),
 });
 
 export const updateCategorySchema = categorySchema.partial();

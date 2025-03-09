@@ -15,7 +15,7 @@ const CategorySchema = new mongoose.Schema(
       trim: true,
       required: [true, "La descripción es obligatoria"],
     },
-    estado: { type: String, default: "Activo", enum: ["Activo", "Inactivo"] },
+    estado: { type: String, default: "Activa", enum: ["Activa", "Inactiva"] },
   },
   { timestamps: true, versionKey: false }
 );

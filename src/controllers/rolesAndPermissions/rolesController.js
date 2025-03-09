@@ -6,6 +6,7 @@ import {
   rolesSchema,
   updateRolesSchema,
 } from "../../middlewares/rolesAndPermissions/rolesValidations.js";
+import { resolveContent } from "nodemailer/lib/shared/index.js";
 
 // Registrar un nuevo rol
 export const newRol = async (req, res) => {
@@ -27,6 +28,7 @@ export const newRol = async (req, res) => {
         .json({ error: `El permiso con ID ${permisos} no existe` });
     }
 
+    // Crear y guardar el nuevo rol
     const nuevoRol = new Roles(req.body);
     await nuevoRol.save();
 
@@ -43,16 +45,19 @@ export const newRol = async (req, res) => {
       },
     });
 
+    // Responder con éxito y datos del rol creado
     res.status(201).json({
       message: "Rol creado exitosamente",
       data: nuevoRol,
     });
   } catch (error) {
+    // Manejar error de duplicación
     if (error.code === 11000) {
       return res
         .status(400)
         .json({ error: "El nombre del rol ya está en uso" });
     }
+    // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -86,6 +91,7 @@ export const updateRol = async (req, res) => {
   const { nombre } = req.params;
   const { permisos } = req.body;
   try {
+    // Validar datos de actualización con Zod
     const updateRolesValidate = updateRolesSchema.safeParse(req.body);
     if (!updateRolesValidate.success) {
       return res.status(400).json({
@@ -103,21 +109,20 @@ export const updateRol = async (req, res) => {
       }
     }
 
+    // Obtener el rol antes de actualizarla para el log
     const rolAnterior = await Roles.findOne({ nombre });
-
     if (!rolAnterior) {
       return res.status(404).json({ error: "Rol no encontrado" });
     }
 
-    if (rolAnterior.estado === "Inactivo") {
-      return res
-        .status(400)
-        .json({ error: "No se puede modificar el Rol ya que esta Inactivo" });
-    }
-
-    const rol = await Roles.findOneAndUpdate({ nombre }, req.body, {
-      new: true,
-    });
+    // Actualizar el rol
+    const rol = await Roles.findOneAndUpdate(
+      { nombre },
+      req.body,
+      {
+        new: true,
+      } // Devuelve el documento actualizado
+    );
 
     // Generar log de auditoría
     await LogAuditoria.create({
@@ -132,16 +137,19 @@ export const updateRol = async (req, res) => {
       },
     });
 
+    // Responder con éxito y datos actualizados
     res.json({
       message: "Rol actualizado exitosamente",
       data: rol,
     });
   } catch (error) {
+    // Manejar error de duplicación
     if (error.code === 11000) {
       return res
         .status(400)
         .json({ error: "El nombre del rol ya está en uso" });
     }
+    // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }
 };
@@ -150,6 +158,7 @@ export const updateRol = async (req, res) => {
 export const updateStateRol = async (req, res) => {
   const { nombre } = req.params;
   try {
+    // Buscar el rol por Nombre
     const rol = await Roles.findOne({ nombre });
     if (!rol) {
       return res.status(404).json({ error: "Rol no encontrado" });
@@ -157,7 +166,6 @@ export const updateStateRol = async (req, res) => {
 
     // Validación para no poder desactivar un rol asignado a un usuario
     const usuarioConRol = await Usuarios.findOne({ rol: rol._id });
-
     if (usuarioConRol) {
       return res.status(400).json({
         error:
@@ -165,15 +173,34 @@ export const updateStateRol = async (req, res) => {
       });
     }
 
+    // Guardar estado anterior para el log de auditoría
+    const estadoAnterior = rol.estado;
+
     // Alternar estado entre Activo o Inactivo
     rol.estado = rol.estado === "Activo" ? "Inactivo" : "Activo";
+
+    // Guarda la rol
     await rol.save();
 
+    // Registrar cambio en log de auditoría
+    await LogAuditoria.create({
+      usuario: req.usuario ? req.usuario.id : null,
+      fecha: new Date(),
+      accion: "cambiar_estado",
+      entidad: "Rol",
+      entidadId: nombre,
+      cambios: {
+        previo: { estado: estadoAnterior },
+        nuevo: { estado: rol.estado },
+      },
+    });
+
+    // Responder con éxito y datos actualizados
     res.json({
       message: `Cambio de estado exitosamente`,
       data: rol,
     });
   } catch (error) {
-    res.status(500).json({ error: "Error al cambiar el estado de el rol" });
+    res.status(500).json({ error: "Error al cambiar el estado de el rol", error });
   }
 };

@@ -34,7 +34,11 @@ const ProductSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    estado: { type: String, default: "Activo", enum: ["Activo", "Inactivo"] },
+    estado: {
+      type: String,
+      default: "Disponible",
+      enum: ["Disponible", "No disponible"],
+    },
   },
   { timestamps: true, versionKey: false }
 );
