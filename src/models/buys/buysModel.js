@@ -1,9 +1,10 @@
-import mongoose, { Schema } from "mongoose";
-import { createAutoIncrementModel } from "../../middlewares/modelHelper/modelHelper.js";
+import mongoose from "mongoose";
+import mongooseSequence from "mongoose-sequence";
 
-const ShoppingSchema = new mongoose.Schema(
+const AutoIncrementFactory = mongooseSequence(mongoose);
+
+const ComprasSchema = new mongoose.Schema(
   {
-    compraId: { type: Number, unique: true },
     proveedor: {
       type: mongoose.Schema.Types.ObjectId, // Referencia al modelo Proveedor
       ref: "Proveedor", // Nombre del modelo referenciado
@@ -16,7 +17,7 @@ const ShoppingSchema = new mongoose.Schema(
     productos: [
       {
         producto: {
-          type: Schema.Types.ObjectId, // Referencia al modelo Producto
+          type: mongoose.Schema.Types.ObjectId, // Referencia al modelo Producto
           ref: "Producto", // Nombre del modelo referenciado
           required: [true, "El producto es obligatorio"],
         },
@@ -28,12 +29,20 @@ const ShoppingSchema = new mongoose.Schema(
     ],
     total: {
       type: Number,
+      required: [true, "El total es obligatorio"],
     },
-    estado: { type: String, default: "Activo", enum: ["Activo", "Inactivo"] },
+    estado: {
+      type: String,
+      default: "Pendiente",
+      enum: ["Pendiente", "Procesando", "Completado", "Cancelado"],
+    },
   },
   { timestamps: true, versionKey: false }
 );
 
-const Buys = createAutoIncrementModel("compras", ShoppingSchema, "compraId");
+ComprasSchema.plugin(AutoIncrementFactory, {
+  inc_field: "compraId",
+});
 
-export default Buys;
+const Compra = mongoose.model("Compras", ComprasSchema);
+export default Compra;

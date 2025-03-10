@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
-import { createAutoIncrementModel } from "../../middlewares/modelHelper/modelHelper.js";
+import mongooseSequence from "mongoose-sequence";
+
+const AutoIncrementFactory = mongooseSequence(mongoose);
 
 const CategoriaProveedorSchema = new mongoose.Schema(
   {
@@ -9,6 +11,7 @@ const CategoriaProveedorSchema = new mongoose.Schema(
       required: [true, "El nombre es obligatorio"],
       minlength: 3,
       trim: true,
+      unique: true,
     },
     descripcion: {
       type: String,
@@ -20,10 +23,13 @@ const CategoriaProveedorSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-const Categoria_Proveedores = createAutoIncrementModel(
-  "categoria_Proveedores",
-  CategoriaProveedorSchema,
-  "categoriaProveedorId"
+CategoriaProveedorSchema.plugin(AutoIncrementFactory, {
+  inc_field: "categoriaProveedorId",
+});
+
+const CategoriasProveedor = mongoose.model(
+  "CategoriasProveedor",
+  CategoriaProveedorSchema
 );
 
-export default Categoria_Proveedores;
+export default CategoriasProveedor;

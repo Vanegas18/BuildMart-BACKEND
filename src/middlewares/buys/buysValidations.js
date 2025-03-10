@@ -1,8 +1,8 @@
-import mongoose from "mongoose";
 import { z } from "zod";
+import mongoose from "mongoose";
 
 // Validación para productos en una compra con cantidad
-const ProductInCompraSchema = z.object({
+const ProductoEnCompraSchema = z.object({
   producto: z
     .string()
     .nonempty({ message: "El ID del producto es obligatorio" })
@@ -23,19 +23,21 @@ export const compraSchema = z.object({
     .refine((value) => mongoose.Types.ObjectId.isValid(value), {
       message: "El ID del proveedor no es válido",
     }),
-  fecha: z.string().datetime({
-    message: "La fecha debe ser una cadena de fecha y hora válida",
-  }),
-  productos: z.array(ProductInCompraSchema).nonempty({
-    message: "Debe incluir al menos un producto",
-  }),
-  total: z
-    .number()
-    .positive({
-      message: "El total debe ser un número positivo",
+  fecha: z.string().datetime({ message: "La fecha debe ser una cadena de fecha y hora válida" }), 
+  productos: z
+    .array(ProductoEnCompraSchema)
+    .nonempty({ message: "Debe haber al menos un producto" }),
+  estado: z
+    .enum(["Pendiente", "Procesando", "Completado", "Cancelado"], {
+      message: "El estado solo puede ser 'Pendiente', 'Procesando', 'Completado' o 'Cancelado'",
     })
     .optional(),
-  estado: z.enum(["Activo", "Inactivo"]).default("Activo"),
 });
 
-export const updateCompraSchema = compraSchema.partial();
+// Validación del esquema de actualización de compras
+export const updateCompraSchema = z.object({
+  estado: z
+    .enum(["Pendiente", "Procesando", "Completado", "Cancelado"], {
+      message: "El estado solo puede ser 'Pendiente', 'Procesando', 'Completado' o 'Cancelado'",
+    }).optional()
+});

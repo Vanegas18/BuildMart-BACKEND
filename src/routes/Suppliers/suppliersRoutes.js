@@ -1,12 +1,11 @@
 import express from "express";
 const router = express.Router();
-import{
+import {
     getSuppliers,
     getSuppliersById,
     newSupplier,
-    updateStateSupplier,
     updateSupplier,
-    // deleteSupplier,
+    updateStateSupplier,
 } from "../../controllers/Suppliers/suppliersController.js";
 
 router.post("/", newSupplier);
@@ -15,6 +14,6 @@ router.get("/:proveedorId", getSuppliersById);
 router.put("/:proveedorId", updateSupplier);
 router.patch("/:proveedorId/estado", updateStateSupplier);
 
-// router.delete("/:proveedorId", deleteSupplier);
+// router.delete("/:proveedorId", eliminarProveedor);
 
 export default router;

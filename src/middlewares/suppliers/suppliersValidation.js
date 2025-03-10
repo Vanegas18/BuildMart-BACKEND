@@ -3,9 +3,9 @@ import { z } from "zod";
 export const supplierSchema = z.object({
   nit: z
     .string()
-    .min(10, { message: "El nit debe tener al menos 10 caracteres" })
+    .min(9, { message: "El NIT debe tener al menos 9 caracteres" })
     .trim()
-    .nonempty({ message: "El nit es obligatorio" }),
+    .nonempty({ message: "El NIT es obligatorio" }),
   nombre: z
     .string()
     .min(3, { message: "El nombre debe tener al menos 3 caracteres" })
@@ -33,6 +33,22 @@ export const supplierSchema = z.object({
     .regex(/^[a-fA-F0-9]{24}$/, {
       message: "El ID de la categoría debe ser un ObjectId válido",
     }),
+  estado: z
+    .enum(["Activo", "Inactivo"], {
+      message: "El estado solo puede ser 'Activo' o 'Inactivo'",
+    })
+    .optional(),
 });
 
-export const updateSupplierSchema = supplierSchema.partial();
+export const updateSupplierSchema = z.object({
+  nombre: z.string().min(3).trim().optional(),
+  direccion: z.string().min(5).trim().optional(),
+  telefono: z.string().min(10).trim().optional(),
+  correo: z.string().email().optional(),
+  categoriaProveedorId: z
+    .string()
+    .regex(/^[a-fA-F0-9]{24}$/, {
+      message: "El ID de la categoría debe ser un ObjectId válido",
+    })
+    .optional(),
+});

@@ -4,13 +4,17 @@ import {
   updateCategorySchema,
 } from "../../middlewares/categorySuppliers/categoryValidations.js";
 
-//Registrar una categoria de proveedor
+// Registrar una categoría de proveedor
 export const newCategorySup = async (req, res) => {
   try {
-    const catSupplierValidate = categorySchema.safeParse(req.body);
-    if (!catSupplierValidate.success) {
+    // Validar los datos de la categoría con Zod
+    const categoryValidator = categorySchema.safeParse(req.body);
+    if (!categoryValidator.success) {
       return res.status(400).json({
-        error: catSupplierValidate.error,
+        error: categoryValidator.error.errors.map((err) => ({
+          path: err.path.join('.'),
+          message: err.message,
+        })),
       });
     }
 
@@ -22,11 +26,17 @@ export const newCategorySup = async (req, res) => {
       data: newCategoria,
     });
   } catch (error) {
-    res.status(400).json({ error: error.errors || error.message });
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res
+        .status(400)
+        .json({ error: `El ${field} ya está en uso` });
+    }
+    res.status(500).json({ error: error.message || error.errors });
   }
 };
 
-//Obtener las categorias del proveedor
+// Obtener las categorías del proveedor
 export const getCategoriesProv = async (req, res) => {
   try {
     const categoriasProv = await CategoriasProveedor.find();
@@ -38,7 +48,7 @@ export const getCategoriesProv = async (req, res) => {
   }
 };
 
-//Obtener categorías del proveedor por id
+// Obtener categorías del proveedor por id
 export const getCategoriesProvById = async (req, res) => {
   const { categoriesProvId } = req.params;
   try {
@@ -58,14 +68,18 @@ export const getCategoriesProvById = async (req, res) => {
   }
 };
 
-//Actualizar categorías del proveedor
+// Actualizar categorías del proveedor
 export const updateCategoriesProv = async (req, res) => {
   const { categoriesProvId } = req.params;
   try {
-    const updateCatProveedorValidate = updateCategorySchema.safeParse(req.body);
-    if (!updateCatProveedorValidate.success) {
+    // Validar los datos actualizados con Zod
+    const updateCategoryValidator = updateCategorySchema.safeParse(req.body);
+    if (!updateCategoryValidator.success) {
       return res.status(400).json({
-        error: updateCatProveedorValidate.error,
+        error: updateCategoryValidator.error.errors.map((err) => ({
+          path: err.path.join('.'),
+          message: err.message,
+        })),
       });
     }
 
@@ -85,11 +99,17 @@ export const updateCategoriesProv = async (req, res) => {
       data: categoriesProv,
     });
   } catch (error) {
-    res.status(400).json({ error: error.errors || error.message });
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      return res
+        .status(400)
+        .json({ error: `El ${field} ya está en uso` });
+    }
+    res.status(500).json({ error: error.message || error.errors });
   }
 };
 
-//Cambiar el estado de la categoria del proveedor(Activo o inactivo)
+// Cambiar el estado de la categoría del proveedor (Activo o Inactivo)
 export const updateStateCategoria = async (req, res) => {
   const { categoriesProvId } = req.params;
   try {

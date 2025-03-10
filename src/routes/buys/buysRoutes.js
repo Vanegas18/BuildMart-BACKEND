@@ -4,16 +4,14 @@ import {
   crearCompra,
   obtenerCompra,
   obtenerCompras,
-  actualizarCompra,
+  actualizarEstadoCompra,
   eliminarCompra,
-  cambiarEstadoCompra,
 } from "../../controllers/buys/buysController.js";
 
 router.get("/", obtenerCompras);
 router.post("/", crearCompra);
-router.get("/:compraId", obtenerCompra);
-router.put("/:compraId", actualizarCompra);
+router.get("/:id", obtenerCompra);
+router.put("/:id/estado", actualizarEstadoCompra); // Asegúrate de que el parámetro se llame `compraId`
 router.delete("/:id", eliminarCompra);
-router.patch("/:compraId/estado", cambiarEstadoCompra);
 
 export default router;
