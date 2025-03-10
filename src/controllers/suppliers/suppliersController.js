@@ -4,7 +4,7 @@ import CategoriasProveedor from "../../models/categorySuppliers/catSuppliersMode
 import {
   supplierSchema,
   updateSupplierSchema,
-} from "../../middlewares/suppliers/suppliersValidations.js";
+} from "../../middlewares/suppliers/suppliersValidation.js";
 
 // Registrar un nuevo proveedor
 export const newSupplier = async (req, res) => {
