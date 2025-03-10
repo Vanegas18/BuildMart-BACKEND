@@ -1,6 +1,6 @@
 import Productos from "../../models/products/productModel.js";
 import Categorias from "../../models/categoryProduct/categoryModel.js";
-import LogAuditoria from "../../models/logs/LogAudit.js";
+import LogAuditoria from "../../models/logsModel/LogAudit.js";
 import {
   ProductSchema,
   updateProductSchema,

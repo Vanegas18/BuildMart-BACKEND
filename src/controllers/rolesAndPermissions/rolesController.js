@@ -1,7 +1,7 @@
 import Roles from "../../models/rolesAndPermissions/rolesModel.js";
 import Usuarios from "../../models/users/userModel.js";
 import Permisos from "../../models/rolesAndPermissions/permissionsModel.js";
-import LogAuditoria from "../../models/logs/LogAudit.js";
+import LogAuditoria from "../../models/logsModel/LogAudit.js";
 import {
   rolesSchema,
   updateRolesSchema,

@@ -2,7 +2,7 @@ import User from "../../models/users/userModel.js";
 import bcrypt from "bcrypt";
 import Role from "../../models/rolesAndPermissions/rolesModel.js";
 import { createAccessToken } from "../../middlewares/users/jwt.js";
-import LogAuditoria from "../../models/logs/LogAudit.js";
+import LogAuditoria from "../../models/logsModel/LogAudit.js";
 import {
   UserSchema,
   updateUserSchema,
