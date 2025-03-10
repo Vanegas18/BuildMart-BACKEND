@@ -7,12 +7,14 @@ import {
     updateSupplier,
     updateStateSupplier,
 } from "../../controllers/Suppliers/suppliersController.js";
+import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 
-router.post("/", newSupplier);
-router.get("/", getSuppliers);
-router.get("/:proveedorId", getSuppliersById);
-router.put("/:proveedorId", updateSupplier);
-router.patch("/:proveedorId/estado", updateStateSupplier);
+
+router.post("/",verificarAdmin, newSupplier);
+router.get("/",verificarAdmin, getSuppliers);
+router.get("/:proveedorId",verificarAdmin, getSuppliersById);
+router.put("/:proveedorId",verificarAdmin, updateSupplier);
+router.patch("/:proveedorId/estado",verificarAdmin, updateStateSupplier);
 
 // router.delete("/:proveedorId", eliminarProveedor);
 
