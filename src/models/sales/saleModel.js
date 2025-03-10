@@ -1,6 +1,7 @@
-import mongoose, {Schema} from "mongoose";
+import mongoose, { Schema } from "mongoose";
 import { createAutoIncrementModel } from "../../middlewares/modelHelper/modelHelper.js";
 
+// Definir el esquema para las ventas
 const saleSchema = new mongoose.Schema({
   ventaId: { type: Number, unique: true },
   clienteId: {
@@ -20,8 +21,14 @@ const saleSchema = new mongoose.Schema({
     },
   ],
   total: { type: Number, required: true },
+  estado: {
+    type: String,
+    enum: ["Pendiente", "Completada", "Cancelada", "Reembolsada"], // Agregamos el nuevo estado "Reembolsada"
+    default: "Pendiente", // Valor por defecto
+  },
 });
 
+// Crear el modelo para las ventas
 const Ventas = createAutoIncrementModel("ventas", saleSchema, "ventaId");
 
 export default Ventas;

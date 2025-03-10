@@ -32,52 +32,61 @@ export const createOrder = async (req, res) => {
   }
 
   const { clienteId, productos } = req.body;
+
   try {
     // Verificar si el clientId es un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(clienteId)) {
-      return res
-        .status(400)
-        .json({ message: "El clientId proporcionado no es válido." });
+      return res.status(400).json({ message: "El clientId proporcionado no es válido." });
     }
 
     // Verificar si el cliente existe y su estado
-    const client = await Client.findOne({ _id: clienteId }); // Usar _id para la búsqueda si clienteId es ObjectId
+    const client = await Client.findById(clienteId); // Usamos _id para la búsqueda si clienteId es ObjectId
     if (!client) {
-      return res
-        .status(404)
-        .json({ message: `Cliente con ID ${clienteId} no encontrado` });
-    }
-    if (client.status === "inactivo") {
-      return res
-        .status(400)
-        .json({
-          message: "No se puede crear la orden, el cliente está inactivo.",
-        });
+      return res.status(404).json({ message: `Cliente con ID ${clienteId} no encontrado` });
     }
 
-    // Verificar si la cantidad de productos solicitados es mayor que el stock disponible
+    if (client.estado === "inactivo") {
+      return res.status(400).json({
+        message: "No se puede crear la orden, el cliente está inactivo.",
+      });
+    }
+
+    // Verificar el estado de cada producto, la cantidad en stock y la cantidad solicitada
     for (const producto of productos) {
-      const productoData = await Product.findById(producto.producto); // Usamos el modelo Productos
+      const productoData = await Product.findById(producto.productoId); // Usamos productoId para la búsqueda
+
       if (!productoData) {
-        return res
-          .status(404)
-          .json({
-            message: `Producto con ID ${producto.productoId} no encontrado`,
-          });
+        return res.status(404).json({
+          message: `Producto con ID ${producto.productoId} no encontrado.`,
+        });
       }
-      if (producto.quantity > productoData.stock) {
-        return res
-          .status(400)
-          .json({
-            message: `El producto ${productoData.nombre} solo tiene ${productoData.stock} unidades en stock, no puedes pedir ${producto.quantity}.`,
-          });
+
+      // Verificar si el estado del producto es "No disponible"
+      if (productoData.estado === "No disponible") {
+        return res.status(400).json({
+          message: `El producto ${productoData.nombre} no está disponible para la venta.`,
+        });
+      }
+
+      // Verificar si la cantidad solicitada es mayor que el stock disponible
+      if (producto.cantidad > productoData.stock) {
+        return res.status(400).json({
+          message: `El producto ${productoData.nombre} solo tiene ${productoData.stock} unidades en stock, no puedes pedir ${producto.cantidad}.`,
+        });
+      }
+
+      // Verificar que la cantidad solicitada no sea 0
+      if (producto.cantidad <= 0) {
+        return res.status(400).json({
+          message: `La cantidad solicitada para el producto ${productoData.nombre} no puede ser cero.`,
+        });
       }
     }
 
     // Calcular el total del pedido
     let total = 0;
     for (const producto of productos) {
-      const productoData = await Product.findById(producto.producto); // Usamos el modelo Productos
+      const productoData = await Product.findById(producto.productoId); // Usamos productoId para la búsqueda
       total += productoData.precio * producto.cantidad; // Calculamos el total con el precio y la cantidad
     }
 
@@ -85,7 +94,7 @@ export const createOrder = async (req, res) => {
     const newOrder = new Order({
       clienteId,
       productos: productos.map((p) => ({
-        productoId: p.producto,
+        productoId: p.productoId,
         cantidad: p.cantidad,
       })),
       total,
@@ -95,9 +104,7 @@ export const createOrder = async (req, res) => {
     res.status(201).json(newOrder); // Respondemos con el pedido creado
   } catch (error) {
     console.error(error.message);
-    res
-      .status(500)
-      .json({ message: "Error al crear el pedido, intente nuevamente." });
+    res.status(500).json({ message: "Error al crear el pedido, intente nuevamente." });
   }
 };
 

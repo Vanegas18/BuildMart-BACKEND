@@ -1,58 +1,78 @@
 import { validationResult } from 'express-validator';
-import Client from '../../models/customers/clientModel.js';
+import Clients from '../../models/customers/clientModel.js'; // Importamos el modelo de Clientes
+import mongoose from 'mongoose'; // Para validar ObjectId si es necesario
 
+// Obtener todos los clientes o un cliente específico
 export const getClients = async (req, res) => {
     try {
-        // Verificamos si existe un ID en los parámetros de la URL
         const { id } = req.params;
 
-        // Si hay un ID, buscamos el cliente por su ID
+        // Si hay un id en los parámetros, buscamos un cliente específico
         if (id) {
-            const client = await Client.findById(id);
-            if (!client) {
-                return res.status(404).json({ message: 'Cliente no encontrado' });
+            // Verificar si el id es un ObjectId válido
+            if (!mongoose.Types.ObjectId.isValid(id)) {
+                return res.status(400).json({ message: 'ID de cliente no válido.' });
             }
-            return res.status(200).json(client);
+
+            const client = await Clients.findById(id); // Buscamos el cliente por su id
+
+            if (!client) {
+                return res.status(404).json({ message: 'Cliente no encontrado.' }); // Si no se encuentra el cliente
+            }
+
+            return res.status(200).json(client); // Devolvemos el cliente encontrado
         }
 
-        // Si no hay un ID, devolvemos todos los clientes
-        const clients = await Client.find();
-        res.status(200).json(clients);
+        // Si no hay id, obtenemos todos los clientes
+        const clients = await Clients.find();
+        res.status(200).json(clients); // Devolvemos todos los clientes
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error(error.message);
+        res.status(500).json({ message: 'Error al obtener los clientes, intente nuevamente.' });
     }
 };
 
+// Crear un nuevo cliente
 export const createClient = async (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { name, email, phone, address, department, city } = req.body;
+    const { nombre, correo, telefono, direccion, departamento, ciudad, estado } = req.body;
 
     try {
-        const newClient = new Client({
-            name,
-            email,
-            phone,
-            address,
-            department,
-            city
+        // Verificar si el correo ya está registrado
+        const existingClient = await Clients.findOne({ correo });
+        if (existingClient) {
+            return res.status(400).json({ message: 'El correo ya está registrado.' });
+        }
+
+        // Crear el nuevo cliente
+        const newClient = new Clients({
+            nombre,
+            correo,
+            telefono,
+            direccion,
+            departamento,
+            ciudad,
+            estado
         });
 
         await newClient.save();
-        res.status(201).json(newClient);
+        res.status(201).json({ message: 'Cliente creado exitosamente.', client: newClient });
     } catch (error) {
-        res.status(500).json({ message: error.message });
+        console.error(error.message);
+        res.status(500).json({ message: 'Error al crear el cliente, intente nuevamente.' });
     }
 };
 
+// Actualizar un cliente existente
 export const updateClient = async (req, res) => {
     const { id } = req.params;  // ID del cliente a actualizar
-    const { name, email, phone, address, department, city, status } = req.body;
+    const { nombre, correo, telefono, direccion, departamento, ciudad, estado } = req.body;
 
-    // Verifica si hay errores de validación
+    // Verificar si hay errores de validación
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
@@ -60,25 +80,25 @@ export const updateClient = async (req, res) => {
 
     try {
         // Buscar el cliente por ID
-        const client = await Client.findById(id);
+        const client = await Clients.findById(id);
         if (!client) {
             return res.status(404).json({ message: 'Cliente no encontrado.' });
         }
 
         // Actualizar los datos del cliente
-        client.name = name || client.name;
-        client.email = email || client.email;
-        client.phone = phone || client.phone;
-        client.address = address || client.address;
-        client.department = department || client.department;
-        client.city = city || client.city;
-        client.status = status || client.status;
+        client.nombre = nombre || client.nombre;
+        client.correo = correo || client.correo;
+        client.telefono = telefono || client.telefono;
+        client.direccion = direccion || client.direccion;
+        client.departamento = departamento || client.departamento;
+        client.ciudad = ciudad || client.ciudad;
+        client.estado = estado || client.estado;
 
         // Guardar los cambios
         await client.save();
 
         // Responder con el cliente actualizado
-        res.status(200).json(client);
+        res.status(200).json({ message: 'Cliente actualizado exitosamente.', client });
     } catch (error) {
         console.error(error.message);  // Para debug
         res.status(500).json({ message: 'Error al actualizar el cliente, intente nuevamente.' });

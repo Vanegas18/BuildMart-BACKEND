@@ -1,5 +1,5 @@
 import express from 'express';
-import { createSale, getSales } from '../../controllers/sales/saleController.js';
+import { createSale, getSales, updateSaleStatus } from '../../controllers/sales/saleController.js';
 
 const router = express.Router();
 
@@ -8,5 +8,8 @@ router.get('/:id?', getSales);
 
 // Ruta para crear una nueva venta
 router.post('/', createSale);
+
+router.put('/:id', updateSaleStatus);
+
 
 export default router;
