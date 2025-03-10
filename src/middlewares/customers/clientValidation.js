@@ -1,47 +1,41 @@
-// Validaciones para la creación de un cliente
-import { body } from "express-validator";
+import { z } from 'zod';
 
-export const validateClient = [
-  body("nombre").notEmpty().withMessage("El nombre es obligatorio"),
-  body("correo").isEmail().withMessage("Debe ser un correo válido"),
-  body("telefono").isMobilePhone().withMessage("El teléfono debe ser válido"),
-  body("direccion").notEmpty().withMessage("La dirección es obligatoria"),
-  body("departamento").notEmpty().withMessage("El departamento es obligatorio"),
-  body("ciudad").notEmpty().withMessage("La ciudad es obligatoria"),
-];
+// Validación para la creación de un cliente
+export const clientSchema = z.object({
+  nombre: z
+    .string()
+    .trim()
+    .nonempty({ message: "El nombre es obligatorio" }),
 
-// import { z } from "zod";
+  correo: z
+    .string()
+    .email({ message: "Debe ser un correo válido" })
+    .nonempty({ message: "El correo es obligatorio" }),
 
-// export const clientSchema = z.object({
-//   nombre: z.string().trim().nonempty({ message: "El nombre es obligatorio" }),
+  telefono: z
+    .string()
+    .nonempty({ message: "El teléfono es obligatorio" })
+    .regex(/^[0-9+\s()-]{8,15}$/, {
+      message: "El teléfono debe tener un formato válido",
+    }),
 
-//   correo: z
-//     .string()
-//     .trim()
-//     .email({ message: "Debe ser un correo válido" })
-//     .nonempty({ message: "El correo es obligatorio" }),
+  direccion: z
+    .string()
+    .trim()
+    .nonempty({ message: "La dirección es obligatoria" }),
 
-//   telefono: z
-//     .string()
-//     .trim()
-//     .nonempty({ message: "El teléfono es obligatorio" })
-//     .regex(/^[0-9+\s()-]{8,15}$/, {
-//       message: "El teléfono debe tener un formato válido",
-//     }),
+  departamento: z
+    .string()
+    .trim()
+    .nonempty({ message: "El departamento es obligatorio" }),
 
-//   direccion: z
-//     .string()
-//     .trim()
-//     .nonempty({ message: "La dirección es obligatoria" }),
+  ciudad: z
+    .string()
+    .trim()
+    .nonempty({ message: "La ciudad es obligatoria" }),
 
-//   departamento: z
-//     .string()
-//     .trim()
-//     .nonempty({ message: "El departamento es obligatorio" }),
+  estado: z.enum(["activo", "inactivo"]).default("activo").optional(),
+});
 
-//   ciudad: z.string().trim().nonempty({ message: "La ciudad es obligatoria" }),
-
-//   estado: z.enum(["activo", "inactivo"]).default("activo").optional(),
-// });
-
-// export const updateClientSchema = clientSchema.partial();
+// Esquema de validación para actualizar el cliente (campo parcial)
+export const updateClientSchema = clientSchema.partial();

@@ -2,7 +2,6 @@ import { validationResult } from "express-validator";
 import Order from "../../models/orders/orderModel.js";
 import Product from "../../models/products/productModel.js";
 import Client from "../../models/customers/clientModel.js";
-import Sale from "../../models/sales/saleModel.js";
 import mongoose from "mongoose"; // Asegúrate de importar mongoose
 
 // Metodo GET
@@ -25,7 +24,7 @@ export const getOrders = async (req, res) => {
   }
 };
 
-//Metodo POST
+// Metodo POST
 export const createOrder = async (req, res) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -102,10 +101,10 @@ export const createOrder = async (req, res) => {
   }
 };
 
-//Metodo PUT
+// Metodo PUT (Actualizar el estado de la orden)
 export const updateOrderStatus = async (req, res) => {
   const { id } = req.params;
-  const { status } = req.body;
+  const { estado } = req.body;
 
   try {
     // Buscar la orden y sus productos asociados
@@ -116,14 +115,14 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     // Si el estado de la orden ya es "pagado", no se puede cancelar
-    if (order.status === "pagado" && status === "cancelado") {
+    if (order.estado === "pagado" && estado === "cancelado") {
       return res
         .status(400)
         .json({ message: "La orden ya está pagada, no se puede cancelar." });
     }
 
     // Si el estado de la orden ya es "cancelado", no se puede modificar
-    if (order.status === "cancelado") {
+    if (order.estado === "cancelado") {
       return res
         .status(400)
         .json({
@@ -132,8 +131,8 @@ export const updateOrderStatus = async (req, res) => {
     }
 
     // Si el estado es "pagado", descontamos el stock solo si la orden está en estado "pendiente"
-    if (status === "pagado") {
-      if (order.status === "pagado") {
+    if (estado === "pagado") {
+      if (order.estado === "pagado") {
         // Si ya está pagado, no permitimos modificar el estado
         return res
           .status(400)
@@ -143,7 +142,7 @@ export const updateOrderStatus = async (req, res) => {
       }
 
       // Descontamos el stock de los productos solo si el estado está en "pendiente"
-      if (order.status !== "pagado") {
+      if (order.estado !== "pagado") {
         for (const producto of order.productos) {
           const productData = await Product.findById(producto.productoId);
           if (!productData) {
@@ -155,7 +154,7 @@ export const updateOrderStatus = async (req, res) => {
           }
 
           // Verificamos que haya suficiente stock
-          if (productData.stock < producto.quantity) {
+          if (productData.stock < producto.cantidad) {
             return res
               .status(400)
               .json({
@@ -164,21 +163,21 @@ export const updateOrderStatus = async (req, res) => {
           }
 
           // Descontamos el stock
-          productData.stock -= producto.quantity;
+          productData.stock -= producto.cantidad;
           await productData.save();
         }
       }
 
       // Finalmente, cambiamos el estado de la orden a "pagado"
-      order.status = "pagado";
+      order.estado = "pagado";
     }
 
     // Si el estado cambia a "cancelado", no se puede cambiar más si ya está en "pagado"
-    if (status === "cancelado" && order.status !== "pagado") {
-      order.status = "cancelado";
-    } else if (status !== "cancelado" && status !== "pagado") {
+    if (estado === "cancelado" && order.estado !== "pagado") {
+      order.estado = "cancelado";
+    } else if (estado !== "cancelado" && estado !== "pagado") {
       // Si el estado no es "pagado" ni "cancelado", simplemente se actualiza
-      order.status = status;
+      order.estado = estado;
     }
 
     // Guardar la orden con el nuevo estado

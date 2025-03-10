@@ -1,56 +1,60 @@
-import { validationResult } from 'express-validator';
-import Sale from '../../models/sales/saleModel.js';
-import Product from '../../models/products/productModel.js';
-import Client from '../../models/customers/clientModel.js';
-import mongoose from 'mongoose';
+import Sale from "../../models/sales/saleModel.js";
+import Product from "../../models/products/productModel.js";
+import Client from "../../models/customers/clientModel.js";
+import mongoose from "mongoose";
+import { saleSchema } from "../../middlewares/sales/saleValidation.js"; // Asegúrate de importar el schema de validación
 
 export const getSales = async (req, res) => {
-    try {
-        const { id } = req.params;
+  try {
+    const { id } = req.params;
 
-        // Si hay un id en los parámetros, buscamos una venta específica
-        if (id) {
-            // Verificar si el id es un ObjectId válido
-            if (!mongoose.Types.ObjectId.isValid(id)) {
-                return res.status(400).json({ message: 'ID de venta no válido.' });
-            }
+    // Si hay un id en los parámetros, buscamos una venta específica
+    if (id) {
+      // Verificar si el id es un ObjectId válido
+      if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "ID de venta no válido." });
+      }
 
-            const sale = await Sale.findById(id); // Buscamos la venta por su id y poblamos la relación con el cliente
+      const sale = await Sale.findById(id); // Buscamos la venta por su id y poblamos la relación con el cliente
 
-            if (!sale) {
-                return res.status(404).json({ message: 'Venta no encontrada.' }); // Si no se encuentra la venta
-            }
+      if (!sale) {
+        return res.status(404).json({ message: "Venta no encontrada." }); // Si no se encuentra la venta
+      }
 
-            return res.status(200).json(sale); // Si se encuentra la venta
-        }
-
-        // Si no hay id, obtenemos todas las ventas
-        const sales = await Sale.find().populate('saleId'); // Traemos todas las ventas y poblamos los clientes
-
-        res.status(200).json(sales); // Devolvemos todas las ventas
-    } catch (error) {
-        console.error(error.message); // Para debug
-        res.status(500).json({ message: 'Error al obtener las ventas, intente nuevamente.' });
+      return res.status(200).json(sale); // Si se encuentra la venta
     }
+
+    // Si no hay id, obtenemos todas las ventas
+    const sales = await Sale.find().populate("saleId"); // Traemos todas las ventas y poblamos los clientes
+
+    res.status(200).json(sales); // Devolvemos todas las ventas
+  } catch (error) {
+    console.error(error.message); // Para debug
+    res.status(500).json({ message: "Error al obtener las ventas, intente nuevamente." });
+  }
 };
 
-
 export const createSale = async (req, res) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
-
-  const { clienteId, productos } = req.body;
-
-  // Verificamos si productos es un array y tiene al menos un elemento
-  if (!Array.isArray(productos) || productos.length === 0) {
-    return res
-      .status(400)
-      .json({ message: "Debe proporcionar al menos un producto en la venta." });
-  }
-
   try {
+    // Validación de la entrada usando Zod
+    const parsedData = saleSchema.safeParse(req.body);
+
+    if (!parsedData.success) {
+      return res.status(400).json({
+        message: "Datos inválidos",
+        errors: parsedData.error.errors,
+      });
+    }
+
+    const { clienteId, productos } = parsedData.data;
+
+    // Verificamos si productos es un array y tiene al menos un elemento
+    if (!Array.isArray(productos) || productos.length === 0) {
+      return res
+        .status(400)
+        .json({ message: "Debe proporcionar al menos un producto en la venta." });
+    }
+
     // Verificar si el clienteId es un ObjectId válido
     if (!mongoose.Types.ObjectId.isValid(clienteId)) {
       return res
