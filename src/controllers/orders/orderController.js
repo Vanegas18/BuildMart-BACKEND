@@ -2,6 +2,7 @@ import { validationResult } from "express-validator";
 import Order from "../../models/orders/orderModel.js";
 import Product from "../../models/products/productModel.js";
 import Client from "../../models/customers/clientModel.js";
+import Sale from "../../models/sales/saleModel.js";
 import mongoose from "mongoose"; // Asegúrate de importar mongoose
 
 // Metodo GET
@@ -175,10 +176,33 @@ export const updateOrderStatus = async (req, res) => {
         }
       }
 
-      // Finalmente, cambiamos el estado de la orden a "pagado"
-      order.estado = "pagado";
-    }
+     // Finalmente, cambiamos el estado de la orden a "pagado"
+     order.estado = "pagado";
 
+    //      // Generar la venta con el estado "Pendiente"
+    //  let newSale = new Sale({
+    //        clienteId,
+    //        productos: productos.map((p) => ({
+    //          productoId: p.producto,
+    //          cantidad: p.cantidad,
+    //        })),
+    //        total: total, // Asignamos el total calculado
+    //        estado: "Completada",
+    //  });
+     // **Registrar la venta**: Crear un registro en la tabla de ventas
+     const newSale = new Sale({
+       clienteId: order.clienteId,  // Asumiendo que la orden tiene un clienteId
+       productos: order.productos.map((producto) => ({
+         productoId: producto.productoId,
+         cantidad: producto.cantidad,
+       })),
+       total: order.total,  // Suponiendo que tienes un campo total en la orden
+       estado: "Completada", // El estado de la venta será "Completada"
+     });
+
+     // Guardamos la venta en la base de datos
+     await newSale.save();
+   }
     // Si el estado cambia a "cancelado", no se puede cambiar más si ya está en "pagado"
     if (estado === "cancelado" && order.estado !== "pagado") {
       order.estado = "cancelado";

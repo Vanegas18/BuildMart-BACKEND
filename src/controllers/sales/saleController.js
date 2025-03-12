@@ -145,6 +145,13 @@ export const updateSaleStatus = async (req, res) => {
       return res.status(404).json({ message: "Venta no encontrada." });
     }
 
+        // Si la venta ya está en estado "Reembolsada", no se puede cambiar a ningún otro estado
+    if (venta.estado === "Reembolsada") {
+      return res.status(400).json({
+        message: "No se puede cambiar el estado, la venta ya está reembolsada.",
+      });
+    }
+
     // Si el estado es "Cancelada", no se puede cambiar
     if (venta.estado === "Cancelada") {
       return res.status(400).json({ message: "No se puede cambiar el estado, la venta ya está cancelada." });
@@ -188,6 +195,7 @@ export const updateSaleStatus = async (req, res) => {
         }
       }
     }
+  
 
     // Actualizamos el estado de la venta
     venta.estado = estado;

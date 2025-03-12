@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-
 /**
  * Configuración general de autenticación
  * Centraliza valores como la clave secreta y los IDs de roles para facilitar mantenimiento
