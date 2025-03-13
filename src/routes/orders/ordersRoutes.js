@@ -15,6 +15,6 @@ router.get('/:id?', verificarAdmin, getOrders);
 router.post('/', verificarAdmin, createOrder);
 
 // Ruta para actualizar el estado de una orden
-router.put('/:id', updateOrderStatus);
+router.put('/:id',verificarAdmin, updateOrderStatus);
 
 export default router;
