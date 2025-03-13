@@ -33,17 +33,17 @@ export const newRol = async (req, res) => {
     await nuevoRol.save();
 
     // Generar log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : null,
-      fecha: new Date(),
-      accion: "crear",
-      entidad: "Rol",
-      entidadId: nuevoRol._id,
-      cambios: {
-        previo: null,
-        nuevo: nuevoRol,
-      },
-    });
+    // await LogAuditoria.create({
+    //   usuario: req.usuario ? req.usuario.id : null,
+    //   fecha: new Date(),
+    //   accion: "crear",
+    //   entidad: "Rol",
+    //   entidadId: nuevoRol._id,
+    //   cambios: {
+    //     previo: null,
+    //     nuevo: nuevoRol,
+    //   },
+    // });
 
     // Responder con éxito y datos del rol creado
     res.status(201).json({
