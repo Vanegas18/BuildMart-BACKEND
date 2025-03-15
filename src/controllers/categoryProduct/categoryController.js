@@ -142,16 +142,19 @@ export const updateStateCategory = async (req, res) => {
     // Guardar estado anterior para el log de auditoría
     const estadoAnterior = categoria.estado;
 
+    // Si estamos intentando desactivar la categoría
     if (categoria.estado === "Activa") {
-      const productosAsociados = await Productos.findOne({
-        categoriaId: categoriaId,
-        estado: "Activo",
+      // Verificar si hay productos asociados a esta categoría
+      const productosAsociados = await Productos.find({
+        categoriaId: categoria._id,
+        estado: "Disponible",
       });
 
+      // Si hay productos activos asociados, no permitir la desactivación
       if (productosAsociados.length > 0) {
         return res.status(400).json({
           error:
-            "No se puede desactivar la categoría porque tiene productos activos asociados",
+            "No se puede desactivar la categoría porque tiene productos disponibles asociados",
           productosAsociados: productosAsociados.length,
         });
       }
@@ -182,6 +185,7 @@ export const updateStateCategory = async (req, res) => {
       data: categoria,
     });
   } catch (error) {
+    console.error("Error completo:", error);
     res
       .status(500)
       .json({ error: "Error al cambiar el estado de la categoría", error });
