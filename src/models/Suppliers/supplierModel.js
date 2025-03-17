@@ -35,13 +35,12 @@ const ProveedoresSchema = new mongoose.Schema(
             unique: true,
             trim: true,
         },
-        categoriaProveedorId: [
+        categoriaProveedorId: 
             {
             type: mongoose.Schema.Types.ObjectId, // Con esto traemos el modelo al cual vamos a hacer referencia
             ref: 'CategoriasProveedor', // Con esto traemos el objeto el cual vamos a referenciar, en este caso el id de la categoría
             required: true,
-        }
-    ],
+        },  
         estado: {type: String, default: "Activo", enum: ["Activo", "Inactivo"]},
     },
     {timestamps: true, versionKey: false},
