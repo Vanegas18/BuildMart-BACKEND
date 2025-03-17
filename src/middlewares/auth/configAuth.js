@@ -4,16 +4,15 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-
 /**
  * Configuración general de autenticación
  * Centraliza valores como la clave secreta y los IDs de roles para facilitar mantenimiento
  */
 
 const AUTH_CONFIG = {
-  SECRET_KEY: process.env.JWT_SECRET,
+  SECRET_KEY: process.env.JWT_SECRET || "KeyIdUsuario",
   ROLES: {
-    ADMIN: "67cb9a4fa5866273d8830fad",
+    ADMIN: "67d2ff40efacf3bbd9387557",
   },
   MESSAGES: {
     NO_TOKEN: "Acceso denegado. Debe iniciar sesión",
@@ -27,11 +26,11 @@ const AUTH_CONFIG = {
 // Extrae y verifica el token JWT de las cookies
 const extractAndVerifyToken = (req) => {
   const token = req.cookies.token;
-  
+
   if (!token) {
     return { error: AUTH_CONFIG.MESSAGES.NO_TOKEN, status: 401 };
   }
-  
+
   try {
     const decoded = jwt.verify(token, AUTH_CONFIG.SECRET_KEY);
     return { decoded };
@@ -41,15 +40,14 @@ const extractAndVerifyToken = (req) => {
   }
 };
 
-
 // Middleware para verificar si el usuario está autenticado
 export const verificarAutenticacion = (req, res, next) => {
   const result = extractAndVerifyToken(req);
-  
+
   if (result.error) {
     return res.status(result.status).json({ error: result.error });
   }
-  
+
   // Guardar la información del usuario decodificada en la request
   req.usuario = result.decoded;
   next();
@@ -60,27 +58,27 @@ export const verificarAdmin = async (req, res, next) => {
   try {
     // Verificamos la autenticación con el token
     const result = extractAndVerifyToken(req);
-    
+
     if (result.error) {
       return res.status(result.status).json({ error: result.error });
     }
-    
+
     // Buscar usuario en la base de datos
     const usuario = await Usuario.findOne({ usuarioId: result.decoded.id });
-    
+
     if (!usuario) {
       return res.status(401).json({
-        error: AUTH_CONFIG.MESSAGES.USER_NOT_FOUND
+        error: AUTH_CONFIG.MESSAGES.USER_NOT_FOUND,
       });
     }
-    
+
     // Verificar si es administrador
     if (usuario.rol.toString() !== AUTH_CONFIG.ROLES.ADMIN) {
       return res.status(403).json({
-        error: AUTH_CONFIG.MESSAGES.NOT_ADMIN
+        error: AUTH_CONFIG.MESSAGES.NOT_ADMIN,
       });
     }
-    
+
     // Usuario es administrador, continuamos
     req.usuario = { id: usuario.usuarioId };
     next();

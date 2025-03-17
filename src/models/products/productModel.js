@@ -27,7 +27,6 @@ const ProductSchema = new mongoose.Schema(
     },
     stock: {
       type: Number,
-      default: 10,
       min: [0, "El stock no puede ser negativo"],
     },
     img: {

@@ -8,7 +8,6 @@ import {
 } from "../../controllers/rolesAndPermissions/rolesController.js";
 import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 
-
 const router = express.Router();
 
 router.get("/", verificarAdmin, getRoles);

@@ -1,5 +1,6 @@
 import Categoria from "../../models/categoryProduct/categoryModel.js";
 import LogAuditoria from "../../models/logsModel/LogAudit.js";
+import Productos from "../../models/products/productModel.js";
 import {
   categorySchema,
   updateCategorySchema,
@@ -141,6 +142,24 @@ export const updateStateCategory = async (req, res) => {
     // Guardar estado anterior para el log de auditoría
     const estadoAnterior = categoria.estado;
 
+    // Si estamos intentando desactivar la categoría
+    if (categoria.estado === "Activa") {
+      // Verificar si hay productos asociados a esta categoría
+      const productosAsociados = await Productos.find({
+        categoriaId: categoria._id,
+        estado: "Disponible",
+      });
+
+      // Si hay productos activos asociados, no permitir la desactivación
+      if (productosAsociados.length > 0) {
+        return res.status(400).json({
+          error:
+            "No se puede desactivar la categoría porque tiene productos disponibles asociados",
+          productosAsociados: productosAsociados.length,
+        });
+      }
+    }
+
     // Alternar el estado entre "activo" e "inactivo"
     categoria.estado = categoria.estado === "Activa" ? "Inactiva" : "Activa";
 
@@ -166,6 +185,7 @@ export const updateStateCategory = async (req, res) => {
       data: categoria,
     });
   } catch (error) {
+    console.error("Error completo:", error);
     res
       .status(500)
       .json({ error: "Error al cambiar el estado de la categoría", error });

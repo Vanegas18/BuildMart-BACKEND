@@ -16,7 +16,7 @@ export const ProductSchema = z.object({
   precio: z.number().min(0, "El precio no puede ser negativo"),
   stock: z
     .number()
-    .min(10, { message: "El stock debe ser mayor o igual a 10" })
+    .min(1, { message: "El stock debe ser mayor o igual a 1" })
     .optional(),
   img: z.string().url("Debe ser una URL válida").optional(),
   estado: z.enum(["Disponible", "No disponible"]).optional(),
