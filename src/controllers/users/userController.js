@@ -328,11 +328,7 @@ export const loginUser = async (req, res) => {
     const token = await createAccessToken({ id: usuarioPorCorreo.usuarioId });
 
     // Establecer cookie de autenticación
-    res.cookie("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-    });
+    res.cookie("token", token);
 
     res.status(200).json({
       message: "Usuario logueado correctamente",
