@@ -329,7 +329,7 @@ export const loginUser = async (req, res) => {
     });
 
     // Generar token JWT para la sesión
-    const token = await createAccessToken({ id: usuarioPorCorreo.usuarioId });
+    const token = await createAccessToken({ id: usuarioPorCorreo._id });
 
     // Establecer cookie de autenticación
     res.cookie("token", token, {
@@ -450,6 +450,7 @@ export const verifyToken = async (req, res) => {
 
     // Verificar y decodificar el token
     const decoded = jwt.verify(tokenToVerify, JWT_CONFIG.SECRET_KEY);
+    console.log("Token decodificado:", decoded);
 
     // Buscar el usuario por el ID contenido en el token
     const user = await User.findOne({ usuarioId: decoded.id }).select(
