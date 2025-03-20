@@ -329,16 +329,10 @@ export const loginUser = async (req, res) => {
     });
 
     // Generar token JWT para la sesión
-    const token = await createAccessToken({ usuarioId: usuarioPorCorreo.id });
+    const token = await createAccessToken({ id: usuarioPorCorreo._id });
 
     // Establecer cookie de autenticación
-    res.cookie("token", token, {
-      httpOnly: false,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-      path: "/",
-    });
+    res.cookie("token", token);
 
     res.status(200).json({
       message: "Usuario logueado correctamente",
