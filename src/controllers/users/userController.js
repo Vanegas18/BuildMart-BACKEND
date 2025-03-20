@@ -31,6 +31,18 @@ export const newUser = async (req, res) => {
       return res.status(400).json({ error: "El nombre ya está registrado" });
     }
 
+    // Verificar unicidad de el nombre
+    const correoExistente = await User.findOne({ correo });
+    if (correoExistente) {
+      return res.status(400).json({ error: "El correo ya está registrado" });
+    }
+
+    // Verificar unicidad de el nombre
+    const telefonoExistente = await User.findOne({ telefono });
+    if (telefonoExistente) {
+      return res.status(400).json({ error: "El telefono ya está registrado" });
+    }
+
     // Hasheo de la contraseña
     const passwordHash = await bcrypt.hash(contraseña, 10);
 
