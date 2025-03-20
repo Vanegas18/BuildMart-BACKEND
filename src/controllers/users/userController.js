@@ -334,8 +334,8 @@ export const loginUser = async (req, res) => {
     // Establecer cookie de autenticación
     res.cookie("token", token, {
       httpOnly: false,
-      secure: false,
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
