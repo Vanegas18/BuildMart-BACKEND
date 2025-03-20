@@ -1,7 +1,6 @@
 import express from "express";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import cookieParser from "cookie-parser"
 import { dbConnection } from "./config/db.js";
 import categoryProduct from "./routes/categoryProduct/categoryRoutes.js";
 import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js";
@@ -46,7 +45,6 @@ class Server {
   }
 
   middlewares() {
-    this.app.use(cookieParser())
     this.app.use(cors({
       origin: 'http://localhost:5173',
       credentials: true
