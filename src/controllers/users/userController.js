@@ -428,7 +428,7 @@ export const forgotPassword = async (req, res) => {
 
 // Verificar cookie
 export const verifyToken = async (req, res) => {
-  const { token } = req.cookie;
+  const { token } = req.cookies;
 
   if (!token) return res.status(401).json({ message: "No autorizado 1" });
 
