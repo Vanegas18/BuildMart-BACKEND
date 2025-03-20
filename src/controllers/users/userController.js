@@ -332,7 +332,13 @@ export const loginUser = async (req, res) => {
     const token = await createAccessToken({ id: usuarioPorCorreo.usuarioId });
 
     // Establecer cookie de autenticación
-    res.cookie("token", token);
+    res.cookie("token", token, {
+      httpOnly: false,
+      secure: false,
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      path: "/",
+    });
 
     res.status(200).json({
       message: "Usuario logueado correctamente",
@@ -425,36 +431,63 @@ export const forgotPassword = async (req, res) => {
   }
 };
 
-// Verificar Token
+// Verificar token de autenticación
 export const verifyToken = async (req, res) => {
   try {
-    const token = req.cookies.token;
+    // Obtener el token del usuario desde la petición
+    const { token } = req.cookies;
 
-    if (!token) {
-      return res.status(401).json({ message: "No autorizado" });
+    // Si no hay token en las cookies, intentar obtenerlo del header Authorization
+    const headerToken = req.headers.authorization?.split(" ")[1];
+
+    if (!token && !headerToken) {
+      return res
+        .status(401)
+        .json({ message: "No se proporcionó token de autenticación" });
     }
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
-      if (err) {
-        return res.status(401).json({ message: "Token inválido o expirado" });
-      }
+    const tokenToVerify = token || headerToken;
 
-      // Buscar usuario por usuarioId (asegúrate de que este campo exista en tu modelo)
-      const userFound = await User.findOne({ usuarioId: decoded.id });
+    // Verificar y decodificar el token
+    const decoded = jwt.verify(tokenToVerify, JWT_CONFIG.SECRET_KEY);
 
-      if (!userFound) {
-        return res.status(401).json({ message: "Usuario no encontrado" });
-      }
+    // Buscar el usuario por el ID contenido en el token
+    const user = await User.findOne({ usuarioId: decoded.id }).select(
+      "-contraseña"
+    );
 
-      return res.json({
-        id: userFound.usuarioId,
-        nombre: userFound.nombre,
-        correo: userFound.correo,
-        rol: userFound.rol,
-      });
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    // Verificar que el usuario esté activo
+    if (user.estado !== "Activo") {
+      return res
+        .status(403)
+        .json({ message: "Esta cuenta se encuentra inactiva" });
+    }
+
+    // Si todo está correcto, renovar el token
+    const newToken = await createAccessToken({ id: user.usuarioId });
+
+    // Actualizar la cookie con el nuevo token
+    res.cookie("token", newToken, {
+      httpOnly: false,
+      secure: false, // Establecido manualmente (true para HTTPS, false para HTTP)
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+      path: "/",
+    });
+
+    // Devolver la información del usuario
+    return res.json({
+      id: user._id,
+      nombre: user.nombre,
+      correo: user.correo,
+      rol: user.rol,
     });
   } catch (error) {
-    console.error("Error en verifyToken:", error);
-    return res.status(500).json({ message: "Error interno del servidor" });
+    console.error("Error en verificación de token:", error);
+    return res.status(401).json({ message: "Token inválido o expirado" });
   }
 };
