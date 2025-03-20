@@ -8,8 +8,8 @@ dotenv.config();
  * Configuración general de autenticación
  * Centraliza valores como la clave secreta y los IDs de roles para facilitar mantenimiento
  */
-
-const AUTH_CONFIG = {
+ 
+export const AUTH_CONFIG = {
   SECRET_KEY: process.env.JWT_SECRET || "KeyIdUsuario",
   ROLES: {
     ADMIN: "67cb9a4fa5866273d8830fad",

@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import Role from "../../models/rolesAndPermissions/rolesModel.js";
 import { createAccessToken } from "../../middlewares/users/jwt.js";
+import { AUTH_CONFIG } from "../../middlewares/auth/configAuth.js";
 import LogAuditoria from "../../models/logsModel/LogAudit.js";
 import {
   UserSchema,
@@ -423,4 +424,25 @@ export const forgotPassword = async (req, res) => {
     console.error("Error al solicitar recuperación de contraseña:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
+};
+
+// Verificar cookie
+export const verifyToken = async (req, res) => {
+  const { token } = req.cookie;
+
+  if (!token) return res.status(401).json({ message: "No autorizado 1" });
+
+  jwt.verify(token, AUTH_CONFIG.SECRET_KEY, async (err, usuario) => {
+    if (err) return res.status(401).json({ message: "No autorizado 2" });
+
+    const userFound = await User.findById(usuario.id);
+    if (!userFound) return res.status(401).json({ message: "No autorizado 3" });
+
+    return res.json({
+      id: userFound._id,
+      nombre: userFound.nombre,
+      correo: userFound.correo,
+      rol: userFound.rol,
+    });
+  });
 };
