@@ -340,6 +340,7 @@ export const loginUser = async (req, res) => {
         nombre: usuarioPorCorreo.nombre,
         correo: usuarioPorCorreo.correo,
       },
+      token: token,
     });
   } catch (error) {
     console.error("Error en login:", error);
