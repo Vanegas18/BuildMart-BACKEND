@@ -426,20 +426,34 @@ export const forgotPassword = async (req, res) => {
 
 // Verificar Token
 export const verifyToken = async (req, res) => {
-  const { token } = req.cookies;
+  try {
+    const token = req.cookies.token;
 
-  if (!token) return res.status(401).json({ message: "No autorizado" });
+    if (!token) {
+      return res.status(401).json({ message: "No autorizado" });
+    }
 
-  jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
-    if (err) return res.status(401).json({ message: "No autorizado" });
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err) {
+        return res.status(401).json({ message: "Token inválido o expirado" });
+      }
 
-    const userFound = await User.findById(user.id);
-    if (!userFound) return res.status(401).json({ message: "No autorizado" });
+      // Buscar usuario por usuarioId (asegúrate de que este campo exista en tu modelo)
+      const userFound = await User.findOne({ usuarioId: decoded.id });
 
-    return res.json({
-      id: user._id,
-      nombre: user.nombre,
-      correo: user.correo,
+      if (!userFound) {
+        return res.status(401).json({ message: "Usuario no encontrado" });
+      }
+
+      return res.json({
+        id: userFound.usuarioId,
+        nombre: userFound.nombre,
+        correo: userFound.correo,
+        rol: userFound.rol,
+      });
     });
-  });
+  } catch (error) {
+    console.error("Error en verifyToken:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
 };
