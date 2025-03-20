@@ -10,10 +10,10 @@ import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 
 const router = express.Router();
 
-router.get("/", getRoles);
+router.get("/", verificarAdmin, getRoles);
 router.get("/:nombre", verificarAdmin, getRolByName);
 
-router.post("/", newRol);
+router.post("/", verificarAdmin, newRol);
 router.put("/:nombre", verificarAdmin, updateRol);
 router.patch("/:nombre/estado", verificarAdmin, updateStateRol);
 

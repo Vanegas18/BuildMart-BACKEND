@@ -12,7 +12,7 @@ dotenv.config();
 const AUTH_CONFIG = {
   SECRET_KEY: process.env.JWT_SECRET || "KeyIdUsuario",
   ROLES: {
-    ADMIN: "67d2ff40efacf3bbd9387557",
+    ADMIN: "67cb9a4fa5866273d8830fad",
   },
   MESSAGES: {
     NO_TOKEN: "Acceso denegado. Debe iniciar sesión",
