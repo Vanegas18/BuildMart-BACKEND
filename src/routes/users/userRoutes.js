@@ -15,8 +15,7 @@ import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 const router = express.Router();
 
 router.get("/", verificarAdmin, getUsers);
-router.get("/:usuarioId", getUserById);
-
+router.get("/:usuarioId/Id", getUserById);
 router.post("/", newUser);
 router.put("/:usuarioId", updateUser);
 router.patch("/:usuarioId/estado", verificarAdmin, updateStateUser);

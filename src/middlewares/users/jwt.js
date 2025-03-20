@@ -7,7 +7,7 @@ dotenv.config();
 // Configuración centralizada para JWT
 const JWT_CONFIG = {
   SECRET_KEY: process.env.JWT_SECRET || "KeyIdUsuario",
-  DEFAULT_EXPIRATION: "1h", // Tiempo de expiración predeterminado
+  DEFAULT_EXPIRATION: "7d", // Tiempo de expiración predeterminado
   ERROR_MESSAGES: {
     GENERATION_FAILED: "No se pudo generar el token",
     VERIFICATION_FAILED: "Token inválido o expirado",
