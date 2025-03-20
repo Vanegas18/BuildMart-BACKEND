@@ -454,7 +454,7 @@ export const verifyToken = async (req, res) => {
     console.log("Token decodificado:", decoded);
 
     // Buscar el usuario por el ID contenido en el token
-    const user = await User.findOne({ usuarioId: decoded.id }).select(
+    const user = await User.findOne({ _id: decoded.id }).select(
       "-contraseña"
     );
 
@@ -470,7 +470,7 @@ export const verifyToken = async (req, res) => {
     }
 
     // Si todo está correcto, renovar el token
-    const newToken = await createAccessToken({ id: user.usuarioId });
+    const newToken = await createAccessToken({ id: user._id });
 
     // Actualizar la cookie con el nuevo token
     res.cookie("token", newToken, {
