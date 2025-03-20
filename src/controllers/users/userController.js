@@ -435,6 +435,7 @@ export const forgotPassword = async (req, res) => {
 export const verifyToken = async (req, res) => {
   try {
     console.log("Cookies recibidas:", req.cookies);
+    console.log("Headers de autorización:", req.headers.authorization);
     // Obtener el token del usuario desde la petición
     const { token } = req.cookies;
 
@@ -490,6 +491,7 @@ export const verifyToken = async (req, res) => {
     });
   } catch (error) {
     console.error("Error en verificación de token:", error);
+    console.error("Detalles del error:", error.message, error.stack);
     return res.status(401).json({ message: "Token inválido o expirado" });
   }
 };
