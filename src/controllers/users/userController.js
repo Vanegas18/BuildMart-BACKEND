@@ -335,7 +335,7 @@ export const loginUser = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: false,
       secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "none",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
       path: "/",
     });
@@ -434,6 +434,7 @@ export const forgotPassword = async (req, res) => {
 // Verificar token de autenticación
 export const verifyToken = async (req, res) => {
   try {
+    console.log("Cookies recibidas:", req.cookies);
     // Obtener el token del usuario desde la petición
     const { token } = req.cookies;
 
@@ -473,9 +474,9 @@ export const verifyToken = async (req, res) => {
 
     // Actualizar la cookie con el nuevo token
     res.cookie("token", newToken, {
-      httpOnly: false,
-      secure: false, // Establecido manualmente (true para HTTPS, false para HTTP)
-      sameSite: "strict",
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
       path: "/",
     });
