@@ -1,5 +1,7 @@
 import User from "../../models/users/userModel.js";
 import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import dotenv from "dotenv";
 import Role from "../../models/rolesAndPermissions/rolesModel.js";
 import { createAccessToken } from "../../middlewares/users/jwt.js";
 import LogAuditoria from "../../models/logsModel/LogAudit.js";
@@ -11,6 +13,8 @@ import {
   enviarCorreoRegistro,
   enviarCorreoRecuperacion,
 } from "../../middlewares/users/configNodemailer.js";
+
+dotenv.config();
 
 // Registrar un nuevo usuario
 export const newUser = async (req, res) => {
@@ -417,4 +421,24 @@ export const forgotPassword = async (req, res) => {
     console.error("Error al solicitar recuperación de contraseña:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
+};
+
+// Verificar Token
+export const verifyToken = async (req, res) => {
+  const { token } = req.cookies;
+
+  if (!token) return res.status(401).json({ message: "No autorizado" });
+
+  jwt.verify(token, process.env.JWT_SECRET, async (err, user) => {
+    if (err) return res.status(401).json({ message: "No autorizado" });
+
+    const user = await User.findById(user.id);
+    if (!user) return res.status(401).json({ message: "No autorizado" });
+
+    return res.json({
+      id: user._id,
+      nombre: user.nombre,
+      correo: user.correo,
+    });
+  });
 };
