@@ -10,8 +10,8 @@ import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 
 const router = express.Router();
 
-router.post("/", verificarAdmin, newPermissions);
-router.get("/:nombre", verificarAdmin, getPermissionsByName);
+router.post("/", newPermissions);
+router.get("/:nombre", getPermissionsByName);
 
 router.get("/", verificarAdmin, getPermissions);
 router.put("/:nombre", verificarAdmin, updatePermissions);
