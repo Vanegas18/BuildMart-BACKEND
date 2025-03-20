@@ -64,7 +64,7 @@ export const verificarAdmin = async (req, res, next) => {
     }
 
     // Buscar usuario en la base de datos
-    const usuario = await Usuario.findOne({ usuarioId: result.decoded.id });
+    const usuario = await Usuario.findOne({ id: result.decoded._id });
 
     if (!usuario) {
       return res.status(401).json({
@@ -73,14 +73,14 @@ export const verificarAdmin = async (req, res, next) => {
     }
 
     // Verificar si es administrador
-    if (usuario.rol.toString() !== AUTH_CONFIG.ROLES.ADMIN) {
+    if (usuario.rol._id.toString() !== AUTH_CONFIG.ROLES.ADMIN) {
       return res.status(403).json({
         error: AUTH_CONFIG.MESSAGES.NOT_ADMIN,
       });
     }
 
     // Usuario es administrador, continuamos
-    req.usuario = { id: usuario.usuarioId };
+    req.usuario = { id: usuario._id };
     next();
   } catch (error) {
     console.error("Error en verificación de admin:", error);

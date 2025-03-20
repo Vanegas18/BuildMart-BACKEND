@@ -329,7 +329,7 @@ export const loginUser = async (req, res) => {
     });
 
     // Generar token JWT para la sesión
-    const token = await createAccessToken({ id: usuarioPorCorreo._id });
+    const token = await createAccessToken({ usuarioId: usuarioPorCorreo.id });
 
     // Establecer cookie de autenticación
     res.cookie("token", token, {
@@ -428,70 +428,5 @@ export const forgotPassword = async (req, res) => {
   } catch (error) {
     console.error("Error al solicitar recuperación de contraseña:", error);
     res.status(500).json({ error: "Error interno del servidor" });
-  }
-};
-
-// Verificar token de autenticación
-export const verifyToken = async (req, res) => {
-  try {
-    console.log("Cookies recibidas:", req.cookies);
-    console.log("Headers de autorización:", req.headers.authorization);
-    // Obtener el token del usuario desde la petición
-    const { token } = req.cookies;
-
-    // Si no hay token en las cookies, intentar obtenerlo del header Authorization
-    const headerToken = req.headers.authorization?.split(" ")[1];
-
-    if (!token && !headerToken) {
-      return res
-        .status(401)
-        .json({ message: "No se proporcionó token de autenticación" });
-    }
-
-    const tokenToVerify = token || headerToken;
-
-    // Verificar y decodificar el token
-    const decoded = jwt.verify(tokenToVerify, JWT_CONFIG.SECRET_KEY);
-    console.log("Token decodificado:", decoded);
-
-    // Buscar el usuario por el ID contenido en el token
-    const user = await User.findOne({ _id: decoded.id }).select(
-      "-contraseña"
-    );
-
-    if (!user) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
-    }
-
-    // Verificar que el usuario esté activo
-    if (user.estado !== "Activo") {
-      return res
-        .status(403)
-        .json({ message: "Esta cuenta se encuentra inactiva" });
-    }
-
-    // Si todo está correcto, renovar el token
-    const newToken = await createAccessToken({ id: user._id });
-
-    // Actualizar la cookie con el nuevo token
-    res.cookie("token", newToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: process.env.NODE_ENV === "production" ? "strict" : "lax",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
-      path: "/",
-    });
-
-    // Devolver la información del usuario
-    return res.json({
-      id: user._id,
-      nombre: user.nombre,
-      correo: user.correo,
-      rol: user.rol,
-    });
-  } catch (error) {
-    console.error("Error en verificación de token:", error);
-    console.error("Detalles del error:", error.message, error.stack);
-    return res.status(401).json({ message: "Token inválido o expirado" });
   }
 };
