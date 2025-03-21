@@ -14,8 +14,8 @@ export const transporter = nodemailer.createTransport({
 
 // Función para generar HTML dinámico del correo según el rol
 export const generarHtmlCorreo = (nombreRol) => {
-  const baseUrl = process.env.BASE_URL || "http://localhost:3000";
-  const resetUrl = `${baseUrl}/views/Usuario/usuario.html`;
+  const baseUrl = process.env.BASE_URL || "http://localhost:5173";
+  const resetUrl = `${baseUrl}/`;
 
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
@@ -90,7 +90,7 @@ export const generarTokenRecuperacion = (usuarioId, correo) => {
 
 // Generar el HTML para el correo de solicitud de cambio de contraseña
 export const generarHtmlRecuperacion = (token) => {
-  const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+  const baseUrl = process.env.BASE_URL || "http://localhost:5173";
   const resetUrl = `${baseUrl}/restablecer-contrasena?token=${token}`;
 
   return `
@@ -137,7 +137,7 @@ export const enviarCorreoRecuperacion = async (emailDestino, token) => {
       subject: `🔑 Build Mart - Recuperación de Contraseña`,
       html: htmlCorreo,
       text: `Hemos recibido una solicitud para restablecer su contraseña en Build Mart. Por favor visite ${
-        process.env.BASE_URL || "http://localhost:3000"
+        process.env.BASE_URL || "http://localhost:5173"
       }/restablecer-contrasena?token=${token} para crear una nueva contraseña. Este enlace expirará en 1 hora.`,
     };
 
@@ -163,7 +163,7 @@ export const enviarCorreoConfirmacionCambio = async (emailDestino) => {
 
   try {
     const { userGmail } = process.env;
-    const baseUrl = process.env.BASE_URL || "http://localhost:3000";
+    const baseUrl = process.env.BASE_URL || "http://localhost:5173";
     const loginUrl = `${baseUrl}/login`;
 
     const htmlCorreo = `
