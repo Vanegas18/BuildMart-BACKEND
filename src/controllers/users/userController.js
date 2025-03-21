@@ -13,6 +13,7 @@ import {
 import {
   enviarCorreoRegistro,
   enviarCorreoRecuperacion,
+  enviarCorreoConfirmacionCambio,
 } from "../../middlewares/users/configNodemailer.js";
 
 dotenv.config();
@@ -382,7 +383,7 @@ export const logoutUser = async (req, res) => {
 
 // Solicitar recuperar contraseña
 export const forgotPassword = async (req, res) => {
-  const { correo, nuevaContraseña } = req.body;
+  const { correo } = req.body;
   try {
     // Verificar que el usuario exista
     const usuario = await User.findOne({ correo });
@@ -392,36 +393,101 @@ export const forgotPassword = async (req, res) => {
         .json({ error: "No existe una cuenta con ese correo" });
     }
 
-    // Guardar contraseña anterior para el log (hash)
-    const contraseñaAnterior = usuario.contraseña;
+    // Generar token JWT para recuperación
+    const token = generarTokenRecuperacion(usuario._id, correo);
 
-    // Hasher la nueva contraseña
-    const passwordHash = await bcrypt.hash(nuevaContraseña, 10);
-    usuario.contraseña = passwordHash;
-    await usuario.save();
-
-    // Registrar cambio de contraseña en el log de auditoría
+    // Registrar en log de auditoría
     await LogAuditoria.create({
       usuario: usuario._id,
       fecha: new Date(),
-      accion: "recuperar_contraseña",
+      accion: "solicitar_recuperacion_contraseña",
       entidad: "Usuario",
       entidadId: usuario._id,
-      cambios: {
-        previo: { contraseña: contraseñaAnterior },
-        nuevo: { contraseña: passwordHash },
-      },
     });
 
     // Enviar correo de bienvenida al usuario
-    await enviarCorreoRecuperacion(correo);
+    await enviarCorreoRecuperacion(correo, token);
+
+    return res.json({
+      message:
+        "Se ha enviado un correo con instrucciones para restablecer tu contraseña",
+    });
+  } catch (error) {
+    console.error("Error al solicitar recuperación de contraseña:", error);
+    res.status(500).json({ error: "Error interno del servidor" });
+  }
+};
+
+// Controlador para restablecer la contraseña usando el token JWT
+export const resetPassword = async (req, res) => {
+  const { token, nuevaContraseña } = req.body;
+  const secretKey = process.env.JWT_SECRET || "KeyIdUsuario";
+
+  try {
+    // Verificar y decodificar el token
+    const payload = jwt.verify(token, secretKey);
+
+    // Verificar que sea un token de recuperación
+    if (payload.tipo !== "recuperacion") {
+      return res.status(400).json({
+        error: "Token inválido para recuperación de contraseña",
+      });
+    }
+
+    // Buscar el usuario por id
+    const usuario = await User.findById(payload.id);
+    if (!usuario) {
+      return res.status(404).json({
+        error: "Usuario no encontrado",
+      });
+    }
+
+    // Verificar que el correo coincida
+    if (usuario.correo !== payload.correo) {
+      return res.status(400).json({
+        error: "Token inválido para este usuario",
+      });
+    }
+
+    // Hashear la nueva contraseña
+    const passwordHash = await bcrypt.hash(nuevaContraseña, 10);
+
+    // Actualizar contraseña
+    usuario.contraseña = passwordHash;
+    await usuario.save();
+
+    // Registrar cambio en log de auditoría
+    await LogAuditoria.create({
+      usuario: usuario._id,
+      fecha: new Date(),
+      accion: "restablecer_contraseña",
+      entidad: "Usuario",
+      entidadId: usuario._id,
+      cambios: {
+        previo: { contraseña: "******" }, // No guardar el hash por seguridad
+        nuevo: { contraseña: "******" },
+      },
+    });
+
+    // Enviar correo de confirmación
+    await enviarCorreoConfirmacionCambio(usuario.correo);
 
     res.json({
       message:
         "Contraseña restablecida correctamente. Ahora puedes iniciar sesión.",
     });
   } catch (error) {
-    console.error("Error al solicitar recuperación de contraseña:", error);
+    // Si el token expiró o es inválido
+    if (
+      error instanceof jwt.JsonWebTokenError ||
+      error instanceof jwt.TokenExpiredError
+    ) {
+      return res.status(400).json({
+        error: "El enlace de recuperación no es válido o ha expirado",
+      });
+    }
+
+    console.error("Error al restablecer contraseña:", error);
     res.status(500).json({ error: "Error interno del servidor" });
   }
 };

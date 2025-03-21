@@ -6,6 +6,7 @@ import {
   loginUser,
   logoutUser,
   newUser,
+  resetPassword,
   updateStateUser,
   updateUser,
   verifyToken,
@@ -22,6 +23,7 @@ router.patch("/:usuarioId/estado", verificarAdmin, updateStateUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.post("/restablecer-contrasena", forgotPassword);
+router.post("/verificar-token-contrasena", resetPassword);
 router.get("/verify", verifyToken);
 
 export default router;
