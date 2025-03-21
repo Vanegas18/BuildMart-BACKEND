@@ -8,7 +8,7 @@ dotenv.config();
  * Configuración general de autenticación
  * Centraliza valores como la clave secreta y los IDs de roles para facilitar mantenimiento
  */
- 
+
 export const AUTH_CONFIG = {
   SECRET_KEY: process.env.JWT_SECRET || "KeyIdUsuario",
   ROLES: {
@@ -25,12 +25,23 @@ export const AUTH_CONFIG = {
 
 // Extrae y verifica el token JWT de las cookies
 const extractAndVerifyToken = (req) => {
-  const token = req.cookies.token;
+  // Obtener token del encabezado Authorization
+  const authHeader = req.headers.authorization;
+  const token = authHeader && authHeader.split(" ")[1]; // Formato "Bearer TOKEN"
 
   if (!token) {
-    return { error: AUTH_CONFIG.MESSAGES.NO_TOKEN, status: 401 };
+    // Intentar obtener de cookies como respaldo
+    const cookieToken = req.cookies.token;
+    if (!cookieToken) {
+      return { error: AUTH_CONFIG.MESSAGES.NO_TOKEN, status: 401 };
+    }
+    return verifyToken(cookieToken);
   }
 
+  return verifyToken(token);
+};
+
+const verifyToken = (token) => {
   try {
     const decoded = jwt.verify(token, AUTH_CONFIG.SECRET_KEY);
     return { decoded };
@@ -56,24 +67,39 @@ export const verificarAutenticacion = (req, res, next) => {
 // Middleware para verificar si el usuario es administrador
 export const verificarAdmin = async (req, res, next) => {
   try {
+    console.log("Headers recibidos:", req.headers);
+    console.log("Cookies recibidas:", req.cookies);
+
     // Verificamos la autenticación con el token
     const result = extractAndVerifyToken(req);
 
     if (result.error) {
+      console.log("Error en token:", result.error);
       return res.status(result.status).json({ error: result.error });
     }
 
+    console.log("Token decodificado:", result.decoded);
+
     // Buscar usuario en la base de datos
-    const usuario = await Usuario.findOne({ id: result.decoded._id });
+    const usuario = await Usuario.findById(result.decoded.id);
 
     if (!usuario) {
+      console.log("Usuario no encontrado con ID:", result.decoded.id);
       return res.status(401).json({
         error: AUTH_CONFIG.MESSAGES.USER_NOT_FOUND,
       });
     }
 
+    console.log("Usuario encontrado:", usuario._id, "Rol:", usuario.rol);
+
     // Verificar si es administrador
-    if (usuario.rol._id.toString() !== AUTH_CONFIG.ROLES.ADMIN) {
+    if (usuario.rol.toString() !== AUTH_CONFIG.ROLES.ADMIN) {
+      console.log(
+        "Usuario no es admin. Rol usuario:",
+        usuario.rol,
+        "Rol admin esperado:",
+        AUTH_CONFIG.ROLES.ADMIN
+      );
       return res.status(403).json({
         error: AUTH_CONFIG.MESSAGES.NOT_ADMIN,
       });
