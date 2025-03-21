@@ -14,6 +14,7 @@ import {
   enviarCorreoRegistro,
   enviarCorreoRecuperacion,
   enviarCorreoConfirmacionCambio,
+  generarTokenRecuperacion,
 } from "../../middlewares/users/configNodemailer.js";
 
 dotenv.config();
