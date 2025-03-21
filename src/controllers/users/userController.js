@@ -397,15 +397,6 @@ export const forgotPassword = async (req, res) => {
     // Generar token JWT para recuperación
     const token = generarTokenRecuperacion(usuario._id, correo);
 
-    // Registrar en log de auditoría
-    await LogAuditoria.create({
-      usuario: usuario._id,
-      fecha: new Date(),
-      accion: "solicitar_recuperacion_contraseña",
-      entidad: "Usuario",
-      entidadId: usuario._id,
-    });
-
     // Enviar correo de bienvenida al usuario
     await enviarCorreoRecuperacion(correo, token);
 
