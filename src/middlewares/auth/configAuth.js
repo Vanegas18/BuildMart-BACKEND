@@ -41,12 +41,12 @@ const extractAndVerifyToken = (req) => {
   return verifyToken(token);
 };
 
+// VERIFICA EN TOKEN
 const verifyToken = (token) => {
   try {
     const decoded = jwt.verify(token, AUTH_CONFIG.SECRET_KEY);
     return { decoded };
   } catch (error) {
-    console.error("Error al verificar el token:", error);
     return { error: AUTH_CONFIG.MESSAGES.INVALID_TOKEN, status: 401 };
   }
 };
@@ -67,9 +67,6 @@ export const verificarAutenticacion = (req, res, next) => {
 // Middleware para verificar si el usuario es administrador
 export const verificarAdmin = async (req, res, next) => {
   try {
-    console.log("Headers recibidos:", req.headers);
-    console.log("Cookies recibidas:", req.cookies);
-
     // Verificamos la autenticación con el token
     const result = extractAndVerifyToken(req);
 
@@ -78,28 +75,17 @@ export const verificarAdmin = async (req, res, next) => {
       return res.status(result.status).json({ error: result.error });
     }
 
-    console.log("Token decodificado:", result.decoded);
-
     // Buscar usuario en la base de datos
     const usuario = await Usuario.findById(result.decoded.id);
 
     if (!usuario) {
-      console.log("Usuario no encontrado con ID:", result.decoded.id);
       return res.status(401).json({
         error: AUTH_CONFIG.MESSAGES.USER_NOT_FOUND,
       });
     }
 
-    console.log("Usuario encontrado:", usuario._id, "Rol:", usuario.rol);
-
     // Verificar si es administrador
     if (usuario.rol.toString() !== AUTH_CONFIG.ROLES.ADMIN) {
-      console.log(
-        "Usuario no es admin. Rol usuario:",
-        usuario.rol,
-        "Rol admin esperado:",
-        AUTH_CONFIG.ROLES.ADMIN
-      );
       return res.status(403).json({
         error: AUTH_CONFIG.MESSAGES.NOT_ADMIN,
       });
