@@ -26,6 +26,7 @@ const logAuditoriaSchema = new Schema(
         "iniciar_sesion",
         "cerrar_sesion",
         "recuperar_contraseña",
+        "restablecer_contraseña",
       ],
       description: "Tipo de acción realizada",
     },
