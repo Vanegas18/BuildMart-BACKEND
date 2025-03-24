@@ -1,17 +1,19 @@
 import express from "express";
 import {
-  forgotPassword,
   getUserById,
   getUsers,
-  loginUser,
-  logoutUser,
   newUser,
-  resetPassword,
   updateStateUser,
   updateUser,
-  verifyToken,
 } from "../../controllers/users/userController.js";
 import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
+import {
+  forgotPassword,
+  loginUser,
+  logoutUser,
+  resetPassword,
+  verifyToken,
+} from "../../middlewares/users/auth/userAuth.js";
 
 const router = express.Router();
 
