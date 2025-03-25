@@ -1,22 +1,39 @@
 import mongoose from "mongoose";
 
-const permissionsSchema = new mongoose.Schema(
+const permisoSchema = new mongoose.Schema(
   {
-    nombre: {
+    nombreGrupo: {
       type: String,
-      required: [true, "El nombre del permiso es obligatorio"],
-      unique: true,
+      required: [true, "El nombre del grupo de permisos es obligatorio"],
       trim: true,
+      unique: false
     },
-    descripcion: {
+    permisos: [
+      {
+        label: {
+          type: String,
+          required: true,
+        },
+        description: {
+          type: String,
+        },
+        estado: {
+          type: String,
+          default: "Activo",
+          enum: ["Activo", "Inactivo"],
+        },
+      },
+    ],
+    estado: {
       type: String,
-      trim: true,
-      required: false,
-      trim: true,
+      default: "Activo",
+      enum: ["Activo", "Inactivo"],
     },
-    estado: { type: String, default: "Activo", enum: ["Activo", "Inactivo"] },
   },
-  { timestamps: true, versionKey: false }
+  {
+    timestamps: true,
+    versionKey: false,
+  }
 );
 
-export default mongoose.model("permisos", permissionsSchema);
+export default mongoose.model("permisos", permisoSchema);
