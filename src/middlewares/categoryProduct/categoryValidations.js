@@ -5,8 +5,8 @@ export const categorySchema = z.object({
     .string()
     .trim()
     .min(5, { message: "El nombre debe tener al menos 5 caracteres" })
-    .regex(/^[a-zA-Z\s]+$/, {
-      message: "El nombre solo puede contener letras",
+    .regex(/^[a-zA-ZáéíóúÁÉÍÓÚñÑ\s]+$/, {
+      message: "El nombre solo puede contener letras y espacios",
     }),
   descripcion: z
     .string()
