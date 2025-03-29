@@ -14,3 +14,4 @@ logs
 pids
 *.pid
 *.sublime-workspace
+src/models/Suppliers/suppliersModel.js
