@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import Supplier from "../../models/Suppliers/supplierModel.js";
+import Supplier from "../../models/suppliers/supplierModel.js";
 import CategoriasProveedor from "../../models/categorySuppliers/catSuppliersModel.js";
 import {
   supplierSchema,

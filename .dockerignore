@@ -1,0 +1,16 @@
+node_modules
+.env
+*.log
+*.txt
+.vscode
+.idea
+.DS_Store
+Thumbs.db
+dist
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+pids
+*.pid
+*.sublime-workspace
