@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import Compra from "../../models/buys/buysModel.js";
 import Producto from "../../models/products/productModel.js";
-import Proveedor from "../../models/Suppliers/supplierModel.js";
+import Proveedor from "../../models/suppliers/supplierModel.js";
 import { compraSchema, updateCompraSchema } from "../../middlewares/buys/buysValidations.js";
 import { z } from "zod";
 
