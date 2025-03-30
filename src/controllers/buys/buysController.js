@@ -33,7 +33,7 @@ export const crearCompra = async (req, res) => {
       if (item.cantidad > producto.stock) {
         return res.status(400).json({ error: `La cantidad de la compra (${item.cantidad}) no puede ser mayor al stock del producto (${producto.stock})` });
       }
-      total += producto.precio * item.cantidad; // Calcular el total
+      total += producto.precioCompra * item.cantidad; // Calcular el total
     }
 
     // Verificar que el proveedor es un ObjectId válido
