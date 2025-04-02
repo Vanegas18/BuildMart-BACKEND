@@ -26,7 +26,7 @@ export const newRol = async (req, res) => {
 
       for (const id of permisos) {
         // Verificar si es un grupo de permisos
-        const grupoPermiso = await GrupoPermisos.findById(id);
+        const grupoPermiso = await Permisos.findById(id);
 
         if (grupoPermiso) {
           // Si es un grupo, añadir todos sus permisos individuales
