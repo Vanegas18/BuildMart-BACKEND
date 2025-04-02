@@ -21,11 +21,18 @@ export const newRol = async (req, res) => {
     }
 
     // Verificar que los permisos existan
-    const permisoExistente = await Permisos.findById(permisos);
-    if (!permisoExistente) {
-      return res
-        .status(400)
-        .json({ error: `El permiso con ID ${permisos} no existe` });
+    if (Array.isArray(permisos)) {
+      // Verificar cada permiso individualmente
+      for (const permisoId of permisos) {
+        const permisoExistente = await Permisos.findById(permisoId);
+        if (!permisoExistente) {
+          return res
+            .status(400)
+            .json({ error: `El permiso con ID ${permisoId} no existe` });
+        }
+      }
+    } else {
+      return res.status(400).json({ error: "El campo permisos debe ser un array" });
     }
 
     // Crear y guardar el nuevo rol
