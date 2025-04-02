@@ -20,19 +20,41 @@ export const newRol = async (req, res) => {
       });
     }
 
-    // Verificar que los permisos existan
+    // Verificar que los permisos existan y procesar grupos
     if (Array.isArray(permisos)) {
-      // Verificar cada permiso individualmente
-      for (const permisoId of permisos) {
-        const permisoExistente = await Permisos.findById(permisoId);
-        if (!permisoExistente) {
-          return res
-            .status(400)
-            .json({ error: `El permiso con ID ${permisoId} no existe` });
+      let permisosIndividuales = [];
+
+      for (const id of permisos) {
+        // Verificar si es un grupo de permisos
+        const grupoPermiso = await GrupoPermisos.findById(id);
+
+        if (grupoPermiso) {
+          // Si es un grupo, añadir todos sus permisos individuales
+          const permisosDelGrupo = grupoPermiso.permisos.map((p) =>
+            p._id.toString()
+          );
+          permisosIndividuales = [...permisosIndividuales, ...permisosDelGrupo];
+        } else {
+          // Si no es un grupo, verificar si es un permiso individual
+          const permisoExistente = await Permisos.findById(id);
+          if (!permisoExistente) {
+            return res
+              .status(400)
+              .json({ error: `El permiso o grupo con ID ${id} no existe` });
+          }
+          permisosIndividuales.push(id);
         }
       }
+
+      // Eliminar duplicados si existen
+      permisosIndividuales = [...new Set(permisosIndividuales)];
+
+      // Reemplazar los permisos originales con la lista procesada
+      req.body.permisos = permisosIndividuales;
     } else {
-      return res.status(400).json({ error: "El campo permisos debe ser un array" });
+      return res
+        .status(400)
+        .json({ error: "El campo permisos debe ser un array" });
     }
 
     // Crear y guardar el nuevo rol
