@@ -20,37 +20,28 @@ export const newRol = async (req, res) => {
       });
     }
 
-    // Verificar que los permisos existan y procesar grupos
+    // Verificar que los permisos existan
     if (Array.isArray(permisos)) {
-      let permisosIndividuales = [];
+      for (const permisoId of permisos) {
+        // Primero verificar si es un ID de grupo
+        const grupoPermiso = await Permisos.findById(permisoId);
 
-      for (const id of permisos) {
-        // Verificar si es un grupo de permisos
-        const grupoPermiso = await Permisos.findById(id);
+        if (!grupoPermiso) {
+          // Si no es un grupo, buscar si es un ID de permiso individual dentro de algún grupo
+          const grupoConPermiso = await Permisos.findOne({
+            "permisos._id": permisoId,
+          });
 
-        if (grupoPermiso) {
-          // Si es un grupo, añadir todos sus permisos individuales
-          const permisosDelGrupo = grupoPermiso.permisos.map((p) =>
-            p._id.toString()
-          );
-          permisosIndividuales = [...permisosIndividuales, ...permisosDelGrupo];
-        } else {
-          // Si no es un grupo, verificar si es un permiso individual
-          const permisoExistente = await Permisos.findById(id);
-          if (!permisoExistente) {
+          if (!grupoConPermiso) {
             return res
               .status(400)
-              .json({ error: `El permiso o grupo con ID ${id} no existe` });
+              .json({ error: `El permiso con ID ${permisoId} no existe` });
           }
-          permisosIndividuales.push(id);
         }
       }
 
-      // Eliminar duplicados si existen
-      permisosIndividuales = [...new Set(permisosIndividuales)];
-
-      // Reemplazar los permisos originales con la lista procesada
-      req.body.permisos = permisosIndividuales;
+      // Si llegamos aquí, todos los IDs son válidos
+      // No es necesario procesar los permisos aquí, podemos usar los IDs tal como están
     } else {
       return res
         .status(400)
