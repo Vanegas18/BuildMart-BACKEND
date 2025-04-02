@@ -65,7 +65,7 @@ export const newRol = async (req, res) => {
 // Obtener todos los roles
 export const getRoles = async (req, res) => {
   try {
-    const roles = await Roles.find().populate("permisos", "nombreGrupo");
+    const roles = await Roles.find().populate("permisos");
     res.json(roles);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener los roles" });
@@ -204,6 +204,8 @@ export const updateStateRol = async (req, res) => {
       data: rol,
     });
   } catch (error) {
-    res.status(500).json({ error: "Error al cambiar el estado de el rol", error });
+    res
+      .status(500)
+      .json({ error: "Error al cambiar el estado de el rol", error });
   }
 };
