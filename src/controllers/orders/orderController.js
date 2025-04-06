@@ -20,8 +20,7 @@ export const getOrders = async (req, res) => {
     }
     const orders = await Order.find()
       .populate("clienteId", "nombre")
-      .populate("productos.productoId", "nombre precio"); // aquí
-    también;
+      .populate("productos.productoId", "nombre precio"); // aquí también;
     res.status(200).json(orders);
   } catch (error) {
     console.error(error.message);
