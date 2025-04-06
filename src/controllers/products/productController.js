@@ -101,8 +101,18 @@ export const updateProduct = async (req, res) => {
   const { productoId } = req.params;
   const { categoriaId } = req.body;
   try {
+    // Convertir campos numéricos de string a número
+    const datosValidados = {
+      ...req.body,
+      precioCompra: req.body.precioCompra
+        ? Number(req.body.precioCompra)
+        : undefined,
+      stock: req.body.stock ? Number(req.body.stock) : undefined,
+    };
+
     // Validar datos de actualización con Zod
-    const updateProductValidator = updateProductSchema.safeParse(req.body);
+    const updateProductValidator =
+      updateProductSchema.safeParse(datosValidados);
     if (!updateProductValidator.success) {
       return res.status(400).json({
         error: updateProductValidator.error,
@@ -128,7 +138,7 @@ export const updateProduct = async (req, res) => {
     // Actualizar el producto
     const producto = await Productos.findOneAndUpdate(
       { productoId },
-      req.body,
+      datosValidados,
       { new: true } // Devuelve el documento actualizado
     );
 
