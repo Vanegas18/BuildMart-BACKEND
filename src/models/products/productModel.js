@@ -37,6 +37,11 @@ const ProductSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    imgType: {
+      type: String,
+      enum: ["url", "file"],
+      default: "url",
+    },
     estado: {
       type: String,
       default: "Disponible",

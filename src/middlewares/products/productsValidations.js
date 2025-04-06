@@ -18,7 +18,8 @@ export const ProductSchema = z.object({
     .number()
     .min(1, { message: "El stock debe ser mayor o igual a 1" })
     .optional(),
-  img: z.string().url("Debe ser una URL válida").optional(),
+  img: z.string().optional(),
+  imgType: z.enum(["url", "file"]).default("url"),
   estado: z.enum(["Disponible", "No disponible"]).optional(),
 });
 

@@ -14,6 +14,13 @@ import buysRoutes from "./routes/buys/buysRoutes.js";
 import orderRoutes from "./routes/orders/ordersRoutes.js";
 import saleRoutes from "./routes/sales/saleRoutes.js";
 import clientRoutes from "./routes/customers/clientRoutes.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+// Obtener el directorio actual
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 class Server {
   constructor() {
@@ -45,12 +52,16 @@ class Server {
   }
 
   middlewares() {
-    this.app.use(cors({
-      origin: 'http://localhost:5173',
-      credentials: true
-    }));
+    this.app.use(
+      cors({
+        origin: "http://localhost:5173",
+        credentials: true,
+      })
+    );
     this.app.use(express.json());
     this.app.use(cookieParser());
+    // Servir archivos estáticos
+    this.app.use("/uploads", express.static(path.join(__dirname, "uploads")));
   }
 
   routes() {
@@ -66,8 +77,6 @@ class Server {
     this.app.use(this.paths.ordenes, orderRoutes);
     this.app.use(this.paths.ventas, saleRoutes);
     this.app.use(this.paths.clientes, clientRoutes);
-    // this.app.use(this.paths.categoriesSuppliers, categorySuppliers);
-    // this.app.use(this.paths.suppliers, suppliers);
   }
 
   listen() {
