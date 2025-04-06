@@ -10,8 +10,17 @@ import {
 export const newProduct = async (req, res) => {
   const { categoriaId } = req.body;
   try {
+    // Convertir campos numéricos de string a número
+    const datosValidados = {
+      ...req.body,
+      precioCompra: req.body.precioCompra
+        ? Number(req.body.precioCompra)
+        : undefined,
+      stock: req.body.stock ? Number(req.body.stock) : undefined,
+    };
+
     // Validar datos con Zod
-    const productValidator = ProductSchema.safeParse(req.body);
+    const productValidator = ProductSchema.safeParse(datosValidados);
     if (!productValidator.success) {
       return res.status(400).json({
         error: productValidator.error,
@@ -27,7 +36,7 @@ export const newProduct = async (req, res) => {
     }
 
     // Crear y guardar el nuevo producto
-    const producto = new Productos(req.body);
+    const producto = new Productos(datosValidados);
     await producto.save();
 
     // Generar log de auditoría
