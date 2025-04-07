@@ -2,8 +2,9 @@ import Sale from "../../models/sales/saleModel.js";
 import Product from "../../models/products/productModel.js";
 import Client from "../../models/customers/clientModel.js";
 import mongoose from "mongoose";
-import { saleSchema } from "../../middlewares/sales/saleValidation.js"; // Asegúrate de importar el schema de validación
+import { saleSchema } from "../../middlewares/sales/saleValidation.js";
 
+// Asegúrate de importar el schema de validación
 export const getSales = async (req, res) => {
   try {
     const { id } = req.params;
@@ -63,6 +64,7 @@ export const createSale = async (req, res) => {
       });
     }
     let total = 0;
+    // Descontar el stock mientras validamos la venta
     for (const producto of productos) {
       const productData = await Product.findById(producto.producto);
       if (!productData) {
@@ -75,13 +77,18 @@ export const createSale = async (req, res) => {
           message: `La cantidad del producto ${productData.nombre} no puede ser 0 o negativa.`,
         });
       }
+      // Verificar si hay suficiente stock
       if (productData.stock < producto.cantidad) {
         return res.status(400).json({
           message: `No hay suficiente stock para el producto ${productData.nombre}.`,
         });
       }
+      // Descontar el stock si todo está correcto
+      productData.stock -= producto.cantidad;
+      await productData.save();
       total += productData.precio * producto.cantidad;
     }
+    // Crear la venta en estado "Pendiente"
     const newSale = new Sale({
       clienteId,
       productos: productos.map((p) => ({
@@ -89,8 +96,9 @@ export const createSale = async (req, res) => {
         cantidad: p.cantidad,
       })),
       total,
-      estado: "Pendiente",
+      estado: "Pendiente", // El estado inicial es "Pendiente"
     });
+    // Guardar la venta en la base de datos
     await newSale.save();
     res.status(201).json({
       message: "Venta creada exitosamente.",
@@ -129,7 +137,7 @@ export const updateSaleStatus = async (req, res) => {
         message: "No se puede cambiar el estado, la venta ya está reembolsada.",
       });
     }
-    // Si el estado es "Cancelada", no se puede cambiar
+    // Si la venta ya está en estado "Cancelada", no se puede cambiar
     if (venta.estado === "Cancelada") {
       return res.status(400).json({
         message: "No se puede cambiar el estado, la venta ya está cancelada.",
@@ -143,49 +151,38 @@ export const updateSaleStatus = async (req, res) => {
         .status(200)
         .json({ message: "Venta cancelada correctamente." });
     }
-    // Si el estado es "Completada" y ahora estamos pasando a "Reembolsada" o "Cancelada"
+    // Si la venta está en estado "Completada" y estamos pasando a "Reembolsada" o "Cancelada", se devuelve el stock.
     if (
       venta.estado === "Completada" &&
       (estado === "Reembolsada" || estado === "Cancelada")
     ) {
-      // Devuelve el stock de los productos
+      // Devolver el stock de los productos
       for (const producto of venta.productos) {
         const productData = await Product.findById(producto.productoId);
         if (productData) {
-          productData.stock += producto.cantidad; // Aumentamos el
-          stock;
+          productData.stock += producto.cantidad; // Restauramos el stock
           await productData.save();
         }
       }
       venta.estado = estado; // Actualizamos el estado de la venta
       await venta.save();
       return res.status(200).json({
-        message:
-          "Venta actualizada a estado " + estado + " y stock restaurado.",
+        message: `Venta actualizada a estado ${estado} y stock restaurado.`,
       });
     }
-    // Si la venta está en estado "Pendiente", no se debe afectar el stock al cambiar el estado
     if (venta.estado === "Pendiente" && estado === "Completada") {
-      // Descontar el stock solo si la venta pasa a "Completada"
-      for (const producto of venta.productos) {
-        const productData = await Product.findById(producto.productoId);
-        if (productData) {
-          if (productData.stock < producto.cantidad) {
-            return res.status(400).json({
-              message: `No hay suficiente stock para el producto ${productData.nombre}.`,
-            });
-          }
-          productData.stock -= producto.cantidad; // Descontamos el
-          stock;
-          await productData.save();
-        }
-      }
+      venta.estado = estado;
+      await venta.save();
+      return res.status(200).json({
+        message: `Estado de la venta actualizado a ${estado}`,
+        sale: venta,
+      });
     }
     // Actualizamos el estado de la venta
     venta.estado = estado;
     await venta.save();
     res.status(200).json({
-      message: "Estado de la venta actualizado a " + estado,
+      message: `Estado de la venta actualizado a ${estado}`,
       sale: venta,
     });
   } catch (error) {
