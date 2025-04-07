@@ -15,11 +15,13 @@ const ProductSchema = new mongoose.Schema(
       trim: true,
       required: [true, "La descripción es obligatoria"],
     },
-    categoriaId: {
-      type: Schema.Types.ObjectId,
-      ref: "categorias_Productos",
-      required: [true, "Se debe categorizar el producto"],
-    },
+    categorias: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "categorias_Productos",
+        required: [true, "Se debe categorizar el producto"],
+      },
+    ],
     precioCompra: {
       type: Number,
       required: [true, "El precio de compra es requerido"],

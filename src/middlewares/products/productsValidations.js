@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidObjectId } from "mongoose";
 
 const objectIdRegex = /^[a-fA-F0-9]{24}$/; // Patrón para validar MongoDB ObjectId
 
@@ -10,9 +11,13 @@ export const ProductSchema = z.object({
   descripcion: z
     .string()
     .min(5, { message: "La descripción debe tener al menos 5 caracteres" }),
-  categoriaId: z
-    .string()
-    .regex(objectIdRegex, { message: "El ID de la categoría no es válido" }),
+  categorias: z
+    .array(
+      z.string().refine(isValidObjectId, {
+        message: "El ID de la categoría no es válido",
+      })
+    )
+    .min(1, { message: "Debe haber al menos una categoría" }),
   precioCompra: z.number().min(0, "El precio no puede ser negativo"),
   stock: z
     .number()

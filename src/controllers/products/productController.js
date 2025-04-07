@@ -8,7 +8,7 @@ import {
 
 // Agregar nuevo producto
 export const newProduct = async (req, res) => {
-  const { categoriaId } = req.body;
+  const { categorias } = req.body;
   try {
     // Convertir campos numéricos de string a número
     const datosValidados = {
@@ -28,11 +28,16 @@ export const newProduct = async (req, res) => {
     }
 
     // Validar si el ID a asociar existe
-    const categoriaExistente = await Categorias.findById(categoriaId);
-    if (!categoriaExistente) {
-      return res
-        .status(404)
-        .json({ error: `La categoría con ID ${categoriaId} no existe` });
+    if (Array.isArray(categorias)) {
+      for (const categoriaId of categorias) {
+        const idExistente = await Categorias.findById(categoriaId);
+
+        if (!idExistente) {
+          return res
+            .status(400)
+            .json({ error: `La categoría con ID ${categoriaId} no existe` });
+        }
+      }
     }
 
     // Crear y guardar el nuevo producto
