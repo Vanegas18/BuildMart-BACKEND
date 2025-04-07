@@ -76,7 +76,7 @@ export const newProduct = async (req, res) => {
 // Obtener todos los productos
 export const getProductos = async (req, res) => {
   try {
-    const producto = await Productos.find().populate("categoriaId", "nombre");
+    const producto = await Productos.find().populate("categorias", "nombre");
     res.json(producto);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener los productos" });
@@ -88,7 +88,7 @@ export const getProductById = async (req, res) => {
   const { productoId } = req.params;
   try {
     const producto = await Productos.findOne({ productoId }).populate(
-      "categoriaId",
+      "categorias",
       "nombre"
     );
     if (!producto) {
@@ -130,13 +130,15 @@ export const updateProduct = async (req, res) => {
       return res.status(404).json({ error: "Producto no encontrada" });
     }
 
-    // Validar si el ID a asociar existe
-    if (categoriaId) {
-      const categoriaExistente = await Categorias.findById(categoriaId);
-      if (!categoriaExistente) {
-        return res
-          .status(404)
-          .json({ error: `La categoría con ID ${categoriaId} no existe` });
+    // Validar si los IDs de categorías existen
+    if (Array.isArray(categorias)) {
+      for (const categoriaId of categorias) {
+        const categoriaExistente = await Categorias.findById(categoriaId);
+        if (!categoriaExistente) {
+          return res
+            .status(404)
+            .json({ error: `La categoría con ID ${categoriaId} no existe` });
+        }
       }
     }
 
