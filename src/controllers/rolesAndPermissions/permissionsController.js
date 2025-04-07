@@ -79,6 +79,17 @@ export const updatePermissions = async (req, res) => {
       });
     }
 
+    // Verificar si ya existe un grupo con el mismo nombre
+    const grupoExistente = await Permisos.findOne({
+      nombreGrupo: req.body.nombreGrupo,
+    });
+
+    if (grupoExistente) {
+      return res.status(400).json({
+        error: "Ya existe un grupo de permisos con este nombre",
+      });
+    }
+
     // Actualizar el permiso
     const permiso = await Permisos.findOneAndUpdate(
       { nombreGrupo: nombreGrupo.trim() },
