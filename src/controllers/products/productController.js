@@ -104,7 +104,7 @@ export const getProductById = async (req, res) => {
 // Actualizar productos
 export const updateProduct = async (req, res) => {
   const { productoId } = req.params;
-  const { categoriaId } = req.body;
+  const { categorias } = req.body;
   try {
     // Convertir campos numéricos de string a número
     const datosValidados = {
