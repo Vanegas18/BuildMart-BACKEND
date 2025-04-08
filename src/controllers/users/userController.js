@@ -246,13 +246,29 @@ export const updateStateUser = async (req, res) => {
   const { usuarioId } = req.params;
   try {
     // Buscar usuario por ID
-    const usuario = await User.findOne({ usuarioId });
+    const usuario = await User.findOne({ usuarioId }).populate("rol");
     if (!usuario) {
       return res.status(404).json({ error: "Usuario no encontrado" });
     }
 
     // Guardar estado anterior para el log
     const estadoAnterior = usuario.estado;
+
+    // Verificar si es un administrador que se está intentando desactivar
+    if (usuario.estado === "Activo" && usuario.rol.nombre === "Administrador") {
+      // Contar cuántos administradores activos hay en el sistema
+      const administradoresActivos = await User.countDocuments({
+        rol: usuario.rol._id,
+        estado: "Activo",
+      });
+
+      // Si solo hay un administrador activo y estamos intentando desactivarlo
+      if (administradoresActivos === 1) {
+        return res.status(400).json({
+          error: "No se puede desactivar al último administrador del sistema",
+        });
+      }
+    }
 
     // Alternar estado entre "Activo" e "Inactivo"
     usuario.estado = usuario.estado === "Activo" ? "Inactivo" : "Activo";
