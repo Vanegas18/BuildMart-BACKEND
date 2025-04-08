@@ -3,7 +3,7 @@ import Order from "../../models/orders/orderModel.js";
 import Product from "../../models/products/productModel.js";
 import Client from "../../models/customers/clientModel.js";
 import Sale from "../../models/sales/saleModel.js";
-import mongoose from "mongoose"; // Asegúrate de importar mongoose
+import mongoose from "mongoose";
 
 // Método GET
 export const getOrders = async (req, res) => {
@@ -12,7 +12,7 @@ export const getOrders = async (req, res) => {
     if (id) {
       const order = await Order.findById(id)
         .populate("clienteId", "nombre")
-        .populate("productos.productoId", "nombre precio"); // populate interno para productos
+        .populate("productos.productoId", "nombre precio");
       if (!order) {
         return res.status(404).json({ message: "Orden no encontrada" });
       }
@@ -20,7 +20,7 @@ export const getOrders = async (req, res) => {
     }
     const orders = await Order.find()
       .populate("clienteId", "nombre")
-      .populate("productos.productoId", "nombre precio"); // aquí también;
+      .populate("productos.productoId", "nombre precio");
     res.status(200).json(orders);
   } catch (error) {
     console.error(error.message);
@@ -40,7 +40,7 @@ export const createOrder = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(clienteId)) {
       return res
         .status(400)
-        .json({ message: "El clientId proporcionado es válido." });
+        .json({ message: "El clientId proporcionado no es válido." });
     }
     const client = await Client.findById(clienteId);
     if (!client) {
@@ -61,9 +61,24 @@ export const createOrder = async (req, res) => {
           message: `Producto con ID ${producto.productoId} no encontrado.`,
         });
       }
-      if (productoData.estado === "No disponible") {
+
+      // Verificación de estado del producto según los nuevos estados
+      if (
+        productoData.estado === "Descontinuado" ||
+        productoData.estado === "Agotado"
+      ) {
         return res.status(400).json({
-          message: `El producto ${productoData.nombre} no está disponible para la venta.`,
+          message: `El producto ${productoData.nombre} no está disponible para la venta. Estado actual: ${productoData.estado}`,
+        });
+      }
+
+      // Solo productos en estado "Activo" o "En oferta" pueden ser vendidos
+      if (
+        productoData.estado !== "Activo" &&
+        productoData.estado !== "En oferta"
+      ) {
+        return res.status(400).json({
+          message: `El producto ${productoData.nombre} no está en un estado válido para la venta.`,
         });
       }
 
@@ -79,6 +94,12 @@ export const createOrder = async (req, res) => {
       }
       // Descontar stock al crear la orden (solo si el estado es "pendiente")
       productoData.stock -= producto.cantidad;
+
+      // Actualizar automáticamente el estado si el stock llega a cero
+      if (productoData.stock === 0) {
+        productoData.estado = "Agotado";
+      }
+
       await productoData.save();
     }
 
@@ -118,8 +139,7 @@ export const updateOrderStatus = async (req, res) => {
     if (!order) {
       return res.status(404).json({ message: "Pedido no encontrado." });
     }
-    // Si el estado de la orden es "pagado", no se puede cancelar ni
-    modificar;
+    // Si el estado de la orden es "pagado", no se puede cancelar ni modificar
     if (order.estado === "pagado" && estado === "cancelado") {
       return res
         .status(400)
@@ -145,6 +165,12 @@ export const updateOrderStatus = async (req, res) => {
         }
         // Devolvemos el stock del producto
         productData.stock += producto.cantidad;
+
+        // Si el producto estaba agotado y ahora tiene stock, actualizar a Activo
+        if (productData.estado === "Agotado" && productData.stock > 0) {
+          productData.estado = "Activo";
+        }
+
         await productData.save();
       }
     } else if (estado === "pagado" && order.estado === "pendiente") {
