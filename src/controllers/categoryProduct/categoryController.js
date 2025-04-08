@@ -147,7 +147,7 @@ export const updateStateCategory = async (req, res) => {
       // Verificar si hay productos asociados a esta categoría
       const productosAsociados = await Productos.find({
         categoriaId: categoria._id,
-        estado: "Disponible",
+        estado: { $in: ["Activo", "En oferta"] },
       });
 
       // Si hay productos activos asociados, no permitir la desactivación
