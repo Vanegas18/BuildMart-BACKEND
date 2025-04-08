@@ -1,7 +1,9 @@
 import Productos from "../../models/products/productModel.js";
 import Categorias from "../../models/categoryProduct/categoryModel.js";
 import LogAuditoria from "../../models/logsModel/LogAudit.js";
+import Pedidos from "../../models/orders/orderModel.js";
 import {
+  estadoProductSchema,
   ProductSchema,
   updateProductSchema,
 } from "../../middlewares/products/productsValidations.js";
@@ -101,6 +103,36 @@ export const getProductById = async (req, res) => {
   }
 };
 
+// Obtener productos por estado
+export const getProductosByEstado = async (req, res) => {
+  const { estado } = req.params;
+
+  try {
+    // Validar que el estado sea válido
+    if (!["Activo", "Descontinuado", "Agotado", "En oferta"].includes(estado)) {
+      return res.status(400).json({
+        error:
+          "Estado inválido. Los estados válidos son: Activo, Descontinuado, Agotado, En oferta",
+      });
+    }
+
+    const productos = await Productos.find({ estado }).populate(
+      "categorias",
+      "nombre"
+    );
+
+    res.json({
+      cantidad: productos.length,
+      productos,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Error al obtener los productos por estado",
+      detalle: error.message,
+    });
+  }
+};
+
 // Actualizar productos
 export const updateProduct = async (req, res) => {
   const { productoId } = req.params;
@@ -182,7 +214,17 @@ export const updateProduct = async (req, res) => {
 // Actualizar estado del producto
 export const updateStateProduct = async (req, res) => {
   const { productoId } = req.params;
+  const { nuevoEstado } = req.body;
   try {
+    // Validar el nuevo estado con Zod
+    const estadoValidator = estadoProductSchema.safeParse(req.body);
+    if (!estadoValidator.success) {
+      return res.status(400).json({
+        error:
+          "Estado inválido. Los estados posibles son: Activo, Descontinuado, Agotado, En oferta",
+      });
+    }
+
     // Buscar el producto por ID
     const producto = await Productos.findOne({ productoId });
     if (!producto) {
@@ -192,9 +234,34 @@ export const updateStateProduct = async (req, res) => {
     // Guardar estado anterior para el log de auditoría
     const estadoAnterior = producto.estado;
 
-    // Alternar el estado entre "Disponible" y "No disponible"
-    producto.estado =
-      producto.estado === "Disponible" ? "No disponible" : "Disponible";
+    // Si se intenta cambiar a estado Descontinuado, verificar las validaciones
+    if (nuevoEstado === "Descontinuado") {
+      // Validación 1: No permitir desactivar productos con pedidos pendientes
+      const pedidosPendientes = await Pedidos.find({
+        "items.producto": producto._id,
+        estado: { $in: ["Pendiente", "En proceso"] },
+      });
+
+      if (pedidosPendientes.length > 0) {
+        return res.status(400).json({
+          error:
+            "No se puede descontinuar el producto porque tiene pedidos pendientes",
+          pedidosPendientes: pedidosPendientes.map((p) => p._id),
+        });
+      }
+
+      // Validación 2: No permitir desactivar productos con stock disponible
+      if (producto.stock > 0) {
+        return res.status(400).json({
+          error:
+            "No se puede descontinuar el producto mientras tenga stock disponible. Por favor, agote el inventario primero o cambie a estado 'Agotado'.",
+          stockActual: producto.stock,
+        });
+      }
+    }
+
+    // Asignar el nuevo estado al producto
+    producto.estado = nuevoEstado;
 
     // Guarda el producto
     await producto.save();
@@ -214,12 +281,66 @@ export const updateStateProduct = async (req, res) => {
 
     // Responder con éxito y datos actualizados
     res.json({
-      message: `Cambio de estado exitosamente`,
+      message: `Estado del producto cambiado exitosamente a ${nuevoEstado}`,
       data: producto,
     });
   } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Error al cambiar el estado de el producto" });
+    res.status(500).json({
+      error: "Error al cambiar el estado del producto",
+      detalle: error.message,
+    });
+  }
+};
+
+// Función auxiliar para automatizar el cambio de estado según el stock
+export const actualizarEstadoSegunStock = async (productoId) => {
+  try {
+    const producto = await Productos.findOne({ productoId });
+    if (!producto) return;
+
+    // Si el producto está en estado Activo o En oferta pero no tiene stock, cambiar a Agotado
+    if (
+      (producto.estado === "Activo" || producto.estado === "En oferta") &&
+      producto.stock === 0
+    ) {
+      producto.estado = "Agotado";
+      await producto.save();
+
+      // Registrar el cambio automático en el log
+      await LogAuditoria.create({
+        usuario: "SISTEMA",
+        fecha: new Date(),
+        accion: "cambiar_estado_automatico",
+        entidad: "Producto",
+        entidadId: productoId,
+        cambios: {
+          previo: { estado: producto.estado, stock: producto.stock },
+          nuevo: { estado: "Agotado", stock: 0 },
+        },
+      });
+    }
+
+    // Si el producto está Agotado pero tiene stock nuevamente, cambiarlo a Activo
+    if (producto.estado === "Agotado" && producto.stock > 0) {
+      producto.estado = "Activo";
+      await producto.save();
+
+      // Registrar el cambio automático en el log
+      await LogAuditoria.create({
+        usuario: "SISTEMA",
+        fecha: new Date(),
+        accion: "cambiar_estado_automatico",
+        entidad: "Producto",
+        entidadId: productoId,
+        cambios: {
+          previo: { estado: "Agotado", stock: producto.stock },
+          nuevo: { estado: "Activo", stock: producto.stock },
+        },
+      });
+    }
+
+    return producto;
+  } catch (error) {
+    console.error("Error al actualizar estado según stock:", error);
   }
 };

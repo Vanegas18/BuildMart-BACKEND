@@ -25,7 +25,15 @@ export const ProductSchema = z.object({
     .optional(),
   img: z.string().optional(),
   imgType: z.enum(["url", "file"]).default("url"),
-  estado: z.enum(["Disponible", "No disponible"]).optional(),
+  estado: z
+    .enum(["Activo", "Descontinuado", "Agotado", "En oferta"])
+    .optional(),
 });
 
 export const updateProductSchema = ProductSchema.partial();
+
+export const estadoProductSchema = z.object({
+  nuevoEstado: z.enum(["Activo", "Descontinuado", "Agotado", "En oferta"]),
+});
+
+

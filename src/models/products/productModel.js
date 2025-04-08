@@ -46,8 +46,8 @@ const ProductSchema = new mongoose.Schema(
     },
     estado: {
       type: String,
-      default: "Disponible",
-      enum: ["Disponible", "No disponible"],
+      default: "Activo",
+      enum: ["Activo", "Descontinuado", "Agotado", "En oferta"],
     },
   },
   { timestamps: true, versionKey: false }
@@ -74,6 +74,27 @@ ProductSchema.pre("findOneAndUpdate", function (next) {
     update.precio = Math.round(update.precioCompra * 1.15);
   }
   next();
+});
+
+// Middleware para actualizar automáticamente el estado cuando se modifica el stock
+ProductSchema.post("findOneAndUpdate", async function (doc) {
+  if (doc) {
+    const update = this.getUpdate();
+
+    // Si se modificó el stock, verificar si es necesario actualizar el estado
+    if (update.stock !== undefined) {
+      // Si el stock es 0 y el estado no es Descontinuado, cambiar a Agotado
+      if (update.stock === 0 && doc.estado !== "Descontinuado") {
+        doc.estado = "Agotado";
+        await doc.save();
+      }
+      // Si el stock es mayor a 0 y el estado es Agotado, cambiar a Activo
+      else if (update.stock > 0 && doc.estado === "Agotado") {
+        doc.estado = "Activo";
+        await doc.save();
+      }
+    }
+  }
 });
 
 const Products = createAutoIncrementModel(

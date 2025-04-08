@@ -2,6 +2,7 @@ import express from "express";
 import {
   getProductById,
   getProductos,
+  getProductosByEstado,
   newProduct,
   updateProduct,
   updateStateProduct,
@@ -16,6 +17,8 @@ const router = express.Router();
 
 router.get("/", getProductos);
 router.get("/:productoId", getProductById);
+router.get("/estado/:estado", getProductosByEstado);
+
 
 router.post("/", verificarAdmin, newProduct);
 
