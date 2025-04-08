@@ -1,4 +1,5 @@
 import Permisos from "../../models/rolesAndPermissions/permissionsModel.js";
+import Rol from "../../models/rolesAndPermissions/rolesModel.js";
 import {
   permissionsSchema,
   updatePermissionsSchema,
@@ -125,62 +126,108 @@ export const updateStatePermissions = async (req, res) => {
   const { nombreGrupo } = req.params;
   try {
     // Buscar el permiso por nombre
-    const permiso = await Permisos.findOne({ nombreGrupo });
+    const grupoPermiso = await Permisos.findOne({ nombreGrupo });
 
-    if (!permiso) {
+    if (!grupoPermiso) {
       return res.status(404).json({ error: "Grupo de permisos no encontrado" });
     }
 
-    // Alternar el estado entre "Activo" e "Inactivo"
-    permiso.estado = permiso.estado === "Activo" ? "Inactivo" : "Activo";
+    // Obtener estado actual para el cambio
+    const estadoActual = grupoPermiso.estado;
+    const nuevoEstado = estadoActual === "Activo" ? "Inactivo" : "Activo";
 
-    // Guarda el permiso
-    await permiso.save();
+    // Si vamos a desactivar (cambiar de Activo a Inactivo)
+    if (estadoActual === "Activo") {
+      // 1. Verificar si es un grupo de permisos crítico
+      const gruposCriticos = [
+        "Gestión de Usuarios",
+        "Gestión de Roles",
+        "Gestión de Acceso",
+      ];
 
-    // Responder con éxito y datos actualizados
-    res.json({
-      message: `Cambio de estado exitoso`,
-      data: permiso,
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ error: "Error al cambiar el estado del grupo de permisos" });
-  }
-};
+      // 1. Verificar si es un grupo de permisos crítico
+      if (gruposCriticos.includes(nombreGrupo)) {
+        return res.status(403).json({
+          error:
+            "No se puede desactivar este grupo de permisos porque es crítico para la operación del sistema",
+          grupoCritico: true,
+        });
+      }
 
-// Activar o desactivar un permiso específico dentro de un grupo
-export const togglePermission = async (req, res) => {
-  const { nombreGrupo, permisoId } = req.params;
-  try {
-    const permisosGroup = await Permisos.findOne({ nombreGrupo });
+      // 2. Obtener roles que utilizan este grupo de permisos
+      const roles = await Rol.find({}).select("nombre descripcion permisos");
+      const rolesAfectados = roles.filter((rol) =>
+        rol.permisos.some(
+          (p) => p._id.toString() === grupoPermiso._id.toString()
+        )
+      );
 
-    if (!permisosGroup) {
-      return res.status(404).json({ error: "Grupo de permisos no encontrado" });
+      // 3. Verificar permisos mínimos para roles administrativos
+      const rolesAdministrativos = ["Administrador", "SuperAdmin"];
+      const rolesEnRiesgo = [];
+
+      for (const rol of rolesAfectados) {
+        if (rolesAdministrativos.includes(rol.nombre)) {
+          // Verificar que el rol mantenga suficientes permisos críticos
+          const permisosRestantes = rol.permisos.filter(
+            (p) =>
+              p._id.toString() !== grupoPermiso._id.toString() &&
+              p.estado === "Activo"
+          );
+
+          // Verificar que aún tenga permisos de gestión básica
+          const tieneGestionBasica = permisosRestantes.some((p) =>
+            ["Gestión de Roles", "Gestión de Acceso"].includes(p.nombreGrupo)
+          );
+
+          if (!tieneGestionBasica) {
+            rolesEnRiesgo.push(rol.nombre);
+          }
+        }
+      }
+
+      if (rolesEnRiesgo.length > 0) {
+        return res.status(403).json({
+          error:
+            "No se puede desactivar este grupo de permisos porque dejaría roles administrativos sin permisos esenciales",
+          rolesAfectados: rolesEnRiesgo,
+        });
+      }
+
+      // Cambiar el estado del grupo completo
+      grupoPermiso.estado = nuevoEstado;
+      await grupoPermiso.save();
+
+      // Responder con información sobre el impacto
+      res.json({
+        message: `Cambio de estado exitoso`,
+        data: grupoPermiso,
+        impacto: {
+          rolesAfectados: rolesAfectados.map((rol) => ({
+            nombre: rol.nombre,
+            descripcion: rol.descripcion,
+          })),
+        },
+        // Información para restauración
+        restauracion: {
+          grupoPermiso: nombreGrupo,
+          estadoAnterior: estadoActual,
+        },
+      });
+    } else {
+      // Si estamos activando (cambio de Inactivo a Activo), no necesitamos validaciones
+      grupoPermiso.estado = nuevoEstado;
+      await grupoPermiso.save();
+
+      res.json({
+        message: `Grupo de permisos activado exitosamente`,
+        data: grupoPermiso,
+      });
     }
-
-    // Encontrar el índice del permiso específico
-    const permisoIndex = permisosGroup.permisos.findIndex(
-      (p) => p._id.toString() === permisoId
-    );
-
-    if (permisoIndex === -1) {
-      return res.status(404).json({ error: "Permiso no encontrado" });
-    }
-
-    // Alternar el estado entre "Activo" e "Inactivo"
-    permisosGroup.permisos[permisoIndex].estado =
-      permisosGroup.permisos[permisoIndex].estado === "Activo"
-        ? "Inactivo"
-        : "Activo";
-
-    await permisosGroup.save();
-
-    res.json({
-      message: `Permiso ${permisoId} ${permisosGroup.permisos[permisoIndex].estado} exitosamente`,
-      data: permisosGroup,
-    });
   } catch (error) {
-    res.status(500).json({ error: "Error al cambiar el estado del permiso" });
+    console.error("Error al cambiar estado del permiso:", error);
+    res.status(500).json({
+      error: "Error al cambiar el estado del permiso",
+    });
   }
 };

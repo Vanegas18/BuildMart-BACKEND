@@ -3,7 +3,6 @@ import {
   getPermissions,
   getPermissionsByName,
   newPermissions,
-  togglePermission,
   updatePermissions,
   updateStatePermissions,
 } from "../../controllers/rolesAndPermissions/permissionsController.js";
@@ -17,10 +16,5 @@ router.get("/:nombreGrupo", verificarAdmin, getPermissionsByName);
 router.get("/", verificarAdmin, getPermissions);
 router.put("/:nombreGrupo", verificarAdmin, updatePermissions);
 router.patch("/:nombreGrupo/estado", verificarAdmin, updateStatePermissions);
-router.patch(
-  "/:nombreGrupo/:permisoId/estado",
-  verificarAdmin,
-  togglePermission
-);
 
 export default router;
