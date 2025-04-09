@@ -4,6 +4,7 @@ import mongoose from "mongoose"; // Para validar ObjectId si es necesario
 import bcrypt from "bcrypt";
 import Role from "../../models/rolesAndPermissions/rolesModel.js";
 import { enviarCorreoRegistro } from "../../middlewares/users/configNodemailer.js";
+import { createAccessToken } from "../../middlewares/users/jwt.js";
 
 // Obtener todos los clientes o un cliente específico
 export const getClients = async (req, res) => {
@@ -108,8 +109,7 @@ export const createClient = async (req, res) => {
   } catch (error) {
     console.error(error.message);
     res.status(500).json({
-      message: "Error al crear el cliente, intente nuevamente.",
-      error,
+      error: error.errors || error.message,
     });
   }
 };
