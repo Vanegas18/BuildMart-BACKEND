@@ -256,11 +256,9 @@ export const verifyToken = async (req, res) => {
     const esCliente = !userFound;
 
     return res.json({
-      id: usuarioEncontrado._id,
       nombre: usuarioEncontrado.nombre,
       correo: usuarioEncontrado.correo,
-      rol: usuarioEncontrado.rol,
-      tipo: esCliente ? "cliente" : "administrador", // Opcional: añadir tipo de usuario
+      rol: usuarioEncontrado.rol || "67cb9a96a5866273d8830fb0",
     });
   });
 };
