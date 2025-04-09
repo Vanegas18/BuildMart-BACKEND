@@ -1,6 +1,9 @@
 import { validationResult } from "express-validator";
 import Clients from "../../models/customers/clientModel.js"; // Importamos el modelo de Clientes
 import mongoose from "mongoose"; // Para validar ObjectId si es necesario
+import bcrypt from "bcrypt";
+import Role from "../../models/rolesAndPermissions/rolesModel.js";
+import { enviarCorreoRegistro } from "../../middlewares/users/configNodemailer.js";
 
 // Obtener todos los clientes o un cliente específico
 export const getClients = async (req, res) => {
@@ -72,6 +75,9 @@ export const createClient = async (req, res) => {
       return res.status(400).json({ message: "El nombre ya está registrado." });
     }
 
+    // Hasheo de la contraseña
+    const passwordHash = await bcrypt.hash(contraseña, 10);
+
     // Crear el nuevo cliente
     const newClient = new Clients({
       nombre,
@@ -81,22 +87,30 @@ export const createClient = async (req, res) => {
       departamento,
       ciudad,
       cedula,
-      contraseña,
+      contraseña: passwordHash,
       estado,
     });
 
     await newClient.save();
+
+    // Enviar correo de bienvenida al usuario
+    await enviarCorreoRegistro(correo, "Cliente");
+
+    // Generar token JWT para la sesión
+    const token = await createAccessToken({ id: newClient.clienteId });
+
+    // Establecer cookie de autenticación
+    res.cookie("token", token);
+
     res
       .status(201)
       .json({ message: "Cliente creado exitosamente.", client: newClient });
   } catch (error) {
     console.error(error.message);
-    res
-      .status(500)
-      .json({
-        message: "Error al crear el cliente, intente nuevamente.",
-        error,
-      });
+    res.status(500).json({
+      message: "Error al crear el cliente, intente nuevamente.",
+      error,
+    });
   }
 };
 
@@ -148,11 +162,9 @@ export const updateClient = async (req, res) => {
       .json({ message: "Cliente actualizado exitosamente.", client });
   } catch (error) {
     console.error(error.message); // Para debug
-    res
-      .status(500)
-      .json({
-        message: "Error al actualizar el cliente, intente nuevamente.",
-        error,
-      });
+    res.status(500).json({
+      message: "Error al actualizar el cliente, intente nuevamente.",
+      error,
+    });
   }
 };
