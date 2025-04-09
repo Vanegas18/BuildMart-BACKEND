@@ -234,19 +234,33 @@ export const verifyToken = async (req, res) => {
     req.cookies.token ||
     (req.headers.authorization && req.headers.authorization.split(" ")[1]);
 
-  if (!token) return res.status(401).json({ message: "No autorizado 1" });
+  if (!token) return res.status(401).json({ message: "No autorizado" });
 
   jwt.verify(token, AUTH_CONFIG.SECRET_KEY, async (err, usuario) => {
-    if (err) return res.status(401).json({ message: "No autorizado 2" });
+    if (err)
+      return res.status(401).json({ message: "Token inválido o expirado" });
 
+    // Buscar en usuarios
     const userFound = await User.findById(usuario.id);
-    if (!userFound) return res.status(401).json({ message: "No autorizado 3" });
+
+    // Si no está en usuarios, buscar en clientes
+    const clienteFound = !userFound ? await Cliente.findById(usuario.id) : null;
+
+    // Si no se encuentra en ninguna colección
+    if (!userFound && !clienteFound) {
+      return res.status(401).json({ message: "Usuario no encontrado" });
+    }
+
+    // Determinar cuál fue encontrado y devolver la información correspondiente
+    const usuarioEncontrado = userFound || clienteFound;
+    const esCliente = !userFound;
 
     return res.json({
-      id: userFound._id,
-      nombre: userFound.nombre,
-      correo: userFound.correo,
-      rol: userFound.rol,
+      id: usuarioEncontrado._id,
+      nombre: usuarioEncontrado.nombre,
+      correo: usuarioEncontrado.correo,
+      rol: usuarioEncontrado.rol,
+      tipo: esCliente ? "cliente" : "administrador", // Opcional: añadir tipo de usuario
     });
   });
 };
