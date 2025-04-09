@@ -2,6 +2,7 @@ import User from "../../../models/users/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
+import Cliente from "../../../models/customers/clientModel.js";
 import { createAccessToken } from "../../../middlewares/users/jwt.js";
 import { AUTH_CONFIG } from "../../../middlewares/auth/configAuth.js";
 import LogAuditoria from "../../../models/logsModel/LogAudit.js";
@@ -19,14 +20,31 @@ export const loginUser = async (req, res) => {
   try {
     // Buscar usuario por correo
     const usuarioPorCorreo = await User.findOne({ correo }).lean();
-    if (!usuarioPorCorreo) {
+
+    // Buscar en la colección de clientes
+    const clientePorCorreo = await Cliente.findOne({ correo }).lean();
+
+    if (!usuarioPorCorreo && !clientePorCorreo) {
       return res.status(400).json({
         message: "No se encontró a ningún usuario registrado con ese correo",
       });
     }
 
+    // Determinar si es usuario administrador o cliente
+    let esCliente = false;
+    let usuarioEncontrado;
+
+    if (usuarioPorCorreo) {
+      // Es un usuario administrador
+      usuarioEncontrado = usuarioPorCorreo;
+    } else {
+      // Es un cliente
+      usuarioEncontrado = clientePorCorreo;
+      esCliente = true;
+    }
+
     // Verificar si el usuario está activo
-    if (usuarioPorCorreo.estado !== "Activo") {
+    if (usuarioEncontrado.estado !== "Activo") {
       return res.status(403).json({
         message:
           "Esta cuenta se encuentra inactiva. Contacte al administrador.",
@@ -34,8 +52,8 @@ export const loginUser = async (req, res) => {
     }
 
     // Verificar contraseña
-    const passwordCompare = usuarioPorCorreo
-      ? await bcrypt.compare(contraseña, usuarioPorCorreo.contraseña)
+    const passwordCompare = usuarioEncontrado
+      ? await bcrypt.compare(contraseña, usuarioEncontrado.contraseña)
       : false;
 
     if (!passwordCompare) {
@@ -46,18 +64,18 @@ export const loginUser = async (req, res) => {
 
     // Registrar evento de inicio de sesión
     LogAuditoria.create({
-      usuario: usuarioPorCorreo._id,
+      usuario: usuarioEncontrado._id,
       fecha: new Date(),
       accion: "iniciar_sesion",
       entidad: "Usuario",
-      entidadId: usuarioPorCorreo._id,
+      entidadId: usuarioEncontrado._id,
       cambios: null,
     }).catch((error) =>
       console.error("Error al crear log de auditoría:", error)
     );
 
     // Generar token JWT para la sesión
-    const token = await createAccessToken({ id: usuarioPorCorreo._id });
+    const token = await createAccessToken({ id: usuarioEncontrado._id });
 
     // Establecer cookie de autenticación
     res.cookie("token", token);
@@ -65,9 +83,9 @@ export const loginUser = async (req, res) => {
     res.status(200).json({
       message: "Usuario logueado correctamente",
       usuario: {
-        nombre: usuarioPorCorreo.nombre,
-        correo: usuarioPorCorreo.correo,
-        rol: usuarioPorCorreo.rol,
+        nombre: usuarioEncontrado.nombre,
+        correo: usuarioEncontrado.correo,
+        rol: usuarioEncontrado.rol,
       },
       token: token,
     });

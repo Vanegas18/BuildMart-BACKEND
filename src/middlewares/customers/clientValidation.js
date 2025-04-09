@@ -44,7 +44,7 @@ export const clientSchema = z.object({
       message: "La ciudad solo debe contener letras",
     }),
 
-  estado: z.enum(["activo", "inactivo"]).default("activo").optional(),
+  estado: z.enum(["Activo", "Inactivo"]).default("Activo").optional(),
 });
 
 // Esquema de validación para actualizar el cliente (campo parcial)

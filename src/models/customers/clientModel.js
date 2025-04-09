@@ -54,7 +54,7 @@ const clientSchema = new mongoose.Schema(
       required: [true, "La ciudad es obligatoria"],
       trim: true,
     },
-    estado: { type: String, enum: ["activo", "inactivo"], default: "activo" },
+    estado: { type: String, enum: ["Activo", "Inactivo"], default: "Activo" },
   },
   { timestamps: true, versionKey: false }
 );
