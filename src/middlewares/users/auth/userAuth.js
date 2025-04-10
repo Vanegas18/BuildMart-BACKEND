@@ -129,18 +129,23 @@ export const logoutUser = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   const { correo } = req.body;
   try {
-    // Verificar que el usuario exista
+    // Verificar que el usuario exista (buscar en Usuario y Cliente)
     const usuario = await User.findOne({ correo });
-    if (!usuario) {
+    const cliente = !usuario ? await Cliente.findOne({ correo }) : null;
+
+    if (!usuario && !cliente) {
       return res
         .status(404)
         .json({ error: "No existe una cuenta con ese correo" });
     }
 
-    // Generar token JWT para recuperación
-    const token = generarTokenRecuperacion(usuario._id, correo);
+    // Determinar cuál fue encontrado
+    const usuarioEncontrado = usuario || cliente;
 
-    // Enviar correo de bienvenida al usuario
+    // Generar token JWT para recuperación
+    const token = generarTokenRecuperacion(usuarioEncontrado._id, correo);
+
+    // Enviar correo de recuperación
     await enviarCorreoRecuperacion(correo, token);
 
     return res.json({
@@ -169,16 +174,22 @@ export const resetPassword = async (req, res) => {
       });
     }
 
-    // Buscar el usuario por id
+    // Buscar el usuario por id en ambos modelos
     const usuario = await User.findById(payload.id);
-    if (!usuario) {
+    const cliente = !usuario ? await Cliente.findById(payload.id) : null;
+
+    if (!usuario && !cliente) {
       return res.status(404).json({
         error: "Usuario no encontrado",
       });
     }
 
+    // Determinar cuál fue encontrado
+    const usuarioEncontrado = usuario || cliente;
+    const esCliente = !usuario;
+
     // Verificar que el correo coincida
-    if (usuario.correo !== payload.correo) {
+    if (usuarioEncontrado.correo !== payload.correo) {
       return res.status(400).json({
         error: "Token inválido para este usuario",
       });
@@ -188,16 +199,16 @@ export const resetPassword = async (req, res) => {
     const passwordHash = await bcrypt.hash(nuevaContraseña, 10);
 
     // Actualizar contraseña
-    usuario.contraseña = passwordHash;
-    await usuario.save();
+    usuarioEncontrado.contraseña = passwordHash;
+    await usuarioEncontrado.save();
 
     // Registrar cambio en log de auditoría
     await LogAuditoria.create({
-      usuario: usuario._id,
+      usuario: usuarioEncontrado._id,
       fecha: new Date(),
       accion: "restablecer_contraseña",
-      entidad: "Usuario",
-      entidadId: usuario._id,
+      entidad: esCliente ? "Cliente" : "Usuario",
+      entidadId: usuarioEncontrado._id,
       cambios: {
         previo: { contraseña: "******" }, // No guardar el hash por seguridad
         nuevo: { contraseña: "******" },
@@ -205,7 +216,7 @@ export const resetPassword = async (req, res) => {
     });
 
     // Enviar correo de confirmación
-    await enviarCorreoConfirmacionCambio(usuario.correo);
+    await enviarCorreoConfirmacionCambio(usuarioEncontrado.correo);
 
     res.json({
       message:
