@@ -155,7 +155,7 @@ export const getUserById = async (req, res) => {
 // Actualizar usuario
 export const updateUser = async (req, res) => {
   const { usuarioId } = req.params;
-  const { rol, nombre, cedula } = req.body;
+  const { rol, nombre, cedula, contraseña } = req.body;
   try {
     // Validar datos de actualización con Zod
     const updateUserValidate = updateUserSchema.safeParse(req.body);
@@ -203,14 +203,37 @@ export const updateUser = async (req, res) => {
       }
     }
 
+    // Crear objeto con los datos a actualizar
+    const datosActualizados = { ...req.body };
+
+    // Si se está actualizando la contraseña, hashearla
+    if (contraseña) {
+      try {
+        // Usar 10 como número de rondas de sal (estándar)
+        const saltRounds = 10;
+        const hashedPassword = await bcrypt.hash(contraseña, saltRounds);
+        datosActualizados.contraseña = hashedPassword;
+      } catch (hashError) {
+        return res
+          .status(500)
+          .json({ error: "Error al procesar la contraseña" });
+      }
+    }
+
     // Actualizar usuario y obtener documento actualizado
     const usuario = await User.findOneAndUpdate(
       { usuarioId },
-      req.body,
+      datosActualizados,
       {
         new: true,
       } // Devuelve el documento actualizado
     );
+
+    // Para evitar mostrar la contraseña hasheada en la respuesta
+    const usuarioRespuesta = usuario.toObject();
+    if (usuarioRespuesta.contraseña) {
+      usuarioRespuesta.contraseña = "*******"; // O reemplazar con '********'
+    }
 
     // Generar log de auditoría
     await LogAuditoria.create({
@@ -220,15 +243,21 @@ export const updateUser = async (req, res) => {
       entidad: "Usuario",
       entidadId: usuarioId,
       cambios: {
-        previo: usuarioAnterior,
-        nuevo: usuario,
+        previo: {
+          ...usuarioAnterior.toObject(),
+          contraseña: contraseña ? "********" : usuarioAnterior.contraseña,
+        },
+        nuevo: {
+          ...usuarioRespuesta,
+          contraseña: contraseña ? "********" : usuarioRespuesta.contraseña,
+        },
       },
     });
 
     // Responder con éxito y datos actualizados
     res.json({
       message: "Usuario actualizado exitosamente",
-      data: usuario,
+      data: usuarioRespuesta,
     });
   } catch (error) {
     // Validaciones de unicidad
