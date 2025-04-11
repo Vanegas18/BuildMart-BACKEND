@@ -26,6 +26,8 @@ export const newProduct = async (req, res) => {
       stock: req.body.stock ? Number(req.body.stock) : undefined,
     };
 
+    console.log("Archivo recibido:", JSON.stringify(req.file, null, 2));
+
     // Determinar el tipo de imagen a manejar
     if (datosValidados.imgType === "url" && datosValidados.img) {
       // Usar la URL proporcionada directamente
@@ -81,8 +83,9 @@ export const newProduct = async (req, res) => {
   } catch (error) {
     console.error(
       "Error al crear el producto:",
-      JSON.stringify(error, null, 2)
+      JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
     );
+
     // Manejar error de duplicación
     if (error.code === 11000) {
       return res
