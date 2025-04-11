@@ -2,6 +2,11 @@ import Productos from "../../models/products/productModel.js";
 import Categorias from "../../models/categoryProduct/categoryModel.js";
 import LogAuditoria from "../../models/logsModel/LogAudit.js";
 import Pedidos from "../../models/orders/orderModel.js";
+// Importaciones necesarias de Firebase
+// Importamos lo necesario para Cloudinary (en lugar de Firebase)
+import { cloudinary } from "../../utils/cloudinary.js";
+import { isValidObjectId } from "mongoose";
+
 import {
   estadoProductSchema,
   ProductSchema,
@@ -20,6 +25,16 @@ export const newProduct = async (req, res) => {
         : undefined,
       stock: req.body.stock ? Number(req.body.stock) : undefined,
     };
+
+    // Determinar el tipo de imagen a manejar
+    if (datosValidados.imgType === "url" && datosValidados.img) {
+      // Usar la URL proporcionada directamente
+      // No necesitamos hacer nada, ya que ya está en datosValidados.img
+    } else if (req.file) {
+      // Si hay un archivo subido, la URL ya fue procesada por Cloudinary y está en req.file.path
+      datosValidados.img = req.file.path;
+      datosValidados.imgType = "file"; // Cambiar a file ya que subimos un archivo
+    }
 
     // Validar datos con Zod
     const productValidator = ProductSchema.safeParse(datosValidados);
@@ -146,6 +161,34 @@ export const updateProduct = async (req, res) => {
         : undefined,
       stock: req.body.stock ? Number(req.body.stock) : undefined,
     };
+
+    // Determinar el tipo de imagen a manejar
+    if (datosValidados.imgType === "url" && datosValidados.img) {
+      // Usar la URL proporcionada directamente
+      // No necesitamos hacer nada, ya que ya está en datosValidados.img
+    } else if (req.file) {
+      // Si hay un archivo subido, la URL ya fue procesada por Cloudinary y está en req.file.path
+      datosValidados.img = req.file.path;
+      datosValidados.imgType = "file"; // Cambiar a file ya que subimos un archivo
+
+      // Opcional: Eliminar la imagen anterior de Cloudinary si existe
+      const productoAnterior = await Productos.findOne({ productoId });
+      if (
+        productoAnterior &&
+        productoAnterior.img &&
+        productoAnterior.imgType === "file"
+      ) {
+        try {
+          // Extraer el public_id de la URL de Cloudinary
+          const publicId = productoAnterior.img.split("/").pop().split(".")[0];
+          if (publicId) {
+            await cloudinary.uploader.destroy(`productos/${publicId}`);
+          }
+        } catch (error) {
+          console.error("Error al eliminar imagen anterior:", error);
+        }
+      }
+    }
 
     // Validar datos de actualización con Zod
     const updateProductValidator =

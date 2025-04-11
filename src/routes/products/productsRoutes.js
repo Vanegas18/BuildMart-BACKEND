@@ -9,9 +9,7 @@ import {
 } from "../../controllers/products/productController.js";
 import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 
-import upload, {
-  processUploadedImage,
-} from "../../middlewares/upload/multerConfig.js";
+import { upload } from "../../utils/cloudinary.js";
 
 const router = express.Router();
 
@@ -19,28 +17,10 @@ router.get("/", getProductos);
 router.get("/:productoId", getProductById);
 router.get("/estado/:estado", getProductosByEstado);
 
+router.post("/", upload.single("image"), verificarAdmin, newProduct);
 
-router.post("/", verificarAdmin, newProduct);
+router.put("/:productoId", upload.single("image"), updateProduct);
 
-// Ruta nueva para crear producto con imagen subida
-router.post(
-  "/upload",
-  verificarAdmin,
-  upload.single("image"),
-  processUploadedImage,
-  newProduct
-);
-
-router.put("/:productoId", verificarAdmin, updateProduct);
-
-// Ruta nueva para actualizar producto con imagen subida
-router.put(
-  "/upload/:productoId",
-  verificarAdmin,
-  upload.single("image"),
-  processUploadedImage,
-  updateProduct
-);
 router.patch("/:productoId/estado", verificarAdmin, updateStateProduct);
 
 export default router;
