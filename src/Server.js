@@ -43,7 +43,25 @@ class Server {
     this.app.get("/", (req, res) => {
       res.send("<h1>¡BIENVENIDO A LA API DE BUILD MART!</h1>");
     });
-    
+    this.app.get("/test-cloudinary", async (req, res) => {
+      try {
+        const result = await cloudinary.api.ping();
+        res.json({ success: true, result });
+      } catch (err) {
+        console.error(
+          "Error en test-cloudinary:",
+          JSON.stringify(err, Object.getOwnPropertyNames(err), 2)
+        );
+        res.status(500).json({
+          success: false,
+          error: {
+            message: err.message,
+            name: err.name,
+            ...(err.response && { cloudinaryResponse: err.response.data }),
+          },
+        });
+      }
+    });
 
     this.conectarDB();
     this.middlewares();

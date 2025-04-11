@@ -105,7 +105,7 @@ export const newProduct = async (req, res) => {
       );
     }
 
-    console.log(
+    console.error(
       "💥 Error detallado:",
       JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
     );
