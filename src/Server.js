@@ -61,16 +61,28 @@ class Server {
     // Parsear multipart/form-data
     this.app.use(express.urlencoded({ extended: true }));
 
-    // Middleware de logging para debugging
+    // Middleware de logging mejorado
     this.app.use((req, res, next) => {
       console.log("📝 Request:", {
         method: req.method,
         path: req.path,
         body: req.body,
-        files: req.files,
+        files: req.files || req.file,
         headers: req.headers,
+        cookies: req.cookies,
       });
       next();
+    });
+
+    // Manejo de errores de multer
+    this.app.use((err, req, res, next) => {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({
+          error: "Error al subir archivo",
+          details: err.message,
+        });
+      }
+      next(err);
     });
 
     // Manejo de errores global

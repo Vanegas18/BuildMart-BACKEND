@@ -20,11 +20,26 @@ const storage = new CloudinaryStorage({
     folder: "productos", // Carpeta donde se guardarán las imágenes
     allowed_formats: ["jpg", "jpeg", "png", "webp"], // Formatos permitidos
     transformation: [{ width: 1000, height: 1000, crop: "limit" }], // Transformaciones opcionales
+    public_id: (req, file) => {
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
+      return `producto-${uniqueSuffix}`;
+    },
   },
 });
 
-// Configuración de Multer con Cloudinary
-export const upload = multer({ storage: storage });
+// Configurar límites y filtros
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/)) {
+      return cb(new Error("Solo se permiten imágenes jpg, jpeg, png y webp"));
+    }
+    cb(null, true);
+  },
+});
 
 // Exportar cloudinary para usarlo en otros archivos
-export { cloudinary };
+export { upload, cloudinary };

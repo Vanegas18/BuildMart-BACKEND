@@ -4,7 +4,7 @@ import LogAuditoria from "../../models/logsModel/LogAudit.js";
 import Pedidos from "../../models/orders/orderModel.js";
 // Importaciones necesarias de Firebase
 // Importamos lo necesario para Cloudinary (en lugar de Firebase)
-import { cloudinary } from "../../utils/cloudinary.js";
+import { cloudinary, upload } from "../../utils/cloudinary.js";
 import util from "util";
 
 import {
@@ -18,10 +18,11 @@ export const newProduct = async (req, res) => {
   const { categorias } = req.body;
 
   try {
-    console.log("🔍 Headers:", req.headers);
-    console.log("📦 Body completo:", req.body);
-    console.log("📎 Archivos:", req.files || req.file);
-
+    // Logging detallado
+    console.log("📦 Headers completos:", JSON.stringify(req.headers, null, 2));
+    console.log("🎁 Body completo:", JSON.stringify(req.body, null, 2));
+    console.log("📎 Archivo:", req.file);
+    console.log("🔑 Usuario:", req.usuario);
 
     // Verificar si se recibieron los datos necesarios
     if (!req.body) {
