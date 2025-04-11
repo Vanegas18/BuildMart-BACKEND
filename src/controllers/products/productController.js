@@ -18,8 +18,10 @@ export const newProduct = async (req, res) => {
   const { categorias } = req.body;
 
   try {
-    console.log("📦 Body recibido:", JSON.stringify(req.body, null, 2));
-    console.log("🖼️ Archivo recibido:", JSON.stringify(req.file, null, 2));
+    console.log("🔍 Headers:", req.headers);
+    console.log("📦 Body completo:", req.body);
+    console.log("📎 Archivos:", req.files || req.file);
+
 
     // Verificar si se recibieron los datos necesarios
     if (!req.body) {
@@ -93,7 +95,11 @@ export const newProduct = async (req, res) => {
       .status(201)
       .json({ message: "Producto creado exitosamente", data: producto });
   } catch (error) {
-    console.error("💥 Error al crear producto:", error);
+    console.error("💥 Error detallado:", {
+      message: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
 
     // Manejar errores específicos
     if (error.code === 11000) {

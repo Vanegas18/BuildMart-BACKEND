@@ -14,9 +14,6 @@ import buysRoutes from "./routes/buys/buysRoutes.js";
 import orderRoutes from "./routes/orders/ordersRoutes.js";
 import saleRoutes from "./routes/sales/saleRoutes.js";
 import clientRoutes from "./routes/customers/clientRoutes.js";
-import path from "path";
-import { fileURLToPath } from "url";
-import { dirname } from "path";
 
 class Server {
   constructor() {
@@ -51,12 +48,19 @@ class Server {
   middlewares() {
     this.app.use(
       cors({
-        origin: "http://localhost:5173",
+        origin: [
+          "http://localhost:5173",
+          "https://buildmart-back-billowing-feather-8375.fly.dev",
+        ],
         credentials: true,
       })
     );
     this.app.use(express.json());
     this.app.use(cookieParser());
+
+    // Parsear multipart/form-data
+    this.app.use(express.urlencoded({ extended: true }));
+
     // Middleware de logging para debugging
     this.app.use((req, res, next) => {
       console.log("📝 Request:", {
@@ -67,6 +71,15 @@ class Server {
         headers: req.headers,
       });
       next();
+    });
+
+    // Manejo de errores global
+    this.app.use((err, req, res, next) => {
+      console.error("💥 Error:", err);
+      res.status(500).json({
+        error: "Error interno del servidor",
+        message: err.message,
+      });
     });
   }
 
