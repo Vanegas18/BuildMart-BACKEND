@@ -17,11 +17,6 @@ import clientRoutes from "./routes/customers/clientRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
-import { v2 as cloudinary } from "cloudinary";
-
-// Obtener el directorio actual
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
 
 class Server {
   constructor() {
@@ -43,25 +38,6 @@ class Server {
     this.app.get("/", (req, res) => {
       res.send("<h1>¡BIENVENIDO A LA API DE BUILD MART!</h1>");
     });
-    this.app.get("/test-cloudinary", async (req, res) => {
-      try {
-        const result = await cloudinary.api.ping();
-        res.json({ success: true, result });
-      } catch (err) {
-        console.error(
-          "Error en test-cloudinary:",
-          JSON.stringify(err, Object.getOwnPropertyNames(err), 2)
-        );
-        res.status(500).json({
-          success: false,
-          error: {
-            message: err.message,
-            name: err.name,
-            ...(err.response && { cloudinaryResponse: err.response.data }),
-          },
-        });
-      }
-    });
 
     this.conectarDB();
     this.middlewares();
@@ -81,8 +57,17 @@ class Server {
     );
     this.app.use(express.json());
     this.app.use(cookieParser());
-    // Servir archivos estáticos
-    this.app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+    // Middleware de logging para debugging
+    this.app.use((req, res, next) => {
+      console.log("📝 Request:", {
+        method: req.method,
+        path: req.path,
+        body: req.body,
+        files: req.files,
+        headers: req.headers,
+      });
+      next();
+    });
   }
 
   routes() {

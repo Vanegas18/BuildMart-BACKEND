@@ -15,11 +15,18 @@ import {
 
 // Agregar nuevo producto
 export const newProduct = async (req, res) => {
-  console.log("💥 Error completo:\n", util.inspect(error, { depth: null }));
   const { categorias } = req.body;
+
   try {
     console.log("📦 Body recibido:", JSON.stringify(req.body, null, 2));
     console.log("🖼️ Archivo recibido:", JSON.stringify(req.file, null, 2));
+
+    // Verificar si se recibieron los datos necesarios
+    if (!req.body) {
+      return res.status(400).json({
+        error: "No se recibieron datos del producto",
+      });
+    }
 
     // Convertir campos numéricos de string a número
     const datosValidados = {
@@ -30,23 +37,25 @@ export const newProduct = async (req, res) => {
       stock: req.body.stock ? Number(req.body.stock) : undefined,
     };
 
-    console.log("Archivo recibido:", JSON.stringify(req.file, null, 2));
-
-    // Determinar el tipo de imagen a manejar
+    // Manejar la imagen
     if (datosValidados.imgType === "url" && datosValidados.img) {
       // Usar la URL proporcionada directamente
-      // No necesitamos hacer nada, ya que ya está en datosValidados.img
     } else if (req.file) {
-      // Si hay un archivo subido, la URL ya fue procesada por Cloudinary y está en req.file.path
       datosValidados.img = req.file.path;
-      datosValidados.imgType = "file"; // Cambiar a file ya que subimos un archivo
+      datosValidados.imgType = "file";
+    } else {
+      return res.status(400).json({
+        error: "Se requiere una imagen (URL o archivo)",
+      });
     }
 
     // Validar datos con Zod
     const productValidator = ProductSchema.safeParse(datosValidados);
     if (!productValidator.success) {
+      console.log("⚠️ Errores de validación:", productValidator.error);
       return res.status(400).json({
-        error: productValidator.error,
+        error: "Error de validación",
+        details: productValidator.error.issues,
       });
     }
 
@@ -54,21 +63,12 @@ export const newProduct = async (req, res) => {
     if (Array.isArray(categorias)) {
       for (const categoriaId of categorias) {
         const idExistente = await Categorias.findById(categoriaId);
-
         if (!idExistente) {
           return res
             .status(400)
             .json({ error: `La categoría con ID ${categoriaId} no existe` });
         }
       }
-    }
-
-    if (!productValidator.success) {
-      console.log(
-        "⚠️ Errores Zod:",
-        JSON.stringify(productValidator.error.issues, null, 2)
-      );
-      return res.status(400).json({ error: productValidator.error });
     }
 
     // Crear y guardar el nuevo producto
@@ -93,27 +93,19 @@ export const newProduct = async (req, res) => {
       .status(201)
       .json({ message: "Producto creado exitosamente", data: producto });
   } catch (error) {
-    console.log(
-      "💥 Error detallado:",
-      JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
-    );
+    console.error("💥 Error al crear producto:", error);
 
-    if (error.response) {
-      console.log(
-        "📡 Respuesta del servidor:",
-        JSON.stringify(error.response.data, null, 2)
-      );
+    // Manejar errores específicos
+    if (error.code === 11000) {
+      return res.status(400).json({
+        error: "Ya existe un producto con ese nombre",
+      });
     }
 
-    console.error(
-      "💥 Error detallado:",
-      JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
-    );
-
-    console.log("💥 Error completo:\n", util.inspect(error, { depth: null }));
-
-    res.status(500).json({
-      error: error.message || "Error desconocido",
+    // Error general
+    return res.status(500).json({
+      error: "Error al crear el producto",
+      message: error.message,
     });
   }
 };
