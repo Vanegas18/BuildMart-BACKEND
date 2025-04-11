@@ -155,7 +155,7 @@ export const getProductosByEstado = async (req, res) => {
 
 // Actualizar productos
 export const updateProduct = async (req, res) => {
-  const { productoId } = req.params;
+  const { productoId } = req.params; // Este es el valor "2" que viene de la URL
   const { categorias } = req.body;
 
   try {
@@ -168,8 +168,11 @@ export const updateProduct = async (req, res) => {
       stock: req.body.stock ? Number(req.body.stock) : undefined,
     };
 
-    // Obtener la categoría antes de actualizarla para el log
-    const productoAnterior = await Productos.findById({ productoId });
+    // CORRECCIÓN: Buscar por el campo productoId (numérico) en lugar del _id
+    const productoAnterior = await Productos.findOne({ 
+      productoId: Number(productoId) 
+    });
+    
     if (!productoAnterior) {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
@@ -211,7 +214,7 @@ export const updateProduct = async (req, res) => {
       updateProductSchema.safeParse(datosValidados);
     if (!updateProductValidator.success) {
       return res.status(400).json({
-        error: updateProductValidator.error,
+        error: updateProductValidator.error.issues,
       });
     }
 
@@ -227,9 +230,9 @@ export const updateProduct = async (req, res) => {
       }
     }
 
-    // Actualizar el producto
-    const producto = await Productos.findByIdAndUpdate(
-      { productoId },
+    // CORRECCIÓN: Actualizar usando el campo productoId
+    const producto = await Productos.findOneAndUpdate(
+      { productoId: Number(productoId) },
       datosValidados,
       { new: true } // Devuelve el documento actualizado
     );
@@ -240,7 +243,7 @@ export const updateProduct = async (req, res) => {
       fecha: new Date(),
       accion: "actualizar",
       entidad: "Producto",
-      entidadId: productoId,
+      entidadId: productoAnterior._id, // Usamos el _id real del documento
       cambios: {
         previo: productoAnterior,
         nuevo: producto,
@@ -255,7 +258,6 @@ export const updateProduct = async (req, res) => {
   } catch (error) {
     // Manejar error de duplicación
     if (error.code === 11000) {
-      console.error("❌ Error de duplicación (código 11000)");
       return res
         .status(400)
         .json({ error: "El nombre del producto ya está en uso" });
