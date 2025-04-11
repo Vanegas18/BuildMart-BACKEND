@@ -79,6 +79,10 @@ export const newProduct = async (req, res) => {
       .status(201)
       .json({ message: "Producto creado exitosamente", data: producto });
   } catch (error) {
+    console.error(
+      "Error al crear el producto:",
+      JSON.stringify(error, null, 2)
+    );
     // Manejar error de duplicación
     if (error.code === 11000) {
       return res

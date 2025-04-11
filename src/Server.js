@@ -17,6 +17,7 @@ import clientRoutes from "./routes/customers/clientRoutes.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { v2 as cloudinary } from "cloudinary";
 
 // Obtener el directorio actual
 const __filename = fileURLToPath(import.meta.url);
@@ -42,6 +43,19 @@ class Server {
     this.app.get("/", (req, res) => {
       res.send("<h1>¡BIENVENIDO A LA API DE BUILD MART!</h1>");
     });
+    this.app.get("/test-cloudinary", async (req, res) => {
+      try {
+        const result = await cloudinary.api.ping();
+        res.json({ success: true, result });
+      } catch (err) {
+        console.error(
+          "Error en test-cloudinary:",
+          JSON.stringify(err, null, 2)
+        );
+        res.status(500).json({ success: false, error: err });
+      }
+    });
+
     this.conectarDB();
     this.middlewares();
     this.routes();
