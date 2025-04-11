@@ -56,10 +56,8 @@ class Server {
       })
     );
     this.app.use(express.json());
-    this.app.use(cookieParser());
-
-    // Parsear multipart/form-data
     this.app.use(express.urlencoded({ extended: true }));
+    this.app.use(cookieParser());
 
     // Middleware de logging mejorado
     this.app.use((req, res, next) => {
@@ -72,26 +70,6 @@ class Server {
         cookies: req.cookies,
       });
       next();
-    });
-
-    // Manejo de errores de multer
-    this.app.use((err, req, res, next) => {
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({
-          error: "Error al subir archivo",
-          details: err.message,
-        });
-      }
-      next(err);
-    });
-
-    // Manejo de errores global
-    this.app.use((err, req, res, next) => {
-      console.error("💥 Error:", err);
-      res.status(500).json({
-        error: "Error interno del servidor",
-        message: err.message,
-      });
     });
   }
 

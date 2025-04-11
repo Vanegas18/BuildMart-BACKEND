@@ -13,11 +13,21 @@ import { upload } from "../../utils/cloudinary.js";
 
 const router = express.Router();
 
+router.use((req, res, next) => {
+  console.log("🔍 Debugging productos:", {
+    headers: req.headers,
+    body: req.body,
+    files: req.files,
+    file: req.file,
+  });
+  next();
+});
+
 router.get("/", getProductos);
 router.get("/:productoId", getProductById);
 router.get("/estado/:estado", getProductosByEstado);
 
-router.post("/", upload.single("image"), verificarAdmin, newProduct);
+router.post("/", verificarAdmin, upload.single("image"), newProduct);
 
 router.put("/:productoId", upload.single("image"), updateProduct);
 
