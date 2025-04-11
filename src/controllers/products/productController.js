@@ -159,6 +159,14 @@ export const updateProduct = async (req, res) => {
   const { categorias } = req.body;
 
   try {
+    // Validar que productoId sea un número válido
+    const productoIdNumerico = parseInt(productoId);
+    if (isNaN(productoIdNumerico)) {
+      return res.status(400).json({
+        error: "El ID del producto debe ser un número válido",
+      });
+    }
+
     // Convertir campos numéricos de string a número
     const datosValidados = {
       ...req.body,
@@ -169,10 +177,10 @@ export const updateProduct = async (req, res) => {
     };
 
     // CORRECCIÓN: Buscar por el campo productoId (numérico) en lugar del _id
-    const productoAnterior = await Productos.findOne({ 
-      productoId: Number(productoId) 
+    const productoAnterior = await Productos.findOne({
+      productoId: productoIdNumerico,
     });
-    
+
     if (!productoAnterior) {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
@@ -232,7 +240,7 @@ export const updateProduct = async (req, res) => {
 
     // CORRECCIÓN: Actualizar usando el campo productoId
     const producto = await Productos.findOneAndUpdate(
-      { productoId: Number(productoId) },
+      { productoId: productoIdNumerico },
       datosValidados,
       { new: true } // Devuelve el documento actualizado
     );
