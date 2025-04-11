@@ -48,9 +48,9 @@ router.post(
 router.get("/:productoId", getProductById);
 router.get("/estado/:estado", getProductosByEstado);
 
-router.post("/", verificarAdmin, upload.single("image"), newProduct);
+// router.post("/", verificarAdmin, upload.single("image"), newProduct);
 
-router.put("/:productoId", upload.single("image"), updateProduct);
+// router.put("/:productoId", upload.single("image"), updateProduct);
 
 router.patch("/:productoId/estado", verificarAdmin, updateStateProduct);
 
