@@ -2,11 +2,7 @@ import Productos from "../../models/products/productModel.js";
 import Categorias from "../../models/categoryProduct/categoryModel.js";
 import LogAuditoria from "../../models/logsModel/LogAudit.js";
 import Pedidos from "../../models/orders/orderModel.js";
-// Importaciones necesarias de Firebase
-// Importamos lo necesario para Cloudinary (en lugar de Firebase)
-import { cloudinary, upload } from "../../utils/cloudinary.js";
-import util from "util";
-
+import { cloudinary } from "../../utils/cloudinary.js";
 import {
   estadoProductSchema,
   ProductSchema,
@@ -18,12 +14,6 @@ export const newProduct = async (req, res) => {
   const { categorias } = req.body;
 
   try {
-    console.log("📦 Request completo:", {
-      body: req.body,
-      file: req.file,
-      headers: req.headers,
-    });
-
     // Verificar si se recibieron los datos necesarios
     if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({
@@ -43,26 +33,13 @@ export const newProduct = async (req, res) => {
       ...req.body,
       precioCompra: Number(req.body.precioCompra),
       stock: Number(req.body.stock),
-      img: req.file.path, // URL de Cloudinary
+      img: req.file.path,
       imgType: "file",
     };
-
-    // Manejar la imagen
-    if (datosValidados.imgType === "url" && datosValidados.img) {
-      // Usar la URL proporcionada directamente
-    } else if (req.file) {
-      datosValidados.img = req.file.path;
-      datosValidados.imgType = "file";
-    } else {
-      return res.status(400).json({
-        error: "Se requiere una imagen (URL o archivo)",
-      });
-    }
 
     // Validar datos con Zod
     const productValidator = ProductSchema.safeParse(datosValidados);
     if (!productValidator.success) {
-      console.log("⚠️ Errores de validación:", productValidator.error);
       return res.status(400).json({
         error: "Error de validación",
         details: productValidator.error.issues,
@@ -103,12 +80,6 @@ export const newProduct = async (req, res) => {
       .status(201)
       .json({ message: "Producto creado exitosamente", data: producto });
   } catch (error) {
-    console.error("💥 Error detallado:", {
-      message: error.message,
-      stack: error.stack,
-      name: error.name,
-    });
-
     // Manejar errores específicos
     if (error.code === 11000) {
       return res.status(400).json({

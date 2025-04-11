@@ -5,7 +5,6 @@ import { dbConnection } from "./config/db.js";
 import categoryProduct from "./routes/categoryProduct/categoryRoutes.js";
 import categorySuppliers from "./routes/categorySuppliers/catSuppliersRoutes.js";
 import suppliers from "./routes/suppliers/supplierRoutes.js";
-import categoryProductRoutes from "./routes/categoryProduct/categoryRoutes.js";
 import rolesRoutes from "./routes/rolesAndPermissions/rolesRoutes.js";
 import permissionsRoutes from "./routes/rolesAndPermissions/permissionsRouter.js";
 import userRoutes from "./routes/users/userRoutes.js";
@@ -58,40 +57,12 @@ class Server {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
-
-    // Middleware de logging mejorado
-    this.app.use((req, res, next) => {
-      console.log("📝 Request:", {
-        method: req.method,
-        path: req.path,
-        body: req.body,
-        files: req.files || req.file,
-        headers: req.headers,
-        cookies: req.cookies,
-      });
-      next();
-    });
-
-    // Middleware de debug para multipart/form-data
-    this.app.use((req, res, next) => {
-      if (req.is("multipart/form-data")) {
-        console.log("🔍 Procesando multipart/form-data:", {
-          contentType: req.headers["content-type"],
-          boundary: req.headers["content-type"].split("boundary=")[1],
-          bodyKeys: Object.keys(req.body),
-          files: req.files,
-          file: req.file,
-        });
-      }
-      next();
-    });
   }
 
   routes() {
     this.app.use(this.paths.categoriesProducts, categoryProduct);
     this.app.use(this.paths.categoriesSuppliers, categorySuppliers);
     this.app.use(this.paths.suppliers, suppliers);
-    this.app.use(this.paths.categoriesProducts, categoryProductRoutes);
     this.app.use(this.paths.roles, rolesRoutes);
     this.app.use(this.paths.permissions, permissionsRoutes);
     this.app.use(this.paths.users, userRoutes);

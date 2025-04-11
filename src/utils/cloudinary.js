@@ -1,4 +1,3 @@
-// utils/cloudinary.js
 import { v2 as cloudinary } from "cloudinary";
 import { CloudinaryStorage } from "multer-storage-cloudinary";
 import multer from "multer";
@@ -15,14 +14,14 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "productos",
-    format: "jpg", // Forzar formato jpg
-    allowed_formats: ["jpg", "jpeg", "png", "webp", "avif"], // Añadir avif a los formatos permitidos
+    format: "jpg",
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "avif"],
     transformation: [
       {
         width: 1000,
         height: 1000,
         crop: "limit",
-        format: "jpg", // Convertir todo a jpg
+        format: "jpg",
       },
     ],
     public_id: (req, file) => {
@@ -33,14 +32,6 @@ const storage = new CloudinaryStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  // Log detallado del archivo
-  console.log("🔍 Verificando archivo:", {
-    originalname: file.originalname,
-    mimetype: file.mimetype,
-    size: file.size,
-  });
-
-  // Lista de tipos MIME permitidos
   const allowedMimes = [
     "image/jpeg",
     "image/jpg",
@@ -60,7 +51,6 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Configurar límites y filtros
 const upload = multer({
   storage: storage,
   limits: {
@@ -69,5 +59,4 @@ const upload = multer({
   fileFilter: fileFilter,
 }).single("image");
 
-// Exportar cloudinary para usarlo en otros archivos
 export { upload, cloudinary };
