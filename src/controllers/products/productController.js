@@ -5,7 +5,7 @@ import Pedidos from "../../models/orders/orderModel.js";
 // Importaciones necesarias de Firebase
 // Importamos lo necesario para Cloudinary (en lugar de Firebase)
 import { cloudinary } from "../../utils/cloudinary.js";
-import { isValidObjectId } from "mongoose";
+import util from "util";
 
 import {
   estadoProductSchema,
@@ -13,7 +13,6 @@ import {
   updateProductSchema,
 } from "../../middlewares/products/productsValidations.js";
 
-console.log("💥 Error completo:\n", util.inspect(error, { depth: null }));
 // Agregar nuevo producto
 export const newProduct = async (req, res) => {
   console.log("💥 Error completo:\n", util.inspect(error, { depth: null }));
@@ -72,7 +71,6 @@ export const newProduct = async (req, res) => {
       return res.status(400).json({ error: productValidator.error });
     }
 
-    
     // Crear y guardar el nuevo producto
     const producto = new Productos(datosValidados);
     await producto.save();
@@ -111,6 +109,8 @@ export const newProduct = async (req, res) => {
       "💥 Error detallado:",
       JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
     );
+
+    console.log("💥 Error completo:\n", util.inspect(error, { depth: null }));
 
     res.status(500).json({
       error: error.message || "Error desconocido",
