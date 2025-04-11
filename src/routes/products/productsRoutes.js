@@ -29,6 +29,23 @@ router.post(
   newProduct
 );
 
+router.put(
+  "/:productoId",
+  verificarAdmin,
+  (req, res, next) => {
+    upload(req, res, function (err) {
+      if (err) {
+        return res.status(400).json({
+          error: "Error en la subida del archivo",
+          details: err.message,
+        });
+      }
+      next();
+    });
+  },
+  updateProduct
+);
+
 router.get("/", getProductos);
 router.get("/:productoId", getProductById);
 router.get("/estado/:estado", getProductosByEstado);

@@ -168,16 +168,21 @@ export const updateProduct = async (req, res) => {
       stock: req.body.stock ? Number(req.body.stock) : undefined,
     };
 
+    // Obtener la categoría antes de actualizarla para el log
+    const productoAnterior = await Productos.findOne({ productoId });
+    if (!productoAnterior) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
     // Determinar el tipo de imagen a manejar
     if (datosValidados.imgType === "url" && datosValidados.img) {
+      // Mantener la URL proporcionada
     } else if (req.file) {
-      // Si hay un archivo subido, la URL ya fue procesada por Cloudinary y está en req.file.path
+      // Si hay un archivo subido, usar la URL de Cloudinary
       datosValidados.img = req.file.path;
-      datosValidados.imgType = "file"; // Cambiar a file ya que subimos un archivo
+      datosValidados.imgType = "file";
 
       // Opcional: Eliminar la imagen anterior de Cloudinary si existe
-      const productoAnterior = await Productos.findOne({ productoId });
-
       if (
         productoAnterior &&
         productoAnterior.img &&
@@ -190,9 +195,11 @@ export const updateProduct = async (req, res) => {
           if (publicId) {
             await cloudinary.uploader.destroy(`productos/${publicId}`);
           }
-        } catch (error) {}
+        } catch (error) {
+          // Continuar aunque falle la eliminación de la imagen anterior
+        }
       }
-    } else if (datosValidados.imgType === "file") {
+    } else if (datosValidados.imgType === "file" && !req.file) {
       return res.status(400).json({
         error:
           "Se especificó imgType como 'file' pero no se recibió ningún archivo",
@@ -206,12 +213,6 @@ export const updateProduct = async (req, res) => {
       return res.status(400).json({
         error: updateProductValidator.error,
       });
-    }
-
-    // Obtener la categoría antes de actualizarla para el log
-    const productoAnterior = await Productos.findOne({ productoId });
-    if (!productoAnterior) {
-      return res.status(404).json({ error: "Producto no encontrado" });
     }
 
     // Validar si los IDs de categorías existen
@@ -260,11 +261,10 @@ export const updateProduct = async (req, res) => {
         .json({ error: "El nombre del producto ya está en uso" });
     }
 
-    // Devuelve más detalles sobre el error
+    // Devuelve detalles básicos sobre el error
     res.status(500).json({
-      error: error.message,
-      stack: error.stack,
-      name: error.name,
+      error: "Error al actualizar el producto",
+      message: error.message,
     });
   }
 };
