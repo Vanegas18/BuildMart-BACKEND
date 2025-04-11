@@ -169,7 +169,7 @@ export const updateProduct = async (req, res) => {
     };
 
     // Obtener la categoría antes de actualizarla para el log
-    const productoAnterior = await Productos.findOne({ productoId });
+    const productoAnterior = await Productos.findById({ productoId });
     if (!productoAnterior) {
       return res.status(404).json({ error: "Producto no encontrado" });
     }
@@ -228,7 +228,7 @@ export const updateProduct = async (req, res) => {
     }
 
     // Actualizar el producto
-    const producto = await Productos.findOneAndUpdate(
+    const producto = await Productos.findByIdAndUpdate(
       { productoId },
       datosValidados,
       { new: true } // Devuelve el documento actualizado
