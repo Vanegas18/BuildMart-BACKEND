@@ -13,6 +13,8 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
+console.log("Cloudinary configurado:", cloudinary.config().cloud_name);
+
 // Configuración del almacenamiento
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
