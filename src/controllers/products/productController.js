@@ -85,8 +85,11 @@ export const newProduct = async (req, res) => {
         .status(400)
         .json({ error: "El nombre del producto ya está en uso" });
     }
-    // Manejar otros errores
-    res.status(400).json({ error: error.errors || error.message });
+    res.status(500).json({
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
   }
 };
 
@@ -249,8 +252,12 @@ export const updateProduct = async (req, res) => {
         .status(400)
         .json({ error: "El nombre del producto ya está en uso" });
     }
-    // Manejar otros errores
-    res.status(400).json({ error: error.errors || error.message });
+    // Devuelve más detalles sobre el error
+    res.status(500).json({
+      error: error.message,
+      stack: error.stack,
+      name: error.name,
+    });
   }
 };
 
