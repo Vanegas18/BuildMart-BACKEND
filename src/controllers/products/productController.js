@@ -156,7 +156,7 @@ export const getProductosByEstado = async (req, res) => {
 // Actualizar productos
 export const updateProduct = async (req, res) => {
   const { productoId } = req.params; // Este es el valor "2" que viene de la URL
-  const { categorias } = req.body;
+  const { categorias } = req.body.categorias;
 
   try {
     // Validar que productoId sea un número válido
@@ -170,6 +170,7 @@ export const updateProduct = async (req, res) => {
     // Convertir campos numéricos de string a número
     const datosValidados = {
       ...req.body,
+      categorias, // Asignar las categorías ya parseadas
       precioCompra: req.body.precioCompra
         ? Number(req.body.precioCompra)
         : undefined,
