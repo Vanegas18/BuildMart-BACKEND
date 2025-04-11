@@ -156,13 +156,6 @@ export const updateProduct = async (req, res) => {
   const { productoId } = req.params;
   const { categorias } = req.body;
 
-  console.log("⭐ Iniciando updateProduct para productoId:", productoId);
-  console.log("⭐ Datos recibidos en el body:", req.body);
-  console.log(
-    "⭐ Archivo recibido:",
-    req.file ? "Sí (archivo presente)" : "No"
-  );
-
   try {
     // Convertir campos numéricos de string a número
     const datosValidados = {
@@ -173,25 +166,15 @@ export const updateProduct = async (req, res) => {
       stock: req.body.stock ? Number(req.body.stock) : undefined,
     };
 
-    console.log("⭐ Datos validados iniciales:", datosValidados);
-
     // Determinar el tipo de imagen a manejar
     if (datosValidados.imgType === "url" && datosValidados.img) {
-      console.log("⭐ Usando URL de imagen:", datosValidados.img);
     } else if (req.file) {
-      console.log("⭐ Procesando archivo subido:", req.file);
-      console.log("⭐ Ruta del archivo:", req.file.path);
-
       // Si hay un archivo subido, la URL ya fue procesada por Cloudinary y está en req.file.path
       datosValidados.img = req.file.path;
       datosValidados.imgType = "file"; // Cambiar a file ya que subimos un archivo
 
       // Opcional: Eliminar la imagen anterior de Cloudinary si existe
       const productoAnterior = await Productos.findOne({ productoId });
-      console.log(
-        "⭐ Producto anterior encontrado:",
-        productoAnterior ? "Sí" : "No"
-      );
 
       if (
         productoAnterior &&
@@ -201,88 +184,54 @@ export const updateProduct = async (req, res) => {
         try {
           // Extraer el public_id de la URL de Cloudinary
           const publicId = productoAnterior.img.split("/").pop().split(".")[0];
-          console.log("⭐ Public ID de imagen anterior:", publicId);
 
           if (publicId) {
-            console.log("⭐ Intentando eliminar imagen anterior de Cloudinary");
             await cloudinary.uploader.destroy(`productos/${publicId}`);
-            console.log("⭐ Imagen anterior eliminada con éxito");
           }
-        } catch (error) {
-          console.error("❌ Error al eliminar imagen anterior:", error);
-        }
+        } catch (error) {}
       }
     } else if (datosValidados.imgType === "file") {
-      console.error(
-        "❌ Se especificó imgType como 'file' pero no se recibió ningún archivo"
-      );
       return res.status(400).json({
         error:
           "Se especificó imgType como 'file' pero no se recibió ningún archivo",
       });
     }
 
-    console.log(
-      "⭐ Datos validados después de procesar imagen:",
-      datosValidados
-    );
-
     // Validar datos de actualización con Zod
-    console.log("⭐ Validando datos con Zod");
     const updateProductValidator =
       updateProductSchema.safeParse(datosValidados);
     if (!updateProductValidator.success) {
-      console.error(
-        "❌ Error de validación Zod:",
-        updateProductValidator.error
-      );
       return res.status(400).json({
         error: updateProductValidator.error,
       });
     }
-    console.log("⭐ Validación Zod exitosa");
 
     // Obtener la categoría antes de actualizarla para el log
     const productoAnterior = await Productos.findOne({ productoId });
     if (!productoAnterior) {
-      console.error("❌ Producto no encontrado con ID:", productoId);
       return res.status(404).json({ error: "Producto no encontrado" });
     }
-    console.log(
-      "⭐ Producto encontrado para actualizar:",
-      productoAnterior.nombre
-    );
 
     // Validar si los IDs de categorías existen
     if (Array.isArray(categorias)) {
-      console.log("⭐ Validando categorías:", categorias);
       for (const categoriaId of categorias) {
         const categoriaExistente = await Categorias.findById(categoriaId);
         if (!categoriaExistente) {
-          console.error("❌ Categoría no encontrada:", categoriaId);
           return res
             .status(404)
             .json({ error: `La categoría con ID ${categoriaId} no existe` });
         }
-        console.log(
-          "⭐ Categoría válida:",
-          categoriaId,
-          categoriaExistente.nombre
-        );
       }
     }
 
     // Actualizar el producto
-    console.log("⭐ Actualizando producto en la base de datos");
     const producto = await Productos.findOneAndUpdate(
       { productoId },
       datosValidados,
       { new: true } // Devuelve el documento actualizado
     );
-    console.log("⭐ Producto actualizado exitosamente:", producto.nombre);
 
     // Generar log de auditoría
-    console.log("⭐ Generando log de auditoría");
     await LogAuditoria.create({
       usuario: req.usuario ? req.usuario.id : "SISTEMA",
       fecha: new Date(),
@@ -294,19 +243,13 @@ export const updateProduct = async (req, res) => {
         nuevo: producto,
       },
     });
-    console.log("⭐ Log de auditoría generado exitosamente");
 
     // Responder con éxito y datos actualizados
-    console.log("⭐ Enviando respuesta de éxito");
     res.json({
       message: "Producto actualizado exitosamente",
       data: producto,
     });
   } catch (error) {
-    console.error("❌ ERROR COMPLETO:", error);
-    console.error("❌ Mensaje:", error.message);
-    console.error("❌ Stack:", error.stack);
-
     // Manejar error de duplicación
     if (error.code === 11000) {
       console.error("❌ Error de duplicación (código 11000)");
@@ -316,7 +259,6 @@ export const updateProduct = async (req, res) => {
     }
 
     // Devuelve más detalles sobre el error
-    console.error("❌ Enviando respuesta de error");
     res.status(500).json({
       error: error.message,
       stack: error.stack,
