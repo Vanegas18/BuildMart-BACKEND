@@ -77,6 +77,8 @@ router.post(
   },
   newProduct
 );
+
+router.get("/", getProductos);
 router.get("/:productoId", getProductById);
 router.get("/estado/:estado", getProductosByEstado);
 
