@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+console.log("💥 Error completo:\n", util.inspect(error, { depth: null }));
 // Configuración de Cloudinary
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,

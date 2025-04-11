@@ -13,10 +13,15 @@ import {
   updateProductSchema,
 } from "../../middlewares/products/productsValidations.js";
 
+console.log("💥 Error completo:\n", util.inspect(error, { depth: null }));
 // Agregar nuevo producto
 export const newProduct = async (req, res) => {
+  console.log("💥 Error completo:\n", util.inspect(error, { depth: null }));
   const { categorias } = req.body;
   try {
+    console.log("📦 Body recibido:", JSON.stringify(req.body, null, 2));
+    console.log("🖼️ Archivo recibido:", JSON.stringify(req.file, null, 2));
+
     // Convertir campos numéricos de string a número
     const datosValidados = {
       ...req.body,
@@ -59,6 +64,15 @@ export const newProduct = async (req, res) => {
       }
     }
 
+    if (!productValidator.success) {
+      console.log(
+        "⚠️ Errores Zod:",
+        JSON.stringify(productValidator.error.issues, null, 2)
+      );
+      return res.status(400).json({ error: productValidator.error });
+    }
+
+    
     // Crear y guardar el nuevo producto
     const producto = new Productos(datosValidados);
     await producto.save();
@@ -81,21 +95,25 @@ export const newProduct = async (req, res) => {
       .status(201)
       .json({ message: "Producto creado exitosamente", data: producto });
   } catch (error) {
-    console.error(
-      "Error al crear el producto:",
+    console.log(
+      "💥 Error detallado:",
       JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
     );
 
-    // Manejar error de duplicación
-    if (error.code === 11000) {
-      return res
-        .status(400)
-        .json({ error: "El nombre del producto ya está en uso" });
+    if (error.response) {
+      console.log(
+        "📡 Respuesta del servidor:",
+        JSON.stringify(error.response.data, null, 2)
+      );
     }
+
+    console.log(
+      "💥 Error detallado:",
+      JSON.stringify(error, Object.getOwnPropertyNames(error), 2)
+    );
+
     res.status(500).json({
-      error: error.message,
-      stack: error.stack,
-      name: error.name,
+      error: error.message || "Error desconocido",
     });
   }
 };
