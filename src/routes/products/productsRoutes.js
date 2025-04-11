@@ -1,4 +1,5 @@
 import express from "express";
+import multer from "multer";
 import {
   getProductById,
   getProductos,
@@ -28,6 +29,13 @@ router.post(
   verificarAdmin,
   (req, res, next) => {
     upload(req, res, function (err) {
+      // Log para debugging
+      console.log("📝 Upload callback:", {
+        error: err,
+        body: req.body,
+        file: req.file,
+      });
+
       if (err instanceof multer.MulterError) {
         return res.status(400).json({
           error: "Error al subir el archivo",
@@ -39,7 +47,14 @@ router.post(
           details: err.message,
         });
       }
-      // Si todo está bien, continuar
+
+      // Verificar si se recibió el archivo
+      if (!req.file) {
+        return res.status(400).json({
+          error: "No se recibió ningún archivo",
+        });
+      }
+
       next();
     });
   },
