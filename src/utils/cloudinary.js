@@ -15,8 +15,16 @@ const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
   params: {
     folder: "productos",
-    allowed_formats: ["jpg", "jpeg", "png", "webp"],
-    transformation: [{ width: 1000, height: 1000, crop: "limit" }],
+    format: "jpg", // Forzar formato jpg
+    allowed_formats: ["jpg", "jpeg", "png", "webp", "avif"], // Añadir avif a los formatos permitidos
+    transformation: [
+      {
+        width: 1000,
+        height: 1000,
+        crop: "limit",
+        format: "jpg", // Convertir todo a jpg
+      },
+    ],
     public_id: (req, file) => {
       const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
       return `producto-${uniqueSuffix}`;
@@ -24,26 +32,41 @@ const storage = new CloudinaryStorage({
   },
 });
 
+const fileFilter = (req, file, cb) => {
+  // Log detallado del archivo
+  console.log("🔍 Verificando archivo:", {
+    originalname: file.originalname,
+    mimetype: file.mimetype,
+    size: file.size,
+  });
+
+  // Lista de tipos MIME permitidos
+  const allowedMimes = [
+    "image/jpeg",
+    "image/jpg",
+    "image/png",
+    "image/webp",
+    "image/avif",
+  ];
+
+  if (allowedMimes.includes(file.mimetype)) {
+    cb(null, true);
+  } else {
+    cb(
+      new Error(
+        `Tipo de archivo no permitido. Se permite: ${allowedMimes.join(", ")}`
+      )
+    );
+  }
+};
+
 // Configurar límites y filtros
 const upload = multer({
   storage: storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB max
   },
-  fileFilter: (req, file, cb) => {
-    // Log para debugging
-    console.log("🔍 Multer procesando archivo:", {
-      fieldname: file.fieldname,
-      originalname: file.originalname,
-      mimetype: file.mimetype,
-      size: file.size,
-    });
-
-    if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/)) {
-      return cb(new Error("Solo se permiten imágenes jpg, jpeg, png y webp"));
-    }
-    cb(null, true);
-  },
+  fileFilter: fileFilter,
 }).single("image");
 
 // Exportar cloudinary para usarlo en otros archivos

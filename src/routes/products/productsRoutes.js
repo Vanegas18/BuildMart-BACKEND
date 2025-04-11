@@ -29,29 +29,46 @@ router.post(
   verificarAdmin,
   (req, res, next) => {
     upload(req, res, function (err) {
-      // Log para debugging
+      // Log detallado
       console.log("📝 Upload callback:", {
         error: err,
         body: req.body,
         file: req.file,
+        headers: req.headers,
       });
 
-      if (err instanceof multer.MulterError) {
-        return res.status(400).json({
-          error: "Error al subir el archivo",
-          details: err.message,
-        });
-      } else if (err) {
+      // Manejo de errores específicos
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          return res.status(400).json({
+            error: "Error en la subida del archivo",
+            details: err.message,
+            code: "MULTER_ERROR",
+          });
+        }
+
+        // Error de Cloudinary
+        if (err.http_code) {
+          return res.status(err.http_code).json({
+            error: "Error de procesamiento en Cloudinary",
+            details: err.message,
+            code: "CLOUDINARY_ERROR",
+          });
+        }
+
+        // Otros errores
         return res.status(500).json({
           error: "Error al procesar el archivo",
           details: err.message,
+          code: "UNKNOWN_ERROR",
         });
       }
 
-      // Verificar si se recibió el archivo
+      // Verificar archivo
       if (!req.file) {
         return res.status(400).json({
           error: "No se recibió ningún archivo",
+          code: "NO_FILE",
         });
       }
 
