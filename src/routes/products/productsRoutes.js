@@ -23,7 +23,28 @@ router.use((req, res, next) => {
   next();
 });
 
-router.get("/", getProductos);
+router.post(
+  "/",
+  verificarAdmin,
+  (req, res, next) => {
+    upload(req, res, function (err) {
+      if (err instanceof multer.MulterError) {
+        return res.status(400).json({
+          error: "Error al subir el archivo",
+          details: err.message,
+        });
+      } else if (err) {
+        return res.status(500).json({
+          error: "Error al procesar el archivo",
+          details: err.message,
+        });
+      }
+      // Si todo está bien, continuar
+      next();
+    });
+  },
+  newProduct
+);
 router.get("/:productoId", getProductById);
 router.get("/estado/:estado", getProductosByEstado);
 

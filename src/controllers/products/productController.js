@@ -18,26 +18,33 @@ export const newProduct = async (req, res) => {
   const { categorias } = req.body;
 
   try {
-    // Logging detallado
-    console.log("📦 Headers completos:", JSON.stringify(req.headers, null, 2));
-    console.log("🎁 Body completo:", JSON.stringify(req.body, null, 2));
-    console.log("📎 Archivo:", req.file);
-    console.log("🔑 Usuario:", req.usuario);
+    console.log("📦 Request completo:", {
+      body: req.body,
+      file: req.file,
+      headers: req.headers,
+    });
 
     // Verificar si se recibieron los datos necesarios
-    if (!req.body) {
+    if (!req.body || Object.keys(req.body).length === 0) {
       return res.status(400).json({
         error: "No se recibieron datos del producto",
       });
     }
 
-    // Convertir campos numéricos de string a número
+    // Verificar si se recibió la imagen
+    if (!req.file) {
+      return res.status(400).json({
+        error: "Se requiere una imagen del producto",
+      });
+    }
+
+    // Preparar los datos del producto
     const datosValidados = {
       ...req.body,
-      precioCompra: req.body.precioCompra
-        ? Number(req.body.precioCompra)
-        : undefined,
-      stock: req.body.stock ? Number(req.body.stock) : undefined,
+      precioCompra: Number(req.body.precioCompra),
+      stock: Number(req.body.stock),
+      img: req.file.path, // URL de Cloudinary
+      imgType: "file",
     };
 
     // Manejar la imagen

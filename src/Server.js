@@ -71,6 +71,20 @@ class Server {
       });
       next();
     });
+
+    // Middleware de debug para multipart/form-data
+    this.app.use((req, res, next) => {
+      if (req.is("multipart/form-data")) {
+        console.log("🔍 Procesando multipart/form-data:", {
+          contentType: req.headers["content-type"],
+          boundary: req.headers["content-type"].split("boundary=")[1],
+          bodyKeys: Object.keys(req.body),
+          files: req.files,
+          file: req.file,
+        });
+      }
+      next();
+    });
   }
 
   routes() {

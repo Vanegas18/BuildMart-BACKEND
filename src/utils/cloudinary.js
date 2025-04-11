@@ -31,13 +31,20 @@ const upload = multer({
     fileSize: 5 * 1024 * 1024, // 5MB max
   },
   fileFilter: (req, file, cb) => {
-    console.log("📸 Procesando archivo:", file);
+    // Log para debugging
+    console.log("🔍 Multer procesando archivo:", {
+      fieldname: file.fieldname,
+      originalname: file.originalname,
+      mimetype: file.mimetype,
+      size: file.size,
+    });
+
     if (!file.originalname.match(/\.(jpg|jpeg|png|webp)$/)) {
       return cb(new Error("Solo se permiten imágenes jpg, jpeg, png y webp"));
     }
     cb(null, true);
   },
-});
+}).single("image");
 
 // Exportar cloudinary para usarlo en otros archivos
 export { upload, cloudinary };
