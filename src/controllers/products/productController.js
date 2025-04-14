@@ -11,7 +11,7 @@ import {
 
 // Agregar nuevo producto
 export const newProduct = async (req, res) => {
-  const { categorias } = req.body;
+  const { categorias, imageType  } = req.body;
 
   try {
     // Verificar si se recibieron los datos necesarios
@@ -21,21 +21,33 @@ export const newProduct = async (req, res) => {
       });
     }
 
-    // Verificar si se recibió la imagen
-    if (!req.file) {
-      return res.status(400).json({
-        error: "Se requiere una imagen del producto",
-      });
-    }
-
     // Preparar los datos del producto
     const datosValidados = {
       ...req.body,
       precioCompra: Number(req.body.precioCompra),
       stock: Number(req.body.stock),
-      img: req.file.path,
-      imgType: "file",
     };
+
+    // Manejar la imagen según el tipo
+    if (imageType === "url") {
+      // Para URL, usamos el campo img directamente
+      if (!req.body.img) {
+        return res.status(400).json({
+          error: "Se requiere una URL de imagen del producto",
+        });
+      }
+      datosValidados.img = req.body.img;
+      datosValidados.imgType = "url";
+    } else {
+      // Para archivos, verificamos que exista el archivo
+      if (!req.file) {
+        return res.status(400).json({
+          error: "Se requiere una imagen del producto",
+        });
+      }
+      datosValidados.img = req.file.path;
+      datosValidados.imgType = "file";
+    }
 
     // Validar datos con Zod
     const productValidator = ProductSchema.safeParse(datosValidados);
