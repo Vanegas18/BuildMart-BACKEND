@@ -80,15 +80,18 @@ export const updatePermissions = async (req, res) => {
       });
     }
 
-    // Verificar si ya existe un grupo con el mismo nombre
-    const grupoExistente = await Permisos.findOne({
-      nombreGrupo: req.body.nombreGrupo,
-    });
-
-    if (grupoExistente) {
-      return res.status(400).json({
-        error: "Ya existe un grupo de permisos con este nombre",
+    // Verificar si ya existe un grupo con el mismo nombre (que no sea el que estamos editando)
+    if (req.body.nombreGrupo) {
+      const grupoExistente = await Permisos.findOne({
+        nombreGrupo: req.body.nombreGrupo,
+        nombreGrupo: { $ne: nombreGrupo.trim() }, // Excluir el grupo actual de la búsqueda
       });
+
+      if (grupoExistente) {
+        return res.status(400).json({
+          error: "Ya existe un grupo de permisos con este nombre",
+        });
+      }
     }
 
     // Actualizar el permiso
