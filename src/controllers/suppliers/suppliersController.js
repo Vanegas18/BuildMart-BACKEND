@@ -8,7 +8,7 @@ import {
 
 // Registrar un nuevo proveedor
 export const newSupplier = async (req, res) => {
-    const { categoriaProveedorId } = req.body;
+  const { categoriaProveedorId } = req.body;
   try {
     // Validar los datos del proveedor con Zod
     const supplierValidator = supplierSchema.safeParse(req.body);
@@ -18,13 +18,17 @@ export const newSupplier = async (req, res) => {
       });
     }
 
-    const categoryExists = await CategoriasProveedor.findById(categoriaProveedorId);
+    const categoryExists = await CategoriasProveedor.findById(
+      categoriaProveedorId
+    );
     if (!categoryExists) {
-        return res
-            .status(404)
-            .json({ error: `La categoría con ID ${categoriaProveedorId} no existe`})
+      return res
+        .status(404)
+        .json({
+          error: `La categoría con ID ${categoriaProveedorId} no existe`,
+        });
     }
-    
+
     const nuevoProveedor = new Supplier(req.body);
     await nuevoProveedor.save();
 
@@ -32,13 +36,10 @@ export const newSupplier = async (req, res) => {
       message: "Proveedor creado exitosamente",
       data: nuevoProveedor,
     });
-    
   } catch (error) {
     if (error.code === 11000) {
-        const field = Object.keys(error.keyValue)[0];
-      return res
-        .status(400)
-        .json({ error: `El ${field} ya está en uso` });
+      const field = Object.keys(error.keyValue)[0];
+      return res.status(400).json({ error: `El ${field} ya está en uso` });
     }
     res.status(500).json({ error: error.message || error.errors });
   }
@@ -47,7 +48,10 @@ export const newSupplier = async (req, res) => {
 // Obtener todos los proveedores
 export const getSuppliers = async (req, res) => {
   try {
-    const suppliers = await Supplier.find().populate("categoriaProveedorId", "nombre");
+    const suppliers = await Supplier.find().populate(
+      "categoriaProveedorId",
+      "nombre"
+    );
     res.json(suppliers);
   } catch (error) {
     res.status(500).json({ error: "Error al obtener los proveedores" });
@@ -58,15 +62,24 @@ export const getSuppliers = async (req, res) => {
 export const getSuppliersById = async (req, res) => {
   const { proveedorId } = req.params;
   try {
-    const supplier = await Supplier.findOne({ proveedorId }).populate(
+    // Verificar si el ID es válido
+    if (!mongoose.Types.ObjectId.isValid(proveedorId)) {
+      return res.status(400).json({ error: "ID de proveedor no válido" });
+    }
+
+    // Buscar por _id en lugar de proveedorId
+    const supplier = await Supplier.findById(proveedorId).populate(
       "categoriaProveedorId",
       "nombre"
     );
+
     if (!supplier) {
       return res.status(404).json({ error: "Proveedor no encontrado" });
     }
+
     res.json(supplier);
   } catch (error) {
+    console.error("Error al obtener proveedor:", error);
     res.status(500).json({ error: "Error al obtener el proveedor" });
   }
 };
@@ -85,8 +98,13 @@ export const updateSupplier = async (req, res) => {
 
     // Validar ID de categoría si se incluye
     const { categoriaProveedorId } = req.body;
-    if (categoriaProveedorId && !mongoose.Types.ObjectId.isValid(categoriaProveedorId)) {
-      return res.status(400).json({ error: "El ID de la categoría no es válido" });
+    if (
+      categoriaProveedorId &&
+      !mongoose.Types.ObjectId.isValid(categoriaProveedorId)
+    ) {
+      return res
+        .status(400)
+        .json({ error: "El ID de la categoría no es válido" });
     }
 
     const supplier = await Supplier.findOneAndUpdate(
