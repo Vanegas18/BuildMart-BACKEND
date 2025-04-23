@@ -83,6 +83,7 @@ export const loginUser = async (req, res) => {
     res.status(200).json({
       message: "Usuario logueado correctamente",
       usuario: {
+        id: usuarioEncontrado._id,
         nombre: usuarioEncontrado.nombre,
         correo: usuarioEncontrado.correo,
         rol: usuarioEncontrado.rol,
