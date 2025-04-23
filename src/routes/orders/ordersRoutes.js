@@ -12,7 +12,7 @@ const router = express.Router();
 router.get('/:id?', verificarAdmin, getOrders);
 
 // Ruta para crear una orden
-router.post('/', verificarAdmin, createOrder);
+router.post('/', createOrder);
 
 // Ruta para actualizar el estado de una orden
 router.put('/:id',verificarAdmin, updateOrderStatus);
