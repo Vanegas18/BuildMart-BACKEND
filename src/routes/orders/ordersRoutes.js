@@ -9,7 +9,7 @@ import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 const router = express.Router();
 
 // Ruta para obtener órdenes (con o sin ID)
-router.get('/:id?', verificarAdmin, getOrders);
+router.get('/:id?', getOrders);
 
 // Ruta para crear una orden
 router.post('/', createOrder);
