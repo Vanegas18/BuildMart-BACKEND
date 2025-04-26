@@ -82,12 +82,6 @@ const metodoPagoSchema = new mongoose.Schema(
         },
         message: "El número de tarjeta debe tener 16 dígitos",
       },
-      set: function (num) {
-        if (num && num.length > 4) {
-          return `xxxx-xxxx-xxxx-${num.slice(-4)}`;
-        }
-        return num;
-      },
     },
     fechaExpiracion: {
       type: String,

@@ -34,11 +34,12 @@ const metodoPagoSchema = z
       "Otro",
     ]),
     titular: z.string().optional(),
-    numeroTarjeta: z.preprocess(
-      // Pre-procesar para asegurar que solo tenemos dígitos
-      (val) => (typeof val === "string" ? val.replace(/\D/g, "") : val),
-      z.string().optional()
-    ),
+    numeroTarjeta: z
+      .string()
+      .refine((val) => !val || /^\d{16}$/.test(val), {
+        message: "El número de tarjeta debe tener 16 dígitos numéricos",
+      })
+      .optional(),
     fechaExpiracion: z.string().optional(),
     esPrincipal: z.boolean().default(false),
   })
