@@ -9,12 +9,12 @@ import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 const router = express.Router();
 
 // Ruta para obtener clientes (con o sin ID)
-router.get("/:id?", verificarAdmin, getClients);
+router.get("/:id?", getClients);
 
 // Ruta para crear un cliente
 router.post("/", createClient);
 
 // Ruta para actualizar un cliente
-router.put("/:id", verificarAdmin, updateClient);
+router.put("/:id", updateClient);
 
 export default router;
