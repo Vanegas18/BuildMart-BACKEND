@@ -114,25 +114,7 @@ export const clientSchema = z.object({
   telefono: z.string().regex(/^\d{7,15}$/, {
     message: "El teléfono debe contener entre 7 y 15 dígitos numéricos",
   }),
-  direccion: z
-    .string()
-    .min(15, { message: "La dirección debe tener al menos 15 caracteres" }),
-  departamento: z
-    .string()
-    .trim()
-    .min(4, { message: "El departamento debe tener al menos 4 caracteres" })
-    .regex(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/, {
-      message: "El departamento solo debe contener letras",
-    }),
-  ciudad: z
-    .string()
-    .trim()
-    .min(4, { message: "La ciudad debe tener al menos 4 caracteres" })
-    .regex(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/, {
-      message: "La ciudad solo debe contener letras",
-    }),
 
-  // Campos opcionales para la creación inicial
   direcciones: z.array(direccionSchema).optional(),
   metodosPago: z.array(metodoPagoSchema).optional(),
 
