@@ -24,7 +24,6 @@ const direccionSchema = z.object({
   esPrincipal: z.boolean().default(false),
 });
 
-// Esquema para validar un método de pago
 const metodoPagoSchema = z
   .object({
     tipo: z.enum([
@@ -34,28 +33,17 @@ const metodoPagoSchema = z
       "Efectivo",
       "Otro",
     ]),
-    titular: z
-      .string()
-      .min(5, {
-        message: "El nombre del titular debe tener al menos 5 caracteres",
-      })
-      .optional(),
-    numeroTarjeta: z
-      .string()
-      .regex(/^\d{16}$/, {
-        message: "El número de tarjeta debe tener 16 dígitos",
-      })
-      .optional(),
-    fechaExpiracion: z
-      .string()
-      .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, {
-        message: "El formato debe ser MM/YY",
-      })
-      .optional(),
+    titular: z.string().optional(),
+    numeroTarjeta: z.preprocess(
+      // Pre-procesar para asegurar que solo tenemos dígitos
+      (val) => (typeof val === "string" ? val.replace(/\D/g, "") : val),
+      z.string().optional()
+    ),
+    fechaExpiracion: z.string().optional(),
     esPrincipal: z.boolean().default(false),
   })
   .superRefine((val, ctx) => {
-    // Solo validar estos campos si es una tarjeta
+    // Validaciones adicionales cuando es tarjeta
     if (val.tipo === "Tarjeta de Crédito" || val.tipo === "Tarjeta de Débito") {
       if (!val.titular || val.titular.length < 5) {
         ctx.addIssue({
@@ -67,9 +55,11 @@ const metodoPagoSchema = z
           message: "El nombre del titular debe tener al menos 5 caracteres",
         });
       }
-      if (!val.numeroTarjeta || !/^\d{16}$/.test(val.numeroTarjeta)) {
+
+      // Validación de número de tarjeta después del pre-procesamiento
+      if (!val.numeroTarjeta || val.numeroTarjeta.length !== 16) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: z.ZodIssueCode.invalid_string,
           path: ["numeroTarjeta"],
           message: "El número de tarjeta debe tener 16 dígitos",
         });
@@ -80,7 +70,7 @@ const metodoPagoSchema = z
         !/^(0[1-9]|1[0-2])\/\d{2}$/.test(val.fechaExpiracion)
       ) {
         ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+          code: z.ZodIssueCode.invalid_string,
           path: ["fechaExpiracion"],
           message: "El formato debe ser MM/YY",
         });
