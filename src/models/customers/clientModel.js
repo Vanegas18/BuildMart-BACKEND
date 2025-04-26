@@ -52,10 +52,36 @@ const metodoPagoSchema = new mongoose.Schema(
     titular: {
       type: String,
       trim: true,
+      validate: {
+        validator: function (v) {
+          // Solo validar si es tarjeta de crédito o débito
+          if (
+            this.tipo === "Tarjeta de Crédito" ||
+            this.tipo === "Tarjeta de Débito"
+          ) {
+            return v && v.length >= 5;
+          }
+          return true; // No validar para otros tipos de pago
+        },
+        message: "El nombre del titular debe tener al menos 5 caracteres",
+      },
     },
     numeroTarjeta: {
       type: String,
       trim: true,
+      validate: {
+        validator: function (v) {
+          // Solo validar si es tarjeta de crédito o débito
+          if (
+            this.tipo === "Tarjeta de Crédito" ||
+            this.tipo === "Tarjeta de Débito"
+          ) {
+            return v && v.length === 16;
+          }
+          return true; // No validar para otros tipos de pago
+        },
+        message: "El número de tarjeta debe tener 16 dígitos",
+      },
       set: function (num) {
         if (num && num.length > 4) {
           return `xxxx-xxxx-xxxx-${num.slice(-4)}`;
@@ -66,6 +92,19 @@ const metodoPagoSchema = new mongoose.Schema(
     fechaExpiracion: {
       type: String,
       trim: true,
+      validate: {
+        validator: function (v) {
+          // Solo validar si es tarjeta de crédito o débito
+          if (
+            this.tipo === "Tarjeta de Crédito" ||
+            this.tipo === "Tarjeta de Débito"
+          ) {
+            return /^\d{2}\/\d{2}$/.test(v); // Formato MM/YY
+          }
+          return true; // No validar para otros tipos de pago
+        },
+        message: "El formato debe ser MM/YY",
+      },
     },
     esPrincipal: {
       type: Boolean,
