@@ -1,5 +1,57 @@
 import { z } from "zod";
 
+// Esquema para validar una dirección
+const direccionSchema = z.object({
+  tipo: z.enum(["Casa", "Trabajo", "Otro"]).default("Casa"),
+  calle: z
+    .string()
+    .min(5, { message: "La dirección debe tener al menos 5 caracteres" }),
+  ciudad: z
+    .string()
+    .trim()
+    .min(2, { message: "La ciudad debe tener al menos 2 caracteres" })
+    .regex(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/, {
+      message: "La ciudad solo debe contener letras",
+    }),
+  departamento: z
+    .string()
+    .trim()
+    .min(2, { message: "El departamento debe tener al menos 2 caracteres" })
+    .regex(/^[a-zA-ZñÑáéíóúÁÉÍÓÚ\s]+$/, {
+      message: "El departamento solo debe contener letras",
+    }),
+  codigoPostal: z.string().optional(),
+  esPrincipal: z.boolean().default(false),
+});
+
+// Esquema para validar un método de pago
+const metodoPagoSchema = z.object({
+  tipo: z.enum([
+    "Tarjeta de Crédito",
+    "Tarjeta de Débito",
+    "PSE",
+    "Efectivo",
+    "Otro",
+  ]),
+  titular: z
+    .string()
+    .min(5, {
+      message: "El nombre del titular debe tener al menos 5 caracteres",
+    })
+    .optional(),
+  numeroTarjeta: z
+    .string()
+    .regex(/^\d{16}$/, {
+      message: "El número de tarjeta debe tener 16 dígitos",
+    })
+    .optional(),
+  fechaExpiracion: z
+    .string()
+    .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, { message: "El formato debe ser MM/YY" })
+    .optional(),
+  esPrincipal: z.boolean().default(false),
+});
+
 // Validación para la creación de un cliente
 export const clientSchema = z.object({
   cedula: z.string().regex(/^\d{7,15}$/, {
@@ -44,8 +96,18 @@ export const clientSchema = z.object({
       message: "La ciudad solo debe contener letras",
     }),
 
+  // Campos opcionales para la creación inicial
+  direcciones: z.array(direccionSchema).optional(),
+  metodosPago: z.array(metodoPagoSchema).optional(),
+
   estado: z.enum(["Activo", "Inactivo"]).default("Activo").optional(),
 });
 
 // Esquema de validación para actualizar el cliente (campo parcial)
 export const updateClientSchema = clientSchema.partial();
+
+// Esquema para añadir una sola dirección
+export const addDireccionSchema = direccionSchema;
+
+// Esquema para añadir un método de pago
+export const addMetodoPagoSchema = metodoPagoSchema;
