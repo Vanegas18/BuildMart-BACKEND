@@ -25,32 +25,68 @@ const direccionSchema = z.object({
 });
 
 // Esquema para validar un método de pago
-const metodoPagoSchema = z.object({
-  tipo: z.enum([
-    "Tarjeta de Crédito",
-    "Tarjeta de Débito",
-    "PSE",
-    "Efectivo",
-    "Otro",
-  ]),
-  titular: z
-    .string()
-    .min(5, {
-      message: "El nombre del titular debe tener al menos 5 caracteres",
-    })
-    .optional(),
-  numeroTarjeta: z
-    .string()
-    .regex(/^\d{16}$/, {
-      message: "El número de tarjeta debe tener 16 dígitos",
-    })
-    .optional(),
-  fechaExpiracion: z
-    .string()
-    .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, { message: "El formato debe ser MM/YY" })
-    .optional(),
-  esPrincipal: z.boolean().default(false),
-});
+const metodoPagoSchema = z
+  .object({
+    tipo: z.enum([
+      "Tarjeta de Crédito",
+      "Tarjeta de Débito",
+      "PSE",
+      "Efectivo",
+      "Otro",
+    ]),
+    titular: z
+      .string()
+      .min(5, {
+        message: "El nombre del titular debe tener al menos 5 caracteres",
+      })
+      .optional(),
+    numeroTarjeta: z
+      .string()
+      .regex(/^\d{16}$/, {
+        message: "El número de tarjeta debe tener 16 dígitos",
+      })
+      .optional(),
+    fechaExpiracion: z
+      .string()
+      .regex(/^(0[1-9]|1[0-2])\/\d{2}$/, {
+        message: "El formato debe ser MM/YY",
+      })
+      .optional(),
+    esPrincipal: z.boolean().default(false),
+  })
+  .superRefine((val, ctx) => {
+    // Solo validar estos campos si es una tarjeta
+    if (val.tipo === "Tarjeta de Crédito" || val.tipo === "Tarjeta de Débito") {
+      if (!val.titular || val.titular.length < 5) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.too_small,
+          minimum: 5,
+          type: "string",
+          inclusive: true,
+          path: ["titular"],
+          message: "El nombre del titular debe tener al menos 5 caracteres",
+        });
+      }
+      if (!val.numeroTarjeta || !/^\d{16}$/.test(val.numeroTarjeta)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["numeroTarjeta"],
+          message: "El número de tarjeta debe tener 16 dígitos",
+        });
+      }
+
+      if (
+        !val.fechaExpiracion ||
+        !/^(0[1-9]|1[0-2])\/\d{2}$/.test(val.fechaExpiracion)
+      ) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ["fechaExpiracion"],
+          message: "El formato debe ser MM/YY",
+        });
+      }
+    }
+  });
 
 // Validación para la creación de un cliente
 export const clientSchema = z.object({
