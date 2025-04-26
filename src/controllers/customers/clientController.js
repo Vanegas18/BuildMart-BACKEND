@@ -48,9 +48,6 @@ export const createClient = async (req, res) => {
     nombre,
     correo,
     telefono,
-    direccion,
-    departamento,
-    ciudad,
     estado,
     cedula,
     contraseña,
@@ -80,35 +77,15 @@ export const createClient = async (req, res) => {
     // Hasheo de la contraseña
     const passwordHash = await bcrypt.hash(contraseña, 10);
 
-    // Preparar las direcciones (si existen)
-    let clienteDirecciones = [];
-    if (direcciones && direcciones.length > 0) {
-      clienteDirecciones = direcciones;
-    } else if (direccion) {
-      // Si no hay direcciones múltiples pero sí hay dirección principal
-      clienteDirecciones = [
-        {
-          tipo: "Casa",
-          calle: direccion,
-          ciudad,
-          departamento,
-          esPrincipal: true,
-        },
-      ];
-    }
-
     // Crear el nuevo cliente
     const newClient = new Clients({
       nombre,
       correo,
       telefono,
-      direccion,
-      departamento,
-      ciudad,
       cedula,
       contraseña: passwordHash,
       estado,
-      direcciones: clienteDirecciones,
+      direcciones: direcciones || [],
       metodosPago: metodosPago || [],
     });
 
@@ -127,9 +104,15 @@ export const createClient = async (req, res) => {
       .status(201)
       .json({ message: "Cliente creado exitosamente.", client: newClient });
   } catch (error) {
+    if (error.name === "ValidationError") {
+      // Error de validación de Mongoose
+      const messages = Object.values(error.errors).map((val) => val.message);
+      return res.status(400).json({ errors: messages });
+    }
+    // Otros errores
     console.error(error.message);
     res.status(500).json({
-      error: error.errors || error.message,
+      error: error.message,
     });
   }
 };
@@ -141,9 +124,6 @@ export const updateClient = async (req, res) => {
     nombre,
     correo,
     telefono,
-    direccion,
-    departamento,
-    ciudad,
     cedula,
     contraseña,
     estado,
@@ -168,9 +148,6 @@ export const updateClient = async (req, res) => {
     if (nombre) client.nombre = nombre;
     if (correo) client.correo = correo;
     if (telefono) client.telefono = telefono;
-    if (direccion) client.direccion = direccion;
-    if (departamento) client.departamento = departamento;
-    if (ciudad) client.ciudad = ciudad;
     if (cedula) client.cedula = cedula;
     if (contraseña) {
       const passwordHash = await bcrypt.hash(contraseña, 10);

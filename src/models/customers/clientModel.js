@@ -111,22 +111,6 @@ const clientSchema = new mongoose.Schema(
       required: [true, "El telefono es obligatorio"],
       unique: true,
     },
-    // Mantenemos el campo de dirección principal por compatibilidad
-    direccion: {
-      type: String,
-      required: [true, "La dirección es obligatoria"],
-      trim: true,
-    },
-    departamento: {
-      type: String,
-      required: [true, "El departamento es obligatorio"],
-      trim: true,
-    },
-    ciudad: {
-      type: String,
-      required: [true, "La ciudad es obligatoria"],
-      trim: true,
-    },
     // Nuevos campos para direcciones múltiples y métodos de pago
     direcciones: {
       type: [direccionSchema],
