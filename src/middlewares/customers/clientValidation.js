@@ -111,7 +111,7 @@ export const clientSchema = z.object({
     .regex(/[^A-Za-z0-9]/, {
       message: "La contraseña debe incluir al menos un carácter especial",
     }),
-  telefono: z.string().regex(/^\d{7,15}$/, {
+  telefono: z.number().regex(/^\d{7,15}$/, {
     message: "El teléfono debe contener entre 7 y 15 dígitos numéricos",
   }),
 

@@ -146,7 +146,7 @@ const clientSchema = new mongoose.Schema(
       minlength: [6, "La contraseña debe tener al menos 6 caracteres"],
     },
     telefono: {
-      type: Number,
+      type: String,
       required: [true, "El telefono es obligatorio"],
       unique: true,
     },
