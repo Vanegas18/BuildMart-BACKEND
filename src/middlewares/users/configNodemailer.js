@@ -1,6 +1,6 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
-import jwt from "jsonwebtoken"
+import jwt from "jsonwebtoken";
 dotenv.config();
 
 // CONFIGURACIÓN NODEMAILER
@@ -74,17 +74,17 @@ export const enviarCorreoRegistro = async (emailDestino, rol) => {
 
 // Generar el token JWT para recuperación de contraseña
 export const generarTokenRecuperacion = (usuarioId, correo) => {
-  const secretKey = process.env.JWT_SECRET || 'tu_clave_secreta';
-  
+  const secretKey = process.env.JWT_SECRET || "tu_clave_secreta";
+
   // Generar token válido por 1 hora (3600 segundos)
   return jwt.sign(
-    { 
-      id: usuarioId, 
+    {
+      id: usuarioId,
       correo,
-      tipo: 'recuperacion'  // Para identificar que es un token de recuperación
+      tipo: "recuperacion", // Para identificar que es un token de recuperación
     },
     secretKey,
-    { expiresIn: '1h' }
+    { expiresIn: "1h" }
   );
 };
 
@@ -205,6 +205,92 @@ export const enviarCorreoConfirmacionCambio = async (emailDestino) => {
   } catch (error) {
     console.error(
       `❌ Error al enviar el correo de confirmación a ${emailDestino}:`,
+      error
+    );
+    throw error;
+  }
+};
+
+// Función para generar HTML dinámico del correo de confirmación de pedido
+export const generarHtmlCorreoPedido = (order, usuario) => {
+  const baseUrl = process.env.BASE_URL || "http://localhost:5173";
+  const orderUrl = `${baseUrl}/orders/${order._id}`;
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+      <h2 style="color: #333; text-align: center;">¡Gracias por tu pedido en <span style="color: #007bff;">Build Mart</span>! 🛒</h2>
+      
+      <p style="color: #555; font-size: 16px;">
+        Hola ${usuario.nombre},
+        
+        Hemos recibido tu pedido #${order._id.substring(
+          0,
+          8
+        )} correctamente y está siendo procesado.
+      </p>
+      
+      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+        <h3 style="color: #007bff; margin-top: 0;">Resumen de tu pedido:</h3>
+        <ul style="padding-left: 20px; color: #555;">
+          ${order.items
+            .map(
+              (item) => `
+            <li style="margin-bottom: 8px;">
+              ${item.producto.nombre} x ${item.cantidad} - $${(
+                item.precio * item.cantidad
+              ).toFixed(2)}
+            </li>
+          `
+            )
+            .join("")}
+        </ul>
+        <p style="font-weight: bold; margin-top: 15px; color: #333;">
+          Total: $${order.total.toFixed(2)}
+        </p>
+      </div>
+      
+      <div style="text-align: center; margin: 20px 0;">
+        <a href="${orderUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
+          Ver Detalles del Pedido
+        </a>
+      </div>
+      
+      <p style="color: #555; font-size: 16px;">
+        Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos.
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #ddd;">
+      <p style="color: #aaa; font-size: 12px; text-align: center;">
+        © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
+      </p>
+    </div>
+  `;
+};
+
+// Función para enviar correo de confirmación de pedido
+export const enviarCorreoPedido = async (order, usuario) => {
+  try {
+    const { userGmail } = process.env;
+    const htmlCorreo = generarHtmlCorreoPedido(order, usuario);
+
+    const mailOptions = {
+      from: `"Build Mart" <${userGmail}>`,
+      to: usuario.email,
+      subject: `🛒 Build Mart - Confirmación de Pedido #${order._id.substring(
+        0,
+        8
+      )}`,
+      html: htmlCorreo,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(
+      `✅ Correo de confirmación de pedido enviado a ${usuario.email}: ${info.response}`
+    );
+    return info;
+  } catch (error) {
+    console.error(
+      `❌ Error al enviar el correo de confirmación de pedido a ${usuario.email}:`,
       error
     );
     throw error;

@@ -4,6 +4,7 @@ import Product from "../../models/products/productModel.js";
 import Client from "../../models/customers/clientModel.js";
 import Sale from "../../models/sales/saleModel.js";
 import mongoose from "mongoose";
+import { enviarCorreoPedido } from "../../middlewares/users/configNodemailer.js";
 
 // Método GET
 export const getOrders = async (req, res) => {
@@ -101,6 +102,14 @@ export const createOrder = async (req, res) => {
       }
 
       await productoData.save();
+
+      // Guardar producto con detalles para el correo
+      productosConDetalles.push({
+        productoId: productoData._id,
+        cantidad: producto.cantidad,
+        producto: productoData,
+        precio: productoData.precio,
+      });
     }
 
     // Calcular el total del pedido
@@ -119,8 +128,29 @@ export const createOrder = async (req, res) => {
       total,
       estado: "pendiente", // Establecer el estado inicial como "pendiente"
     });
+
     // Guardar la orden en la base de datos
     await newOrder.save();
+
+    // Preparar datos para el correo
+    const orderCompleta = {
+      ...newOrder._doc,
+      items: productosConDetalles,
+      _id: newOrder._id,
+    };
+
+    // Enviar correo de confirmación
+    try {
+      await enviarCorreoPedido(orderCompleta, client);
+      console.log(`✅ Correo de confirmación enviado a ${client.email}`);
+    } catch (emailError) {
+      console.error(
+        `❌ Error al enviar el correo de confirmación: ${emailError.message}`
+      );
+      // No devolvemos error al cliente, solo lo registramos
+    }
+
+    // Enviar correo de confirmación
     res.status(201).json(newOrder); // Respondemos con el pedido creado
   } catch (error) {
     console.error(error.message);
