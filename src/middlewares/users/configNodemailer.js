@@ -12,6 +12,15 @@ export const transporter = nodemailer.createTransport({
   },
 });
 
+function formatearPrecio(precio) {
+  return new Intl.NumberFormat("es-CO", {
+    style: "currency",
+    currency: "COP",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(precio);
+}
+
 // Función para generar HTML dinámico del correo según el rol
 export const generarHtmlCorreo = (nombreRol) => {
   const baseUrl = process.env.BASE_URL || "http://localhost:5173";
@@ -216,17 +225,17 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
   const baseUrl = process.env.BASE_URL || "http://localhost:5173";
   const orderUrl = `${baseUrl}/orders/${order._id}`;
 
+  // Convertir a string y usar substring
+  const clienteNombre = usuario?.nombre || usuario?.nombreNegocio || "Cliente";
+
   return `
     <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
       <h2 style="color: #333; text-align: center;">¡Gracias por tu pedido en <span style="color: #007bff;">Build Mart</span>! 🛒</h2>
       
       <p style="color: #555; font-size: 16px;">
-        Hola ${usuario.nombre},
+        Hola ${clienteNombre},
         
-        Hemos recibido tu pedido #${order._id.substring(
-          0,
-          8
-        )} correctamente y está siendo procesado.
+        Hemos recibido tu pedido correctamente y está siendo procesado.
       </p>
       
       <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
@@ -236,24 +245,19 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
             .map(
               (item) => `
             <li style="margin-bottom: 8px;">
-              ${item.producto.nombre} x ${item.cantidad} - $${(
+                ${item.producto.nombre} x ${item.cantidad} - ${formatearPrecio(
                 item.precio * item.cantidad
-              ).toFixed(2)}
+              )}
             </li>
-          `
+            `
             )
             .join("")}
         </ul>
         <p style="font-weight: bold; margin-top: 15px; color: #333;">
-          Total: $${order.total.toFixed(2)}
+          Total: ${formatearPrecio(order.total)}
         </p>
       </div>
-      
-      <div style="text-align: center; margin: 20px 0;">
-        <a href="${orderUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
-          Ver Detalles del Pedido
-        </a>
-      </div>
+    
       
       <p style="color: #555; font-size: 16px;">
         Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos.
@@ -275,17 +279,14 @@ export const enviarCorreoPedido = async (order, usuario) => {
 
     const mailOptions = {
       from: `"Build Mart" <${userGmail}>`,
-      to: usuario.email,
-      subject: `🛒 Build Mart - Confirmación de Pedido #${order._id.substring(
-        0,
-        8
-      )}`,
+      to: usuario.correo,
+      subject: `🛒 Build Mart - Confirmación de Pedido #${order.pedidoId}`,
       html: htmlCorreo,
     };
 
     const info = await transporter.sendMail(mailOptions);
     console.log(
-      `✅ Correo de confirmación de pedido enviado a ${usuario.email}: ${info.response}`
+      `✅ Correo de confirmación de pedido enviado a ${usuario.correo}: ${info.response}`
     );
     return info;
   } catch (error) {

@@ -55,6 +55,7 @@ export const createOrder = async (req, res) => {
       });
     }
     // Verificación de stock y cantidades
+    const productosConDetalles = [];
     for (const producto of productos) {
       const productoData = await Product.findById(producto.productoId);
       if (!productoData) {
@@ -142,7 +143,7 @@ export const createOrder = async (req, res) => {
     // Enviar correo de confirmación
     try {
       await enviarCorreoPedido(orderCompleta, client);
-      console.log(`✅ Correo de confirmación enviado a ${client.email}`);
+      console.log(`✅ Correo de confirmación enviado a ${client.correo}`);
     } catch (emailError) {
       console.error(
         `❌ Error al enviar el correo de confirmación: ${emailError.message}`
@@ -156,7 +157,10 @@ export const createOrder = async (req, res) => {
     console.error(error.message);
     res
       .status(500)
-      .json({ message: "Error al crear el pedido, intente nuevamente." });
+      .json({
+        message: "Error al crear el pedido, intente nuevamente.",
+        error,
+      });
   }
 };
 
