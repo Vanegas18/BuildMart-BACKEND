@@ -13,6 +13,7 @@ import buysRoutes from "./routes/buys/buysRoutes.js";
 import orderRoutes from "./routes/orders/ordersRoutes.js";
 import saleRoutes from "./routes/sales/saleRoutes.js";
 import clientRoutes from "./routes/customers/clientRoutes.js";
+import notificationsRoutes from "./routes/notificaciones.js";
 
 class Server {
   constructor() {
@@ -30,6 +31,7 @@ class Server {
       clientes: "/clientes",
       ordenes: "/pedidos",
       ventas: "/ventas",
+      notificaciones: "/notificaciones",
     };
     this.app.get("/", (req, res) => {
       res.send("<h1>¡BIENVENIDO A LA API DE BUILD MART!</h1>");
@@ -71,6 +73,7 @@ class Server {
     this.app.use(this.paths.ordenes, orderRoutes);
     this.app.use(this.paths.ventas, saleRoutes);
     this.app.use(this.paths.clientes, clientRoutes);
+    this.app.use(this.paths.notificaciones, notificationsRoutes);
   }
 
   listen() {
