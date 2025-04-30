@@ -62,18 +62,6 @@ export const loginUser = async (req, res) => {
       });
     }
 
-    // Registrar evento de inicio de sesión
-    LogAuditoria.create({
-      usuario: usuarioEncontrado._id,
-      fecha: new Date(),
-      accion: "iniciar_sesion",
-      entidad: "Usuario",
-      entidadId: usuarioEncontrado._id,
-      cambios: null,
-    }).catch((error) =>
-      console.error("Error al crear log de auditoría:", error)
-    );
-
     // Generar token JWT para la sesión
     const token = await createAccessToken({ id: usuarioEncontrado._id });
 
@@ -99,18 +87,6 @@ export const loginUser = async (req, res) => {
 // Cerrar sesión
 export const logoutUser = async (req, res) => {
   try {
-    // Registrar evento de cierre de sesión si hay un usuario autenticado
-    if (req.usuario) {
-      await LogAuditoria.create({
-        usuario: req.usuario.id,
-        fecha: new Date(),
-        accion: "cerrar_sesion",
-        entidad: "Usuario",
-        entidadId: req.usuario.id,
-        cambios: null,
-      });
-    }
-
     // Invalidar la cookie de sesión
     res.cookie("token", "", {
       expires: new Date(0),
