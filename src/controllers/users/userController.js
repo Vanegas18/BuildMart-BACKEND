@@ -8,7 +8,10 @@ import {
   UserSchema,
   updateUserSchema,
 } from "../../middlewares/users/userValidation.js";
-import { enviarCorreoRegistro } from "../../middlewares/users/configNodemailer.js";
+import {
+  enviarCorreoConfiguracionAdmin,
+  enviarCorreoRegistro,
+} from "../../middlewares/users/configNodemailer.js";
 
 dotenv.config();
 
@@ -102,8 +105,14 @@ export const newUser = async (req, res) => {
       },
     });
 
-    // Enviar correo de bienvenida al usuario
-    await enviarCorreoRegistro(correo, rolEncontrado.nombre);
+    // Enviar correo específico según el rol
+    if (rolEncontrado.nombre === "Administrador") {
+      // Si es administrador, enviamos correo para configurar contraseña
+      await enviarCorreoConfiguracionAdmin(correo, usuario._id);
+    } else {
+      // Para otros roles, enviar correo de bienvenida estándar
+      await enviarCorreoRegistro(correo, rolEncontrado.nombre);
+    }
 
     // Generar token JWT para la sesión
     const token = await createAccessToken({ id: usuario.usuarioId });

@@ -297,3 +297,66 @@ export const enviarCorreoPedido = async (order, usuario) => {
     throw error;
   }
 };
+
+// 2. Función para enviar correo de configuración a administradores
+export const enviarCorreoConfiguracionAdmin = async (
+  emailDestino,
+  usuarioId
+) => {
+  try {
+    const { userGmail } = process.env;
+
+    // Generar token para el administrador
+    const token = generarTokenRecuperacion(usuarioId, emailDestino);
+
+    // Usamos tu función existente pero con un mensaje adaptado para administradores
+    const baseUrl = process.env.BASE_URL || "http://localhost:5173";
+    const resetUrl = `${baseUrl}/restablecer-contrasena?token=${token}`;
+
+    const htmlCorreo = `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #333; text-align: center;">Bienvenido a <span style="color: #007bff;">Build Mart</span> 🏗️</h2>
+        <p style="color: #555; font-size: 16px; text-align: center;">
+          Has sido registrado como <strong>Administrador</strong> en nuestra plataforma.
+        </p>
+        <p style="color: #555; font-size: 16px; text-align: center;">
+          Para completar tu registro y establecer tu contraseña, por favor haz clic en el siguiente botón:
+        </p>
+        
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${resetUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
+            🔐 Configurar mi contraseña
+          </a>
+        </div>
+
+        <p style="color: #777; font-size: 14px; text-align: center;">
+          Este enlace expirará en 24 horas. Si no configuras tu cuenta en este tiempo, deberás solicitar un nuevo enlace.
+        </p>
+        <hr style="border: none; border-top: 1px solid #ddd;">
+        <p style="color: #aaa; font-size: 12px; text-align: center;">
+          © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
+        </p>
+      </div>
+    `;
+
+    const mailOptions = {
+      from: `"Build Mart" <${userGmail}>`,
+      to: emailDestino,
+      subject: `🔐 Build Mart - Configura tu cuenta de Administrador`,
+      html: htmlCorreo,
+      text: `Has sido registrado como Administrador en Build Mart. Por favor visita ${resetUrl} para configurar tu contraseña. Este enlace expirará en 24 horas.`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(
+      `✅ Correo de configuración enviado a ${emailDestino}: ${info.messageId}`
+    );
+    return info;
+  } catch (error) {
+    console.error(
+      `❌ Error al enviar el correo de configuración a ${emailDestino}:`,
+      error
+    );
+    throw error;
+  }
+};
