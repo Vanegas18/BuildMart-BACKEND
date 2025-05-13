@@ -19,13 +19,34 @@ export const ProductSchema = z.object({
     )
     .min(1, { message: "Debe haber al menos una categoría" }),
   precioCompra: z.preprocess(
-    (val) => Number(val),
-    z.number().min(0, "El precio no puede ser negativo")
-  ),
-  stock: z.preprocess(
     (val) => (val === undefined ? undefined : Number(val)),
-    z.number().min(1, "El stock debe ser mayor o igual a 1").optional()
+    z
+      .number()
+      .min(0, { message: "El precio de compra no puede ser negativo" })
+      .refine((val) => val > 0, {
+        message: "El precio de compra debe ser mayor a 0",
+      })
   ),
+  precio: z.preprocess(
+    (val) => (val === undefined ? undefined : Number(val)),
+    z
+      .number()
+      .min(0, { message: "El precio de venta no puede ser negativo" })
+      .refine((val) => val > 0, {
+        message: "El precio de venta debe ser mayor a 0",
+      })
+  ),
+  stock: z
+    .preprocess(
+      (val) => (val === undefined ? undefined : Number(val)),
+      z
+        .number()
+        .min(0, { message: "El stock no puede ser negativo" })
+        .refine((val) => val >= 0, {
+          message: "El stock debe ser mayor o igual a 0",
+        })
+    )
+    .default(0),
 
   img: z.string().optional(),
   imgType: z.enum(["url", "file"]).default("url"),

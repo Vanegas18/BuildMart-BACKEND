@@ -11,7 +11,7 @@ import {
 
 // Agregar nuevo producto
 export const newProduct = async (req, res) => {
-  const { categorias, imageType  } = req.body;
+  const { categorias, imageType } = req.body;
 
   try {
     // Verificar si se recibieron los datos necesarios
@@ -25,6 +25,7 @@ export const newProduct = async (req, res) => {
     const datosValidados = {
       ...req.body,
       precioCompra: Number(req.body.precioCompra),
+      precio: Number(req.body.precio),
       stock: Number(req.body.stock),
     };
 
@@ -186,6 +187,7 @@ export const updateProduct = async (req, res) => {
       precioCompra: req.body.precioCompra
         ? Number(req.body.precioCompra)
         : undefined,
+      precio: req.body.precio ? Number(req.body.precio) : undefined,
       stock: req.body.stock ? Number(req.body.stock) : undefined,
     };
 

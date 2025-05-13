@@ -29,10 +29,12 @@ const ProductSchema = new mongoose.Schema(
     },
     precio: {
       type: Number,
+      required: [true, "El precio de venta es requerido"],
       min: [0, "El precio no puede ser negativo"],
     },
     stock: {
       type: Number,
+      default: 0,
       min: [0, "El stock no puede ser negativo"],
     },
     img: {
@@ -52,29 +54,6 @@ const ProductSchema = new mongoose.Schema(
   },
   { timestamps: true, versionKey: false }
 );
-
-// Agregar un middleware pre-save para calcular automáticamente el precio de venta
-ProductSchema.pre("save", function (next) {
-  // Si hay precio de compra, calcula el precio de venta con un 15% de ganancia
-  if (this.precioCompra) {
-    this.precio = Math.round(this.precioCompra * 1.15); // Precio de compra + 15%
-  }
-  next();
-});
-
-// Agregar un método virtual para obtener el precio de venta
-ProductSchema.virtual("precioVenta").get(function () {
-  return this.precio;
-});
-
-// También actualizar precio cuando se actualiza precioCompra
-ProductSchema.pre("findOneAndUpdate", function (next) {
-  const update = this.getUpdate();
-  if (update.precioCompra) {
-    update.precio = Math.round(update.precioCompra * 1.15);
-  }
-  next();
-});
 
 // Middleware para actualizar automáticamente el estado cuando se modifica el stock
 ProductSchema.post("findOneAndUpdate", async function (doc) {
