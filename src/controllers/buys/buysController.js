@@ -10,6 +10,7 @@ import { z } from "zod";
 
 // Crear una nueva compra
 export const crearCompra = async (req, res) => {
+  console.log("BODY RECIBIDO:", req.body);
   try {
     // Validar el esquema de la compra antes de procesar los datos
     compraSchema.parse(req.body);
@@ -35,13 +36,7 @@ export const crearCompra = async (req, res) => {
           .status(400)
           .json({ error: "Cantidad no válida para el producto" });
       }
-      if (item.cantidad > producto.stock) {
-        return res
-          .status(400)
-          .json({
-            error: `La cantidad de la compra (${item.cantidad}) no puede ser mayor al stock del producto (${producto.stock})`,
-          });
-      }
+      // Se elimina la validación de stock
       total += producto.precioCompra * item.cantidad; // Calcular el total
     }
 
@@ -91,7 +86,7 @@ export const actualizarEstadoCompra = async (req, res) => {
       return res.status(400).json({ error: "ID de compra no válido" });
     }
 
-    const compra = await Compra.findById(id);
+    const compra = await Compra.findById(id).populate("productos.producto");
     if (!compra) {
       return res.status(404).json({ error: "Compra no encontrada" });
     }
@@ -104,14 +99,34 @@ export const actualizarEstadoCompra = async (req, res) => {
       "Cancelado",
     ];
     if (!estadosValidos.includes(estado)) {
-      return res
-        .status(400)
-        .json({
-          error:
-            "El estado solo puede ser 'Pendiente', 'Procesando', 'Completado' o 'Cancelado'",
-        });
+      return res.status(400).json({
+        error: "El estado solo puede ser 'Pendiente', 'Procesando', 'Completado' o 'Cancelado'"
+      });
     }
 
+    // Guardar el estado anterior para verificar el cambio
+    const estadoAnterior = compra.estado;
+    
+    // Si la compra pasa a estado "Completado", actualizar el stock de productos
+    if (estado === "Completado" && estadoAnterior !== "Completado") {
+      // Recorrer los productos de la compra
+      for (const item of compra.productos) {
+        const productData = await Producto.findById(item.producto);
+        if (productData) {
+          // Actualizar el stock sumando la cantidad comprada
+          productData.stock += item.cantidad;
+          await productData.save();
+        }
+      }
+      compra.estado = estado;
+      await compra.save();
+      return res.json({
+        message: "Compra completada y stock de productos actualizado",
+        data: compra,
+      });
+    }
+
+    // Para cualquier otro cambio de estado
     compra.estado = estado;
     await compra.save();
 
@@ -124,23 +139,30 @@ export const actualizarEstadoCompra = async (req, res) => {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
     }
+    console.error("Error al cambiar el estado de la compra:", error);
     res.status(500).json({
       error: "Error al cambiar el estado de la compra",
     });
   }
 };
 
-
 // Obtener una compra por ID con populate
 export const obtenerCompra = async (req, res) => {
   try {
     const compra = await Compra.findById(req.params.id)
-      .populate("proveedor") // Incluir datos completos del proveedor
-      .populate("productos.producto"); // Incluir datos completos de cada producto
+      .populate({
+        path: "proveedor",
+        select: "nombre nit telefono correo direccion" // Selecciona los campos que quieres mostrar
+      })
+      .populate({
+        path: "productos.producto",
+        select: "nombre categoria precioVenta precioCompra stock" // Selecciona los campos que quieres mostrar
+      });
 
     if (!compra) return res.status(404).json({ error: "Compra no encontrada" });
     res.status(200).json(compra);
   } catch (error) {
+    console.error("Error al obtener la compra:", error);
     res.status(500).json({ error: "Error al obtener la compra" });
   }
 };
@@ -148,13 +170,21 @@ export const obtenerCompra = async (req, res) => {
 // Obtener todas las compras
 export const obtenerCompras = async (req, res) => {
   try {
-    const compras = await Compra.find();
+    const compras = await Compra.find()
+      .populate({
+        path: "proveedor",
+        select: "nombre nit" // Selecciona solo los campos básicos para la lista
+      })
+      .populate({
+        path: "productos.producto",
+        select: "nombre precioCompra" // Selecciona solo los campos básicos para la lista
+      });
     res.status(200).json(compras);
   } catch (error) {
+    console.error("Error al obtener las compras:", error);
     res.status(500).json({ error: "Error al obtener las compras" });
   }
 };
-
 // Eliminar una compra por ID
 export const eliminarCompra = async (req, res) => {
   const { id } = req.params;
