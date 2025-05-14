@@ -18,7 +18,7 @@ const ComprasSchema = new mongoose.Schema(
       {
         producto: {
           type: mongoose.Schema.Types.ObjectId, // Referencia al modelo Producto
-          ref: "Producto", // Nombre del modelo referenciado
+          ref: "productos", // Nombre del modelo referenciado
           required: [true, "El producto es obligatorio"],
         },
         cantidad: {
