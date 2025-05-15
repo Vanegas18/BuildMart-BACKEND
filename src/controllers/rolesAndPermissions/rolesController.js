@@ -109,6 +109,24 @@ export const getRolByName = async (req, res) => {
   }
 };
 
+// Obtener un rol por el ID
+export const getRolById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    // Validar si el ID es un ObjectId válido
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ error: "ID de rol inválido" });
+    }
+    const rol = await Roles.findById(id).populate("permisos");
+    if (!rol) {
+      return res.status(404).json({ error: "Rol no encontrado" });
+    }
+    res.json(rol);
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener el rol" });
+  }
+};
+
 // Actualizar rol
 export const updateRol = async (req, res) => {
   const { nombre } = req.params;

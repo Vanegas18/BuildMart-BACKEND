@@ -1,5 +1,6 @@
 import express from "express";
 import {
+  getRolById,
   getRolByName,
   getRoles,
   newRol,
@@ -10,8 +11,9 @@ import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 
 const router = express.Router();
 
-router.get("/", verificarAdmin, getRoles);
-router.get("/:nombre", verificarAdmin, getRolByName);
+router.get("/", getRoles);
+router.get("/:nombre", getRolByName);
+router.get("/:id", getRolById);
 
 router.post("/", verificarAdmin, newRol);
 router.put("/:nombre", verificarAdmin, updateRol);
