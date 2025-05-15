@@ -57,6 +57,7 @@ export const newUser = async (req, res) => {
       contraseña,
       telefono,
       direccion,
+      rol,
     });
     if (!userValidate.success) {
       return res.status(400).json({
