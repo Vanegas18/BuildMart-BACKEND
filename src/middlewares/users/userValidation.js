@@ -27,7 +27,9 @@ export const UserSchema = z.object({
   direccion: z
     .string()
     .min(15, { message: "La dirección debe tener al menos 15 caracteres" }),
-  rol: z.string().uuid({ message: "El rol es obligatorio" }),
+  rol: z.string({
+    required_error: "El rol es obligatorio",
+  }),
   estado: z.enum(["Activo", "Inactivo"]).optional(),
 });
 
