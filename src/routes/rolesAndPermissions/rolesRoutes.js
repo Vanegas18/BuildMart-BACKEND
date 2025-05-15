@@ -13,7 +13,7 @@ const router = express.Router();
 
 router.get("/", getRoles);
 router.get("/:nombre", getRolByName);
-router.get("/:id", getRolById);
+router.get("/byId/:id", getRolById);
 
 router.post("/", verificarAdmin, newRol);
 router.put("/:nombre", verificarAdmin, updateRol);

@@ -113,10 +113,6 @@ export const getRolByName = async (req, res) => {
 export const getRolById = async (req, res) => {
   const { id } = req.params;
   try {
-    // Validar si el ID es un ObjectId válido
-    if (!isValidObjectId(id)) {
-      return res.status(400).json({ error: "ID de rol inválido" });
-    }
     const rol = await Roles.findById(id).populate("permisos");
     if (!rol) {
       return res.status(404).json({ error: "Rol no encontrado" });
