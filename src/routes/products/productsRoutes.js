@@ -14,7 +14,6 @@ const router = express.Router();
 
 router.post(
   "/",
-  verificarAdmin,
   (req, res, next) => {
     upload(req, res, function (err) {
       if (err) {
@@ -31,7 +30,6 @@ router.post(
 
 router.put(
   "/:productoId",
-  verificarAdmin,
   (req, res, next) => {
     upload(req, res, function (err) {
       if (err) {
@@ -49,6 +47,6 @@ router.put(
 router.get("/", getProductos);
 router.get("/:productoId", getProductById);
 router.get("/estado/:estado", getProductosByEstado);
-router.patch("/:productoId/estado", verificarAdmin, updateStateProduct);
+router.patch("/:productoId/estado", updateStateProduct);
 
 export default router;

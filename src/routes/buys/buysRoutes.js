@@ -9,11 +9,10 @@ import {
 } from "../../controllers/buys/buysController.js";
 import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 
-
-router.get("/",verificarAdmin, obtenerCompras);
-router.post("/",verificarAdmin, crearCompra);
-router.get("/:id",verificarAdmin, obtenerCompra);
-router.put("/:id/estado",verificarAdmin, actualizarEstadoCompra); // Asegúrate de que el parámetro se llame `compraId`
-router.delete("/:id",verificarAdmin, eliminarCompra);
+router.get("/", obtenerCompras);
+router.post("/", crearCompra);
+router.get("/:id", obtenerCompra);
+router.put("/:id/estado", actualizarEstadoCompra); // Asegúrate de que el parámetro se llame `compraId`
+router.delete("/:id", eliminarCompra);
 
 export default router;

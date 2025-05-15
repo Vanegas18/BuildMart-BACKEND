@@ -17,11 +17,11 @@ import {
 
 const router = express.Router();
 
-router.get("/", verificarAdmin, getUsers);
+router.get("/", getUsers);
 router.get("/:usuarioId/Id", getUserById);
 router.post("/", newUser);
 router.put("/:usuarioId", updateUser);
-router.patch("/:usuarioId/estado", verificarAdmin, updateStateUser);
+router.patch("/:usuarioId/estado", updateStateUser);
 router.post("/login", loginUser);
 router.post("/logout", logoutUser);
 router.post("/restablecer-contrasena", forgotPassword);

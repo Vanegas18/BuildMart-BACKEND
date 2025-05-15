@@ -12,8 +12,8 @@ const router = express.Router();
 router.get("/:id?", getSales);
 
 // Ruta para crear una nueva venta
-router.post("/", verificarAdmin, createSale);
+router.post("/", createSale);
 
-router.put("/:id", verificarAdmin, updateSaleStatus);
+router.put("/:id", updateSaleStatus);
 
 export default router;

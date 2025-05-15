@@ -12,8 +12,8 @@ import { verificarAdmin } from "../../middlewares/auth/configAuth.js";
 router.get("/", getCategories);
 router.get("/:categoriaId", getCategoryById);
 
-router.post("/", verificarAdmin, newCategory);
-router.put("/:categoriaId", verificarAdmin, updateCategoria);
-router.patch("/:categoriaId/estado", verificarAdmin, updateStateCategory);
+router.post("/", newCategory);
+router.put("/:categoriaId", updateCategoria);
+router.patch("/:categoriaId/estado", updateStateCategory);
 
 export default router;

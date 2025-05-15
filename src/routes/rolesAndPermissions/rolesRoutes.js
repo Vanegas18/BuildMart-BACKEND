@@ -15,8 +15,8 @@ router.get("/", getRoles);
 router.get("/:nombre", getRolByName);
 router.get("/byId/:id", getRolById);
 
-router.post("/", verificarAdmin, newRol);
-router.put("/:nombre", verificarAdmin, updateRol);
-router.patch("/:nombre/estado", verificarAdmin, updateStateRol);
+router.post("/", newRol);
+router.put("/:nombre", updateRol);
+router.patch("/:nombre/estado", updateStateRol);
 
 export default router;

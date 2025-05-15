@@ -7,13 +7,15 @@ import {
   updateCategoriesProv,
   updateStateCategoria,
 } from "../../controllers/categorySuppliers/catSuppliersController.js";
-import { verificarAdmin, verificarAutenticacion } from "../../middlewares/auth/configAuth.js";
+import {
+  verificarAdmin,
+  verificarAutenticacion,
+} from "../../middlewares/auth/configAuth.js";
 
-
-router.post("/",verificarAdmin, newCategorySup);
-router.get("/",verificarAutenticacion, getCategoriesProv);
-router.get("/:categoriesProvId",verificarAdmin, getCategoriesProvById);
-router.put("/:categoriesProvId",verificarAdmin, updateCategoriesProv);
-router.patch("/:categoriesProvId/estado",verificarAdmin, updateStateCategoria);
+router.post("/", newCategorySup);
+router.get("/", getCategoriesProv);
+router.get("/:categoriesProvId", getCategoriesProvById);
+router.put("/:categoriesProvId", updateCategoriesProv);
+router.patch("/:categoriesProvId/estado", updateStateCategoria);
 
 export default router;
