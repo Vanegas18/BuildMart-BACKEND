@@ -8,7 +8,7 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: [true, "La cédula es obligatoria"],
       unique: true,
-      trim: true
+      trim: true,
     },
     nombre: {
       type: String,
@@ -47,7 +47,7 @@ const UserSchema = new mongoose.Schema(
     rol: {
       type: Schema.Types.ObjectId,
       ref: "roles",
-      default: new mongoose.Types.ObjectId("67b55ac752198cfd60636c36"),
+      required: [true, "El rol es obligatorio"],
     },
     estado: { type: String, default: "Activo", enum: ["Activo", "Inactivo"] },
   },

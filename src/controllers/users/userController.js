@@ -106,12 +106,12 @@ export const newUser = async (req, res) => {
     });
 
     // Enviar correo específico según el rol
-    if (rolEncontrado.nombre === "Administrador") {
-      // Si es administrador, enviamos correo para configurar contraseña
-      await enviarCorreoConfiguracionAdmin(correo, usuario._id);
-    } else {
+    if (rolEncontrado.nombre === "Cliente") {
       // Para otros roles, enviar correo de bienvenida estándar
       await enviarCorreoRegistro(correo, rolEncontrado.nombre);
+    } else {
+      // Si es administrador, enviamos correo para configurar contraseña
+      await enviarCorreoConfiguracionAdmin(correo, usuario._id);
     }
 
     // Generar token JWT para la sesión
