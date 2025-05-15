@@ -74,14 +74,8 @@ export const newUser = async (req, res) => {
         });
       }
       rol = rolCliente._id; // Asignamos su ID
-    } else {
-      // Convertir a ObjectId si es un string válido
-      try {
-        rol = mongoose.Types.ObjectId(rol);
-      } catch (error) {
-        return res.status(400).json({ error: "El ID del rol no es válido" });
-      }
     }
+
     // Va a buscar el rol mandado por el body, en caso de que lo encuentre lo asigna
     const rolEncontrado = await Role.findById(rol);
     if (!rolEncontrado) {
