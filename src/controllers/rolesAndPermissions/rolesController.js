@@ -52,19 +52,6 @@ export const newRol = async (req, res) => {
     const nuevoRol = new Roles(req.body);
     await nuevoRol.save();
 
-    // Generar log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : null,
-      fecha: new Date(),
-      accion: "crear",
-      entidad: "Rol",
-      entidadId: nuevoRol._id,
-      cambios: {
-        previo: null,
-        nuevo: nuevoRol,
-      },
-    });
-
     // Responder con éxito y datos del rol creado
     res.status(201).json({
       message: "Rol creado exitosamente",
@@ -161,19 +148,6 @@ export const updateRol = async (req, res) => {
       } // Devuelve el documento actualizado
     );
 
-    // Generar log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : null,
-      fecha: new Date(),
-      accion: "actualizar",
-      entidad: "Rol",
-      entidadId: nombre,
-      cambios: {
-        previo: rolAnterior,
-        nuevo: rol,
-      },
-    });
-
     // Responder con éxito y datos actualizados
     res.json({
       message: "Rol actualizado exitosamente",
@@ -218,19 +192,6 @@ export const updateStateRol = async (req, res) => {
 
     // Guarda la rol
     await rol.save();
-
-    // Registrar cambio en log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : null,
-      fecha: new Date(),
-      accion: "cambiar_estado",
-      entidad: "Rol",
-      entidadId: nombre,
-      cambios: {
-        previo: { estado: estadoAnterior },
-        nuevo: { estado: rol.estado },
-      },
-    });
 
     // Responder con éxito y datos actualizados
     res.json({
