@@ -23,7 +23,7 @@ export const ProductSchema = z.object({
     z
       .number()
       .min(0, { message: "El precio de compra no puede ser negativo" })
-      .refine((val) => val > 0, {
+      .refine((val) => val >= 0, {
         message: "El precio de compra debe ser mayor a 0",
       })
   ),
@@ -32,7 +32,7 @@ export const ProductSchema = z.object({
     z
       .number()
       .min(0, { message: "El precio de venta no puede ser negativo" })
-      .refine((val) => val > 0, {
+      .refine((val) => val >= 0, {
         message: "El precio de venta debe ser mayor a 0",
       })
   ),
