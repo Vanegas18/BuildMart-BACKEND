@@ -94,19 +94,6 @@ export const newUser = async (req, res) => {
     });
     await usuario.save();
 
-    // Generar log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : "SISTEMA",
-      fecha: new Date(),
-      accion: "crear",
-      entidad: "Usuario",
-      entidadId: usuario._id,
-      cambios: {
-        previo: null,
-        nuevo: usuario,
-      },
-    });
-
     // Enviar correo específico según el rol
     if (rolEncontrado.nombre === "Cliente") {
       // Para otros roles, enviar correo de bienvenida estándar
@@ -246,25 +233,6 @@ export const updateUser = async (req, res) => {
       usuarioRespuesta.contraseña = "*******"; // O reemplazar con '********'
     }
 
-    // Generar log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : "SISTEMA",
-      fecha: new Date(),
-      accion: "actualizar",
-      entidad: "Usuario",
-      entidadId: usuarioId,
-      cambios: {
-        previo: {
-          ...usuarioAnterior.toObject(),
-          contraseña: contraseña ? "********" : usuarioAnterior.contraseña,
-        },
-        nuevo: {
-          ...usuarioRespuesta,
-          contraseña: contraseña ? "********" : usuarioRespuesta.contraseña,
-        },
-      },
-    });
-
     // Responder con éxito y datos actualizados
     res.json({
       message: "Usuario actualizado exitosamente",
@@ -315,19 +283,6 @@ export const updateStateUser = async (req, res) => {
 
     // Guarda el usuario
     await usuario.save();
-
-    // Generar log de auditoría para el cambio de estado
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : "SISTEMA",
-      fecha: new Date(),
-      accion: "cambiar_estado",
-      entidad: "Usuario",
-      entidadId: usuario._id,
-      cambios: {
-        previo: { estado: estadoAnterior },
-        nuevo: { estado: usuario.estado },
-      },
-    });
 
     // Responder con éxito y datos actualizados
     res.json({

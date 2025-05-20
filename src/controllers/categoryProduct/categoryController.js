@@ -21,19 +21,6 @@ export const newCategory = async (req, res) => {
     const nuevaCategoria = new Categoria(req.body);
     await nuevaCategoria.save();
 
-    // Generar log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : null,
-      fecha: new Date(),
-      accion: "crear",
-      entidad: "Categoria",
-      entidadId: nuevaCategoria._id,
-      cambios: {
-        previo: null,
-        nuevo: nuevaCategoria,
-      },
-    });
-
     // Responder con éxito y datos de la categoría creada
     res
       .status(201)
@@ -99,19 +86,6 @@ export const updateCategoria = async (req, res) => {
       { new: true } // Devuelve el documento actualizado
     );
 
-    // Generar log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : null,
-      fecha: new Date(),
-      accion: "actualizar",
-      entidad: "Categoria",
-      entidadId: categoriaId,
-      cambios: {
-        previo: categoriaAnterior,
-        nuevo: categoria,
-      },
-    });
-
     // Responder con éxito y datos actualizados
     res.json({
       message: "Categoría actualizada exitosamente",
@@ -165,19 +139,6 @@ export const updateStateCategory = async (req, res) => {
 
     // Guarda la categoria
     await categoria.save();
-
-    // Registrar cambio en log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : null,
-      fecha: new Date(),
-      accion: "cambiar_estado",
-      entidad: "Categoria",
-      entidadId: categoriaId,
-      cambios: {
-        previo: { estado: estadoAnterior },
-        nuevo: { estado: categoria.estado },
-      },
-    });
 
     // Responder con éxito y datos actualizados
     res.json({

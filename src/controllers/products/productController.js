@@ -75,19 +75,6 @@ export const newProduct = async (req, res) => {
     const producto = new Productos(datosValidados);
     await producto.save();
 
-    // Generar log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : "SISTEMA",
-      fecha: new Date(),
-      accion: "crear",
-      entidad: "Producto",
-      entidadId: producto._id,
-      cambios: {
-        previo: null,
-        nuevo: producto,
-      },
-    });
-
     // Responder con éxito y datos del producto guardado
     res
       .status(201)
@@ -260,19 +247,6 @@ export const updateProduct = async (req, res) => {
       { new: true } // Devuelve el documento actualizado
     );
 
-    // Generar log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : "SISTEMA",
-      fecha: new Date(),
-      accion: "actualizar",
-      entidad: "Producto",
-      entidadId: productoAnterior._id, // Usamos el _id real del documento
-      cambios: {
-        previo: productoAnterior,
-        nuevo: producto,
-      },
-    });
-
     // Responder con éxito y datos actualizados
     res.json({
       message: "Producto actualizado exitosamente",
@@ -349,19 +323,6 @@ export const updateStateProduct = async (req, res) => {
     // Guarda el producto
     await producto.save();
 
-    // Registrar cambio en log de auditoría
-    await LogAuditoria.create({
-      usuario: req.usuario ? req.usuario.id : null,
-      fecha: new Date(),
-      accion: "cambiar_estado",
-      entidad: "Producto",
-      entidadId: productoId,
-      cambios: {
-        previo: { estado: estadoAnterior },
-        nuevo: { estado: producto.estado },
-      },
-    });
-
     // Responder con éxito y datos actualizados
     res.json({
       message: `Estado del producto cambiado exitosamente a ${nuevoEstado}`,
@@ -388,38 +349,12 @@ export const actualizarEstadoSegunStock = async (productoId) => {
     ) {
       producto.estado = "Agotado";
       await producto.save();
-
-      // Registrar el cambio automático en el log
-      await LogAuditoria.create({
-        usuario: "SISTEMA",
-        fecha: new Date(),
-        accion: "cambiar_estado_automatico",
-        entidad: "Producto",
-        entidadId: productoId,
-        cambios: {
-          previo: { estado: producto.estado, stock: producto.stock },
-          nuevo: { estado: "Agotado", stock: 0 },
-        },
-      });
     }
 
     // Si el producto está Agotado pero tiene stock nuevamente, cambiarlo a Activo
     if (producto.estado === "Agotado" && producto.stock > 0) {
       producto.estado = "Activo";
       await producto.save();
-
-      // Registrar el cambio automático en el log
-      await LogAuditoria.create({
-        usuario: "SISTEMA",
-        fecha: new Date(),
-        accion: "cambiar_estado_automatico",
-        entidad: "Producto",
-        entidadId: productoId,
-        cambios: {
-          previo: { estado: "Agotado", stock: producto.stock },
-          nuevo: { estado: "Activo", stock: producto.stock },
-        },
-      });
     }
 
     return producto;
