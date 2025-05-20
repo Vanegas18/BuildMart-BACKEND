@@ -22,16 +22,16 @@ const ProductSchema = new mongoose.Schema(
         required: [true, "Se debe categorizar el producto"],
       },
     ],
-    // precioCompra: {
-    //   type: Number,
-    //   required: [true, "El precio de compra es requerido"],
-    //   min: [0, "El precio no puede ser negativo"],
-    // },
-    // precio: {
-    //   type: Number,
-    //   required: [true, "El precio de venta es requerido"],
-    //   min: [0, "El precio no puede ser negativo"],
-    // },
+    precioCompra: {
+      type: Number,
+      default: 0,
+      min: [0, "El precio no puede ser negativo"],
+    },
+    precio: {
+      type: Number,
+      default: 0,
+      min: [0, "El precio no puede ser negativo"],
+    },
     stock: {
       type: Number,
       default: 0,
