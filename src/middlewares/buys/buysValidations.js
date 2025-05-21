@@ -13,14 +13,13 @@ const ProductoEnCompraSchema = z.object({
     .number()
     .int()
     .positive({ message: "La cantidad debe ser un número entero positivo" }),
-  precioCompra: z
-    .number()
-    .nonpositive({ message: "El precio de compra debe ser mayor a 0" })
-    .optional(),
-  precio: z
-    .number()
-    .nonpositive({ message: "El precio de venta debe ser mayor a 0" })
-    .optional(),
+        // Permitir cualquier tipo y convertir a número
+        precioCompra: z
+          .any()
+          .transform(val => Number(val) || 0),
+        precioVenta: z
+          .any()
+          .transform(val => Number(val) || 0),
 });
 
 // Validación del esquema de compras
