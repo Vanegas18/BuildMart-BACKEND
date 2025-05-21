@@ -15,11 +15,11 @@ const ProductoEnCompraSchema = z.object({
     .positive({ message: "La cantidad debe ser un número entero positivo" }),
   precioCompra: z
     .number()
-    .positive({ message: "El precio de compra debe ser mayor a 0" })
+    .nonpositive({ message: "El precio de compra debe ser mayor a 0" })
     .optional(),
   precio: z
     .number()
-    .positive({ message: "El precio de venta debe ser mayor a 0" })
+    .nonpositive({ message: "El precio de venta debe ser mayor a 0" })
     .optional(),
 });
 
