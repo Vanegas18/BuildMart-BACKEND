@@ -42,13 +42,13 @@ export const crearCompra = async (req, res) => {
       
       // Obtener los precios de compra y venta del request
       // Si no vienen, mantenemos los precios actuales del producto
-      const nuevoPrecioCompra = item.precioCompra || producto.precioCompra;
-      const nuevoPrecioVenta = item.precioVenta || producto.precioVenta;
+      const nuevoPrecioCompra = item.precioCompra !== undefined ? item.precioCompra : producto.precioCompra;
+      const nuevoPrecioVenta = item.precio !== undefined ? item.precio : producto.precio;
       
       // Actualizar los precios del producto en la base de datos
       await Producto.findByIdAndUpdate(item.producto, {
         precioCompra: nuevoPrecioCompra,
-        precioVenta: nuevoPrecioVenta
+        precio: nuevoPrecioVenta
       });
       
       // Recalcular el total con el precio de compra actualizado
