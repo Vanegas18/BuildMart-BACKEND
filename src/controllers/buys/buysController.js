@@ -27,17 +27,35 @@ export const crearCompra = async (req, res) => {
       if (!mongoose.Types.ObjectId.isValid(item.producto)) {
         return res.status(400).json({ error: "Producto no válido" });
       }
+      
+      // Obtener el producto actual
       const producto = await Producto.findById(item.producto);
       if (!producto) {
         return res.status(400).json({ error: "Productos no existentes" });
       }
+      
       if (item.cantidad <= 0) {
         return res
           .status(400)
           .json({ error: "Cantidad no válida para el producto" });
       }
-      // Se elimina la validación de stock
-      total += producto.precioCompra * item.cantidad; // Calcular el total
+      
+      // Obtener los precios de compra y venta del request
+      // Si no vienen, mantenemos los precios actuales del producto
+      const nuevoPrecioCompra = item.precioCompra || producto.precioCompra;
+      const nuevoPrecioVenta = item.precioVenta || producto.precioVenta;
+      
+      // Actualizar los precios del producto en la base de datos
+      await Producto.findByIdAndUpdate(item.producto, {
+        precioCompra: nuevoPrecioCompra,
+        precioVenta: nuevoPrecioVenta
+      });
+      
+      // Recalcular el total con el precio de compra actualizado
+      total += nuevoPrecioCompra * item.cantidad;
+      
+      // Actualizar el item para que se guarde con el precio actual
+      item.precioCompra = nuevoPrecioCompra;
     }
 
     // Verificar que el proveedor es un ObjectId válido
@@ -61,7 +79,7 @@ export const crearCompra = async (req, res) => {
 
     await nuevaCompra.save();
     res.status(201).json({
-      message: "Compra creada exitosamente",
+      message: "Compra creada exitosamente y precios de productos actualizados",
       data: nuevaCompra,
     });
   } catch (error) {
