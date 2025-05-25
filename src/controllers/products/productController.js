@@ -247,6 +247,8 @@ export const updateProduct = async (req, res) => {
       { new: true } // Devuelve el documento actualizado
     );
 
+    await actualizarEstadoSegunStock(productoIdNumerico);
+
     // Responder con éxito y datos actualizados
     res.json({
       message: "Producto actualizado exitosamente",
@@ -336,28 +338,37 @@ export const updateStateProduct = async (req, res) => {
   }
 };
 
-// Función auxiliar para automatizar el cambio de estado según el stock
-export const actualizarEstadoSegunStock = async (productoId) => {
+// Actualizar el estado del producto según su stock
+export const actualizarEstadoSegunStock = async (filtro) => {
   try {
-    const producto = await Productos.findOne({ productoId });
-    if (!producto) return;
-
-    // Si el producto está en estado Activo o En oferta pero no tiene stock, cambiar a Agotado
-    if (
-      (producto.estado === "Activo" || producto.estado === "En oferta") &&
-      producto.stock === 0
-    ) {
-      producto.estado = "Agotado";
-      await producto.save();
+    // Puede recibir productoId, _id, o un objeto de filtro
+    let query;
+    if (typeof filtro === "object" && filtro !== null) {
+      query = filtro;
+    } else {
+      query = {
+        $or: [{ productoId: filtro }, { _id: filtro }],
+      };
     }
 
-    // Si el producto está Agotado pero tiene stock nuevamente, cambiarlo a Activo
-    if (producto.estado === "Agotado" && producto.stock > 0) {
-      producto.estado = "Activo";
-      await producto.save();
-    }
+    const productos = await Productos.find(query);
 
-    return producto;
+    for (const producto of productos) {
+      let nuevoEstado = producto.estado;
+
+      if (producto.stock === 0 && producto.estado !== "Descontinuado") {
+        nuevoEstado = "Agotado";
+      } else if (producto.stock > 0 && producto.estado === "Agotado") {
+        nuevoEstado = "Activo";
+      }
+
+      if (nuevoEstado !== producto.estado) {
+        await Productos.findOneAndUpdate(
+          { _id: producto._id },
+          { estado: nuevoEstado }
+        );
+      }
+    }
   } catch (error) {
     console.error("Error al actualizar estado según stock:", error);
   }

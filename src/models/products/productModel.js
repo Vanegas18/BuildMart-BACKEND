@@ -55,34 +55,73 @@ const ProductSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-// Middleware para actualizar automáticamente el estado cuando se modifica el stock
-ProductSchema.pre("findOneAndUpdate", async function () {
+// Middleware pre-save para creación y actualización directa
+ProductSchema.pre("save", async function (next) {
+  if (this.isModified("stock")) {
+    // Si el stock es 0 y el estado no es Descontinuado, cambiar a Agotado
+    if (this.stock === 0 && this.estado !== "Descontinuado") {
+      this.estado = "Agotado";
+    }
+    // Si el stock es mayor a 0 y el estado es Agotado, cambiar a Activo
+    else if (this.stock > 0 && this.estado === "Agotado") {
+      this.estado = "Activo";
+    }
+  }
+  next();
+});
+
+// Middleware para findOneAndUpdate
+ProductSchema.post("findOneAndUpdate", async function (doc) {
+  if (doc) {
+    let cambioEstado = false;
+
+    if (
+      doc.stock === 0 &&
+      doc.estado !== "Descontinuado" &&
+      doc.estado !== "Agotado"
+    ) {
+      doc.estado = "Agotado";
+      cambioEstado = true;
+    } else if (doc.stock > 0 && doc.estado === "Agotado") {
+      doc.estado = "Activo";
+      cambioEstado = true;
+    }
+
+    if (cambioEstado) {
+      await doc.save();
+    }
+  }
+});
+
+// Middleware para updateOne y updateMany
+ProductSchema.post(["updateOne", "updateMany"], async function () {
   const update = this.getUpdate();
 
-  // Si se está modificando el stock
-  if (update.stock !== undefined || update.$set?.stock !== undefined) {
-    const stockValue =
-      update.stock !== undefined ? update.stock : update.$set.stock;
+  // Si se modificó el stock
+  if (
+    update.stock !== undefined ||
+    update.$set?.stock !== undefined ||
+    update.$inc?.stock !== undefined
+  ) {
+    const docs = await this.model.find(this.getQuery());
 
-    // Obtener el documento actual para verificar el estado
-    const doc = await this.model.findOne(this.getQuery());
+    for (const doc of docs) {
+      let cambioEstado = false;
 
-    if (doc) {
-      // Si el stock es 0 y el estado no es Descontinuado, cambiar a Agotado
-      if (stockValue === 0 && doc.estado !== "Descontinuado") {
-        if (update.$set) {
-          update.$set.estado = "Agotado";
-        } else {
-          update.estado = "Agotado";
-        }
+      if (
+        doc.stock === 0 &&
+        doc.estado !== "Descontinuado" &&
+        doc.estado !== "Agotado"
+      ) {
+        doc.estado = "Agotado";
+        cambioEstado = true;
+      } else if (doc.stock > 0 && doc.estado === "Agotado") {
+        doc.estado = "Activo";
+        cambioEstado = true;
       }
-      // Si el stock es mayor a 0 y el estado es Agotado, cambiar a Activo
-      else if (stockValue > 0 && doc.estado === "Agotado") {
-        if (update.$set) {
-          update.$set.estado = "Activo";
-        } else {
-          update.estado = "Activo";
-        }
+
+      if (cambioEstado) {
+        await doc.save();
       }
     }
   }

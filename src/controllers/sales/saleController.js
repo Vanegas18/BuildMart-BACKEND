@@ -3,6 +3,7 @@ import Product from "../../models/products/productModel.js";
 import Client from "../../models/customers/clientModel.js";
 import mongoose from "mongoose";
 import { saleSchema } from "../../middlewares/sales/saleValidation.js";
+import { actualizarEstadoSegunStock } from "../products/productController.js";
 
 export const getSales = async (req, res) => {
   try {
@@ -67,6 +68,7 @@ export const createSale = async (req, res) => {
     }
 
     let total = 0;
+    let productosIds = [];
 
     for (const producto of productos) {
       const productData = await Product.findById(producto.producto);
@@ -90,9 +92,13 @@ export const createSale = async (req, res) => {
 
       productData.stock -= producto.cantidad;
       await productData.save();
+      productosIds.push(producto.producto); // Guardar el ID
 
       total += productData.precio * producto.cantidad;
     }
+
+    // Actualizar estados según stock después de todas las actualizaciones
+    await actualizarEstadoSegunStock({ _id: { $in: productosIds } });
 
     const newSale = new Sale({
       clienteId,
@@ -153,13 +159,20 @@ export const updateSaleStatus = async (req, res) => {
 
     // Si la venta está en estado "Pendiente" y se pasa a "Cancelada", devolver stock
     if (venta.estado === "Pendiente" && estado === "Cancelada") {
+      const productosIds = [];
+
       for (const producto of venta.productos) {
         const productData = await Product.findById(producto.productoId);
         if (productData) {
           productData.stock += producto.cantidad;
           await productData.save();
+          productosIds.push(producto.productoId);
         }
       }
+
+      // Actualizar estados según stock
+      await actualizarEstadoSegunStock({ _id: { $in: productosIds } });
+
       venta.estado = estado;
       await venta.save();
       return res.status(200).json({
@@ -186,21 +199,30 @@ export const updateSaleStatus = async (req, res) => {
       });
     }
 
-    if (venta.estado === "Pendiente" && estado === "Completada") {
+    if (
+      venta.estado === "Completada" &&
+      (estado === "Reembolsada" || estado === "Cancelada")
+    ) {
+      const productosIds = [];
+
+      for (const producto of venta.productos) {
+        const productData = await Product.findById(producto.productoId);
+        if (productData) {
+          productData.stock += producto.cantidad;
+          await productData.save();
+          productosIds.push(producto.productoId);
+        }
+      }
+
+      // Actualizar estados según stock
+      await actualizarEstadoSegunStock({ _id: { $in: productosIds } });
+
       venta.estado = estado;
       await venta.save();
       return res.status(200).json({
-        message: `Estado de la venta actualizado a ${estado}`,
-        sale: venta,
+        message: `Venta actualizada a estado ${estado} y stock restaurado.`,
       });
     }
-
-    venta.estado = estado;
-    await venta.save();
-    res.status(200).json({
-      message: `Estado de la venta actualizado a ${estado}`,
-      sale: venta,
-    });
   } catch (error) {
     console.error("Error al actualizar el estado de la venta:", error);
     res.status(500).json({ message: "Error al actualizar la venta." });
