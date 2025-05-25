@@ -56,21 +56,33 @@ const ProductSchema = new mongoose.Schema(
 );
 
 // Middleware para actualizar automáticamente el estado cuando se modifica el stock
-ProductSchema.post("findOneAndUpdate", async function (doc) {
-  if (doc) {
-    const update = this.getUpdate();
+ProductSchema.pre("findOneAndUpdate", async function () {
+  const update = this.getUpdate();
 
-    // Si se modificó el stock, verificar si es necesario actualizar el estado
-    if (update.stock !== undefined) {
+  // Si se está modificando el stock
+  if (update.stock !== undefined || update.$set?.stock !== undefined) {
+    const stockValue =
+      update.stock !== undefined ? update.stock : update.$set.stock;
+
+    // Obtener el documento actual para verificar el estado
+    const doc = await this.model.findOne(this.getQuery());
+
+    if (doc) {
       // Si el stock es 0 y el estado no es Descontinuado, cambiar a Agotado
-      if (update.stock === 0 && doc.estado !== "Descontinuado") {
-        doc.estado = "Agotado";
-        await doc.save();
+      if (stockValue === 0 && doc.estado !== "Descontinuado") {
+        if (update.$set) {
+          update.$set.estado = "Agotado";
+        } else {
+          update.estado = "Agotado";
+        }
       }
       // Si el stock es mayor a 0 y el estado es Agotado, cambiar a Activo
-      else if (update.stock > 0 && doc.estado === "Agotado") {
-        doc.estado = "Activo";
-        await doc.save();
+      else if (stockValue > 0 && doc.estado === "Agotado") {
+        if (update.$set) {
+          update.$set.estado = "Activo";
+        } else {
+          update.estado = "Activo";
+        }
       }
     }
   }
