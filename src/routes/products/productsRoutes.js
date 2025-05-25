@@ -1,5 +1,7 @@
 import express from "express";
 import {
+  crearOfertaProducto,
+  desactivarOfertaProducto,
   getProductById,
   getProductos,
   getProductosByEstado,
@@ -48,5 +50,7 @@ router.get("/", getProductos);
 router.get("/:productoId", getProductById);
 router.get("/estado/:estado", getProductosByEstado);
 router.patch("/:productoId/estado", updateStateProduct);
+router.post("/ofertas/:productoId", crearOfertaProducto);
+router.patch("/ofertas/:productoId/desactivar", desactivarOfertaProducto);
 
 export default router;

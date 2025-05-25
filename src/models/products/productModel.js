@@ -51,6 +51,39 @@ const ProductSchema = new mongoose.Schema(
       default: "Activo",
       enum: ["Activo", "Descontinuado", "Agotado", "En oferta"],
     },
+    oferta: {
+      activa: {
+        type: Boolean,
+        default: false,
+      },
+      descuento: {
+        type: Number,
+        min: [0, "El descuento no puede ser negativo"],
+        max: [100, "El descuento no puede ser mayor a 100%"],
+        default: 0,
+      },
+      precioOferta: {
+        type: Number,
+        min: [0, "El precio de oferta no puede ser negativo"],
+        default: 0,
+      },
+      fechaInicio: {
+        type: Date,
+        default: null,
+      },
+      fechaFin: {
+        type: Date,
+        default: null,
+      },
+      descripcionOferta: {
+        type: String,
+        trim: true,
+        maxlength: [
+          100,
+          "La descripción de la oferta no puede exceder 200 caracteres",
+        ],
+      },
+    },
   },
   { timestamps: true, versionKey: false }
 );
@@ -125,6 +158,41 @@ ProductSchema.post(["updateOne", "updateMany"], async function () {
       }
     }
   }
+});
+
+// Middleware para actualizar estado automáticamente basado en ofertas
+ProductSchema.pre("save", async function (next) {
+  // Lógica existente de stock...
+
+  // Nueva lógica para ofertas
+  const ahora = new Date();
+
+  if (this.oferta.activa) {
+    // Si hay fechas definidas, verificar si la oferta está vigente
+    if (this.oferta.fechaInicio && this.oferta.fechaFin) {
+      const ofertaVigente =
+        ahora >= this.oferta.fechaInicio && ahora <= this.oferta.fechaFin;
+
+      if (!ofertaVigente) {
+        this.oferta.activa = false;
+        if (this.estado === "En oferta") {
+          this.estado = this.stock > 0 ? "Activo" : "Agotado";
+        }
+      } else {
+        this.estado = "En oferta";
+      }
+    } else {
+      // Si no hay fechas, la oferta está activa
+      this.estado = "En oferta";
+    }
+  } else {
+    // Si la oferta no está activa, no puede estar en estado "En oferta"
+    if (this.estado === "En oferta") {
+      this.estado = this.stock > 0 ? "Activo" : "Agotado";
+    }
+  }
+
+  next();
 });
 
 const Products = createAutoIncrementModel(

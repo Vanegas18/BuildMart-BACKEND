@@ -7,6 +7,7 @@ import {
   estadoProductSchema,
   ProductSchema,
   updateProductSchema,
+  OfertaUpdateSchema,
 } from "../../middlewares/products/productsValidations.js";
 
 // Agregar nuevo producto
@@ -371,5 +372,105 @@ export const actualizarEstadoSegunStock = async (filtro) => {
     }
   } catch (error) {
     console.error("Error al actualizar estado según stock:", error);
+  }
+};
+
+// Crear o actualizar oferta de un producto
+export const crearOfertaProducto = async (req, res) => {
+  const { productoId } = req.params;
+
+  try {
+    // Validar datos de entrada
+    const validacion = OfertaUpdateSchema.safeParse(req.body);
+    if (!validacion.success) {
+      return res.status(400).json({
+        error: "Datos de oferta inválidos",
+        details: validacion.error.issues,
+      });
+    }
+
+    // Buscar el producto
+    const producto = await Productos.findOne({
+      productoId: parseInt(productoId),
+    });
+    if (!producto) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    // Calcular precio de oferta si se proporciona descuento
+    let precioOferta = validacion.data.oferta.precioOferta;
+    if (validacion.data.oferta.descuento > 0 && precioOferta === 0) {
+      precioOferta =
+        producto.precio * (1 - validacion.data.oferta.descuento / 100);
+    }
+
+    // Actualizar la oferta del producto
+    producto.oferta = {
+      ...validacion.data.oferta,
+      precioOferta: Math.round(precioOferta * 100) / 100, // Redondear a 2 decimales
+    };
+
+    await producto.save();
+
+    res.json({
+      message: "Oferta actualizada exitosamente",
+      data: producto,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Error al actualizar la oferta",
+      message: error.message,
+    });
+  }
+};
+
+// Desactivar oferta de un producto
+export const desactivarOfertaProducto = async (req, res) => {
+  const { productoId } = req.params;
+
+  try {
+    const producto = await Productos.findOne({
+      productoId: parseInt(productoId),
+    });
+    if (!producto) {
+      return res.status(404).json({ error: "Producto no encontrado" });
+    }
+
+    // Desactivar la oferta
+    producto.oferta.activa = false;
+    await producto.save();
+
+    res.json({
+      message: "Oferta desactivada exitosamente",
+      data: producto,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Error al desactivar la oferta",
+      message: error.message,
+    });
+  }
+};
+
+// Función para verificar y actualizar ofertas vencidas (ejecutar periódicamente)
+export const actualizarOfertasVencidas = async () => {
+  try {
+    const ahora = new Date();
+
+    const productosConOfertasVencidas = await Productos.find({
+      "oferta.activa": true,
+      "oferta.fechaFin": { $lt: ahora },
+    });
+
+    for (const producto of productosConOfertasVencidas) {
+      producto.oferta.activa = false;
+      await producto.save();
+    }
+
+    console.log(
+      `${productosConOfertasVencidas.length} ofertas vencidas actualizadas`
+    );
+  } catch (error) {
+    console.error("Error al actualizar ofertas vencidas:", error);
   }
 };
