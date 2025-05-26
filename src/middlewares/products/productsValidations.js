@@ -28,8 +28,13 @@ export const OfertaSchema = z
 
           // Si el formato es datetime-local (YYYY-MM-DDTHH:mm)
           if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
-            // Agregar segundos y zona horaria local
-            date = new Date(val + ":00");
+            // SOLUCIÓN: Especificar zona horaria de Colombia (UTC-5)
+            const fechaLocal = val + ":00-05:00";
+            date = new Date(fechaLocal);
+          } else if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
+            // Si ya tiene segundos pero no zona horaria
+            const fechaLocal = val + "-05:00";
+            date = new Date(fechaLocal);
           } else {
             // Formato completo con zona horaria
             date = new Date(val);
@@ -58,8 +63,13 @@ export const OfertaSchema = z
 
           // Si el formato es datetime-local (YYYY-MM-DDTHH:mm)
           if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
-            // Agregar segundos y zona horaria local
-            date = new Date(val + ":00");
+            // SOLUCIÓN: Especificar zona horaria de Colombia (UTC-5)
+            const fechaLocal = val + ":00-05:00";
+            date = new Date(fechaLocal);
+          } else if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
+            // Si ya tiene segundos pero no zona horaria
+            const fechaLocal = val + "-05:00";
+            date = new Date(fechaLocal);
           } else {
             // Formato completo con zona horaria
             date = new Date(val);
