@@ -12,7 +12,6 @@ export const procesarOfertas = cron.schedule(
     const porActivar = await Productos.find({
       "oferta.activa": false,
       "oferta.fechaInicio": { $lte: ahora },
-      "oferta.fechaFin": { $gt: ahora },
     });
     for (const p of porActivar) {
       p.oferta.activa = true;
@@ -28,10 +27,6 @@ export const procesarOfertas = cron.schedule(
       p.oferta.activa = false;
       await p.save();
     }
-
-    console.log(
-      `[OfertaJob] activadas: ${porActivar.length}, desactivadas: ${vencidas.length}`
-    );
   },
   {
     scheduled: false,
