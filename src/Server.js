@@ -14,6 +14,7 @@ import orderRoutes from "./routes/orders/ordersRoutes.js";
 import saleRoutes from "./routes/sales/saleRoutes.js";
 import clientRoutes from "./routes/customers/clientRoutes.js";
 import notificationsRoutes from "./routes/notificaciones.js";
+import { procesarOfertas } from "./controllers/products/ofertas.js";
 
 class Server {
   constructor() {
@@ -81,6 +82,7 @@ class Server {
       console.log(
         `✅ Servidor corriendo en el puerto http://localhost:${this.port}`
       );
+      procesarOfertas.start();
     });
   }
 }
