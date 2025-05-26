@@ -21,70 +21,18 @@ export const OfertaSchema = z
       .optional()
       .nullable()
       .transform((val) => {
-        if (!val || val === "") return null;
-
-        try {
-          let date;
-
-          // Si el formato es datetime-local (YYYY-MM-DDTHH:mm)
-          if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
-            // SOLUCIÓN: Especificar zona horaria de Colombia (UTC-5)
-            const fechaLocal = val + ":00-05:00";
-            date = new Date(fechaLocal);
-          } else if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
-            // Si ya tiene segundos pero no zona horaria
-            const fechaLocal = val + "-05:00";
-            date = new Date(fechaLocal);
-          } else {
-            // Formato completo con zona horaria
-            date = new Date(val);
-          }
-
-          if (isNaN(date.getTime())) {
-            console.warn("Fecha inválida:", val);
-            return null;
-          }
-
-          return date.toISOString();
-        } catch (error) {
-          console.error("Error parsing fecha inicio:", error);
-          return null;
-        }
+        if (!val) return null;
+        // Aquí devolvemos "2025-05-25T20:39" + ":00" opcional si quieres segundos
+        return val.endsWith(":00") ? val : val + ":00";
       }),
     fechaFin: z
       .string()
       .optional()
       .nullable()
       .transform((val) => {
-        if (!val || val === "") return null;
-
-        try {
-          let date;
-
-          // Si el formato es datetime-local (YYYY-MM-DDTHH:mm)
-          if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
-            // SOLUCIÓN: Especificar zona horaria de Colombia (UTC-5)
-            const fechaLocal = val + ":00-05:00";
-            date = new Date(fechaLocal);
-          } else if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}$/)) {
-            // Si ya tiene segundos pero no zona horaria
-            const fechaLocal = val + "-05:00";
-            date = new Date(fechaLocal);
-          } else {
-            // Formato completo con zona horaria
-            date = new Date(val);
-          }
-
-          if (isNaN(date.getTime())) {
-            console.warn("Fecha inválida:", val);
-            return null;
-          }
-
-          return date.toISOString();
-        } catch (error) {
-          console.error("Error parsing fecha fin:", error);
-          return null;
-        }
+        if (!val) return null;
+        // Aquí devolvemos "2025-05-25T20:39" + ":00" opcional si quieres segundos
+        return val.endsWith(":00") ? val : val + ":00";
       }),
     descripcionOferta: z
       .string()
