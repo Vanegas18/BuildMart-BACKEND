@@ -155,9 +155,9 @@ export const getProductosByEstado = async (req, res) => {
 };
 
 // Actualizar productos
+// Actualizar productos
 export const updateProduct = async (req, res) => {
   const { productoId } = req.params; // Este es el valor "2" que viene de la URL
-  const { categorias } = req.body.categorias;
 
   try {
     // Validar que productoId sea un número válido
@@ -167,6 +167,30 @@ export const updateProduct = async (req, res) => {
         error: "El ID del producto debe ser un número válido",
       });
     }
+
+    // CORRECCIÓN: Extraer categorias correctamente
+    let categorias = req.body.categorias;
+
+    // Si viene como FormData, las categorías pueden venir como array de strings
+    if (Array.isArray(categorias)) {
+      // Ya está en formato correcto
+    } else if (typeof categorias === "string") {
+      // Si viene como string JSON, parsearlo
+      try {
+        categorias = JSON.parse(categorias);
+      } catch (e) {
+        // Si no es JSON válido, tratarlo como un solo elemento
+        categorias = [categorias];
+      }
+    } else if (!categorias) {
+      // Si no hay categorías, error
+      return res.status(400).json({
+        error: "Las categorías son requeridas",
+      });
+    }
+
+    console.log("Categorías recibidas:", categorias);
+    console.log("Tipo de categorías:", typeof categorias);
 
     // Convertir campos numéricos de string a número
     const datosValidados = {
@@ -178,6 +202,8 @@ export const updateProduct = async (req, res) => {
       precio: req.body.precio ? Number(req.body.precio) : undefined,
       stock: req.body.stock ? Number(req.body.stock) : undefined,
     };
+
+    console.log("Datos validados:", datosValidados);
 
     // CORRECCIÓN: Buscar por el campo productoId (numérico) en lugar del _id
     const productoAnterior = await Productos.findOne({
@@ -224,6 +250,10 @@ export const updateProduct = async (req, res) => {
     const updateProductValidator =
       updateProductSchema.safeParse(datosValidados);
     if (!updateProductValidator.success) {
+      console.log(
+        "Errores de validación:",
+        updateProductValidator.error.issues
+      );
       return res.status(400).json({
         error: updateProductValidator.error.issues,
       });
@@ -248,6 +278,8 @@ export const updateProduct = async (req, res) => {
       { new: true } // Devuelve el documento actualizado
     );
 
+    console.log("Producto actualizado:", producto);
+
     await actualizarEstadoSegunStock(productoIdNumerico);
 
     // Responder con éxito y datos actualizados
@@ -256,6 +288,7 @@ export const updateProduct = async (req, res) => {
       data: producto,
     });
   } catch (error) {
+    console.error("Error en updateProduct:", error);
     // Manejar error de duplicación
     if (error.code === 11000) {
       return res
