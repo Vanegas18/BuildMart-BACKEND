@@ -7,45 +7,99 @@ const objectIdRegex = /^[a-fA-F0-9]{24}$/; // Patrón para validar MongoDB Objec
 export const OfertaSchema = z
   .object({
     activa: z.boolean().default(false),
-    descuento: z
+    descuento: z.coerce
       .number()
-      .min(0, { message: "El descuento no puede ser negativo" })
-      .max(100, { message: "El descuento no puede ser mayor a 100%" })
+      .min(0, "El descuento no puede ser negativo")
+      .max(99, "El descuento no puede ser mayor a 99%")
       .default(0),
-    precioOferta: z
+    precioOferta: z.coerce
       .number()
-      .min(0, { message: "El precio de oferta no puede ser negativo" })
+      .min(0, "El precio de oferta no puede ser negativo")
       .default(0),
     fechaInicio: z
       .string()
-      .datetime({ message: "La fecha de inicio debe ser válida" })
+      .optional()
       .nullable()
-      .optional(),
+      .transform((val) => {
+        if (!val || val === "") return null;
+
+        try {
+          let date;
+
+          // Si el formato es datetime-local (YYYY-MM-DDTHH:mm)
+          if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+            // Agregar segundos y zona horaria local
+            date = new Date(val + ":00");
+          } else {
+            // Formato completo con zona horaria
+            date = new Date(val);
+          }
+
+          if (isNaN(date.getTime())) {
+            console.warn("Fecha inválida:", val);
+            return null;
+          }
+
+          return date.toISOString();
+        } catch (error) {
+          console.error("Error parsing fecha inicio:", error);
+          return null;
+        }
+      }),
     fechaFin: z
       .string()
-      .datetime({ message: "La fecha de fin debe ser válida" })
+      .optional()
       .nullable()
-      .optional(),
+      .transform((val) => {
+        if (!val || val === "") return null;
+
+        try {
+          let date;
+
+          // Si el formato es datetime-local (YYYY-MM-DDTHH:mm)
+          if (val.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/)) {
+            // Agregar segundos y zona horaria local
+            date = new Date(val + ":00");
+          } else {
+            // Formato completo con zona horaria
+            date = new Date(val);
+          }
+
+          if (isNaN(date.getTime())) {
+            console.warn("Fecha inválida:", val);
+            return null;
+          }
+
+          return date.toISOString();
+        } catch (error) {
+          console.error("Error parsing fecha fin:", error);
+          return null;
+        }
+      }),
     descripcionOferta: z
       .string()
-      .max(200, { message: "La descripción no puede exceder 200 caracteres" })
-      .optional(),
+      .max(200, "La descripción no puede exceder 200 caracteres")
+      .optional()
+      .default(""),
   })
   .refine(
     (data) => {
-      // Si está activa, debe tener descuento o precio de oferta
       if (data.activa && data.descuento === 0 && data.precioOferta === 0) {
         return false;
       }
-      // Si hay fechas, la fecha de fin debe ser posterior a la de inicio
+
       if (data.fechaInicio && data.fechaFin) {
-        return new Date(data.fechaFin) > new Date(data.fechaInicio);
+        const fechaInicio = new Date(data.fechaInicio);
+        const fechaFin = new Date(data.fechaFin);
+        return fechaFin > fechaInicio;
       }
+
       return true;
     },
     {
       message:
         "Debe especificar descuento o precio de oferta cuando la oferta esté activa, y la fecha fin debe ser posterior a la de inicio",
+      path: ["fechaFin"],
     }
   );
 
