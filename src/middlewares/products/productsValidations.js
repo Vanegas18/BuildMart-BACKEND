@@ -21,9 +21,9 @@ export const OfertaSchema = z
       .optional()
       .nullable()
       .transform((val) => {
-        if (!val) return null;
-        // Aquí devolvemos "2025-05-25T20:39" + ":00" opcional si quieres segundos
-        return val.endsWith(":00") ? val : val + ":00";
+        if (!val || val === "") return null;
+        // DEVUELVE: "2025-05-25T20:56:00-05:00"
+        return val.endsWith(":00") ? `${val}-05:00` : `${val}:00-05:00`;
       }),
     fechaFin: z
       .string()
@@ -32,7 +32,7 @@ export const OfertaSchema = z
       .transform((val) => {
         if (!val) return null;
         // Aquí devolvemos "2025-05-25T20:39" + ":00" opcional si quieres segundos
-        return val.endsWith(":00") ? val : val + ":00";
+        return val.endsWith(":00") ? `${val}-05:00` : `${val}:00-05:00`;
       }),
     descripcionOferta: z
       .string()
