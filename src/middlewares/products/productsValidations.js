@@ -21,9 +21,20 @@ export const OfertaSchema = z
       .optional()
       .nullable()
       .transform((val) => {
-        if (!val || val === "") return null;
-        // DEVUELVE: "2025-05-25T20:56:00-05:00"
-        return val.endsWith(":00") ? `${val}-05:00` : `${val}:00-05:00`;
+        if (!val) return null;
+
+        // Detectamos si ya incluye un offset ±HH:mm
+        const hasOffset = /[+-]\d{2}:\d{2}$/.test(val);
+        // Detectamos si ya incluye segundos antes del offset (o final de cadena)
+        const hasSeconds = /:\d{2}(?:[+-]\d{2}:\d{2})?$/.test(val);
+
+        if (hasOffset) {
+          // Si no trae segundos, se los añadimos justo antes del offset
+          return hasSeconds ? val : val.replace(/([T]\d{2}:\d{2})/, "$1:00");
+        } else {
+          // No trae offset: añadimos ":00-05:00" o "-05:00"
+          return hasSeconds ? `${val}-05:00` : `${val}:00-05:00`;
+        }
       }),
     fechaFin: z
       .string()
@@ -31,8 +42,14 @@ export const OfertaSchema = z
       .nullable()
       .transform((val) => {
         if (!val) return null;
-        // Aquí devolvemos "2025-05-25T20:39" + ":00" opcional si quieres segundos
-        return val.endsWith(":00") ? `${val}-05:00` : `${val}:00-05:00`;
+        const hasOffset = /[+-]\d{2}:\d{2}$/.test(val);
+        const hasSeconds = /:\d{2}(?:[+-]\d{2}:\d{2})?$/.test(val);
+
+        if (hasOffset) {
+          return hasSeconds ? val : val.replace(/([T]\d{2}:\d{2})/, "$1:00");
+        } else {
+          return hasSeconds ? `${val}-05:00` : `${val}:00-05:00`;
+        }
       }),
     descripcionOferta: z
       .string()
