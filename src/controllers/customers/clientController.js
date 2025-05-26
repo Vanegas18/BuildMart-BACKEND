@@ -172,9 +172,12 @@ export const updateClient = async (req, res) => {
     }
 
     // Verificar si el teléfono ya está registrado (y no es el mismo cliente)
-    if (telefono && telefono !== client.telefono) {
+    if (telefono && telefono.toString() !== client.telefono.toString()) {
+      console.log(
+        `Verificando teléfono: ${telefono} vs actual: ${client.telefono}`
+      );
       const existingTelefono = await Clients.findOne({
-        telefono,
+        telefono: telefono,
         _id: { $ne: id }, // Excluir el cliente actual
       });
       if (existingTelefono) {
