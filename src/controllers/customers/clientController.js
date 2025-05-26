@@ -143,7 +143,48 @@ export const updateClient = async (req, res) => {
       return res.status(404).json({ message: "Cliente no encontrado." });
     }
 
-    // Actualizar los datos del cliente
+    // Validaciones de duplicados ANTES de actualizar
+
+    // Verificar si el correo ya está registrado (y no es el mismo cliente)
+    if (correo && correo !== client.correo) {
+      const existingEmail = await Clients.findOne({
+        correo,
+        _id: { $ne: id }, // Excluir el cliente actual
+      });
+      if (existingEmail) {
+        return res
+          .status(400)
+          .json({ message: "El correo ya está registrado." });
+      }
+    }
+
+    // Verificar si la cédula ya está registrada (y no es el mismo cliente)
+    if (cedula && cedula !== client.cedula) {
+      const existingCedula = await Clients.findOne({
+        cedula,
+        _id: { $ne: id }, // Excluir el cliente actual
+      });
+      if (existingCedula) {
+        return res
+          .status(400)
+          .json({ message: "La cédula ya está registrada." });
+      }
+    }
+
+    // Verificar si el teléfono ya está registrado (y no es el mismo cliente)
+    if (telefono && telefono !== client.telefono) {
+      const existingTelefono = await Clients.findOne({
+        telefono,
+        _id: { $ne: id }, // Excluir el cliente actual
+      });
+      if (existingTelefono) {
+        return res
+          .status(400)
+          .json({ message: "El teléfono ya está registrado." });
+      }
+    }
+
+    // Actualizar los datos del cliente después de las validaciones
     if (nombre) client.nombre = nombre;
     if (correo) client.correo = correo;
     if (telefono) client.telefono = telefono;
@@ -181,9 +222,25 @@ export const updateClient = async (req, res) => {
       .json({ message: "Cliente actualizado exitosamente.", client });
   } catch (error) {
     console.error(error.message);
+
+    // Manejo específico para errores de duplicados de MongoDB
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyPattern)[0];
+      const fieldMessages = {
+        correo: "El correo ya está registrado.",
+        cedula: "La cédula ya está registrada.",
+        telefono: "El teléfono ya está registrado.",
+      };
+
+      return res.status(400).json({
+        message:
+          fieldMessages[field] || "Ya existe un registro con estos datos.",
+      });
+    }
+
     res.status(500).json({
       message: "Error al actualizar el cliente, intente nuevamente.",
-      error,
+      error: error.message,
     });
   }
 };
