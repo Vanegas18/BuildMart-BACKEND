@@ -110,10 +110,10 @@ export const newUser = async (req, res) => {
     });
   } catch (error) {
     // Validaciones de unicidad
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyValue)[0];
-      return res.status(400).json({ error: `El ${field} ya está en uso` });
-    }
+    // if (error.code === 11000) {
+    //   const field = Object.keys(error.keyValue)[0];
+    //   return res.status(400).json({ error: `El ${field} ya está en uso` });
+    // }
     // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }
@@ -147,7 +147,7 @@ export const getUserById = async (req, res) => {
 // Actualizar usuario
 export const updateUser = async (req, res) => {
   const { usuarioId } = req.params;
-  const { rol, nombre, cedula, contraseña } = req.body;
+  const { rol, nombre, cedula, contraseña, correo, telefono } = req.body;
   try {
     // Validar datos de actualización con Zod
     const updateUserValidate = updateUserSchema.safeParse(req.body);
@@ -175,7 +175,32 @@ export const updateUser = async (req, res) => {
       }
     }
 
-    // Verificar que el rol exista (si se está actualizando)
+    // Verificar unicidad de correo (solo si se está cambiando)
+    if (correo && correo !== usuarioAnterior.correo) {
+      const correoExistente = await User.findOne({
+        correo,
+        usuarioId: { $ne: usuarioId },
+      });
+
+      if (correoExistente) {
+        return res.status(400).json({ error: "El correo ya está registrado" });
+      }
+    }
+
+    // Verificar unicidad de telefono (solo si se está cambiando)
+    if (telefono && telefono !== usuarioAnterior.telefono) {
+      const telefonoExistente = await User.findOne({
+        telefono,
+        usuarioId: { $ne: usuarioId },
+      });
+
+      if (telefonoExistente) {
+        return res
+          .status(400)
+          .json({ error: "El telefono ya está registrado" });
+      }
+    }
+
     if (rol) {
       const rolExistente = await Role.findById(rol);
       if (!rolExistente) {
@@ -222,10 +247,10 @@ export const updateUser = async (req, res) => {
     });
   } catch (error) {
     // Validaciones de unicidad
-    if (error.code === 11000) {
-      const field = Object.keys(error.keyValue)[0];
-      return res.status(400).json({ error: `El ${field} ya está en uso` });
-    }
+    // if (error.code === 11000) {
+    //   const field = Object.keys(error.keyValue)[0];
+    //   return res.status(400).json({ error: `El ${field} ya está en uso` });
+    // }
     // Manejar otros errores
     res.status(400).json({ error: error.errors || error.message });
   }

@@ -68,6 +68,16 @@ export const createClient = async (req, res) => {
       return res.status(400).json({ message: "La cédula ya está registrada." });
     }
 
+    // Verificar si el teléfono ya está registrado
+    const existingTelefono = await Clients.findOne({
+      telefono,
+    });
+    if (existingTelefono) {
+      return res
+        .status(400)
+        .json({ message: "El teléfono ya está registrado." });
+    }
+
     // Hasheo de la contraseña
     const passwordHash = await bcrypt.hash(contraseña, 10);
 
@@ -98,11 +108,6 @@ export const createClient = async (req, res) => {
       .status(201)
       .json({ message: "Cliente creado exitosamente.", client: newClient });
   } catch (error) {
-    if (error.name === "ValidationError") {
-      // Error de validación de Mongoose
-      const messages = Object.values(error.errors).map((val) => val.message);
-      return res.status(400).json({ errors: messages });
-    }
     // Otros errores
     console.error(error.message);
     res.status(500).json({
