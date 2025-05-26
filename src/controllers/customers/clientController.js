@@ -68,12 +68,6 @@ export const createClient = async (req, res) => {
       return res.status(400).json({ message: "La cédula ya está registrada." });
     }
 
-    // Verificar si el nombre ya está registrado
-    const existingNombre = await Clients.findOne({ nombre });
-    if (existingNombre) {
-      return res.status(400).json({ message: "El nombre ya está registrado." });
-    }
-
     // Hasheo de la contraseña
     const passwordHash = await bcrypt.hash(contraseña, 10);
 

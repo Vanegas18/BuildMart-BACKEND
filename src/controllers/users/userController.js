@@ -28,19 +28,13 @@ export const newUser = async (req, res) => {
       return res.status(400).json({ error: "La cédula ya está registrada" });
     }
 
-    // Verificar unicidad de el nombre
-    const nombreExistente = await User.findOne({ nombre });
-    if (nombreExistente) {
-      return res.status(400).json({ error: "El nombre ya está registrado" });
-    }
-
-    // Verificar unicidad de el nombre
+    // Verificar unicidad de el correo
     const correoExistente = await User.findOne({ correo });
     if (correoExistente) {
       return res.status(400).json({ error: "El correo ya está registrado" });
     }
 
-    // Verificar unicidad de el nombre
+    // Verificar unicidad de el telefono
     const telefonoExistente = await User.findOne({ telefono });
     if (telefonoExistente) {
       return res.status(400).json({ error: "El telefono ya está registrado" });
@@ -178,18 +172,6 @@ export const updateUser = async (req, res) => {
 
       if (cedulaExistente) {
         return res.status(400).json({ error: "La cédula ya está registrada" });
-      }
-    }
-
-    // Verificar unicidad de nombre (solo si se está cambiando)
-    if (nombre && nombre !== usuarioAnterior.nombre) {
-      const nombreExistente = await User.findOne({
-        nombre,
-        usuarioId: { $ne: usuarioId },
-      });
-
-      if (nombreExistente) {
-        return res.status(400).json({ error: "El nombre ya está registrado" });
       }
     }
 

@@ -115,7 +115,6 @@ const clientSchema = new mongoose.Schema(
       type: String,
       required: [true, "El nombre es obligatorio"],
       trim: true,
-      unique: true,
     },
     cedula: {
       type: String,

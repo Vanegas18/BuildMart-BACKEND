@@ -14,7 +14,6 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: [true, "El nombre es obligatorio"],
       trim: true,
-      unique: true,
     },
     correo: {
       type: String,
@@ -37,7 +36,7 @@ const UserSchema = new mongoose.Schema(
       required: [true, "El telefono es obligatorio"],
       unique: true,
       trim: true,
-      match: [/^\d{7,15}$/, "El teléfono debe contener entre 7 y 15 dígitos"],
+      match: [/^\d{10,15}$/, "El teléfono debe contener entre 10 y 15 dígitos"],
     },
     direccion: {
       type: String,
