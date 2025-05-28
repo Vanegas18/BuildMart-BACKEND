@@ -6,6 +6,43 @@ import Sale from "../../models/sales/saleModel.js";
 import mongoose from "mongoose";
 import { enviarCorreoPedido } from "../../middlewares/users/configNodemailer.js";
 
+// Función auxiliar para obtener el precio efectivo del producto
+const obtenerPrecioEfectivo = (producto) => {
+  const ahora = new Date();
+
+  // Verificar si la oferta está activa
+  if (producto.oferta.activa && producto.estado === "En oferta") {
+    // Si hay fechas definidas, verificar vigencia
+    if (producto.oferta.fechaInicio && producto.oferta.fechaFin) {
+      const ofertaVigente =
+        ahora >= producto.oferta.fechaInicio &&
+        ahora <= producto.oferta.fechaFin;
+
+      if (ofertaVigente && producto.oferta.precioOferta > 0) {
+        return {
+          precio: producto.oferta.precioOferta,
+          esOferta: true,
+          descuento: producto.oferta.descuento,
+        };
+      }
+    } else if (producto.oferta.precioOferta > 0) {
+      // Si no hay fechas pero la oferta está activa
+      return {
+        precio: producto.oferta.precioOferta,
+        esOferta: true,
+        descuento: producto.oferta.descuento,
+      };
+    }
+  }
+
+  // Precio normal si no hay oferta válida
+  return {
+    precio: producto.precio,
+    esOferta: false,
+    descuento: 0,
+  };
+};
+
 // Método GET
 export const getOrders = async (req, res) => {
   try {
@@ -54,8 +91,11 @@ export const createOrder = async (req, res) => {
         message: "No se puede crear la orden, el cliente está inactivo.",
       });
     }
-    // Verificación de stock y cantidades
+
+    // Verificación de stock, cantidades y precios
     const productosConDetalles = [];
+    let total = 0;
+
     for (const producto of productos) {
       const productoData = await Product.findById(producto.productoId);
       if (!productoData) {
@@ -95,6 +135,14 @@ export const createOrder = async (req, res) => {
         });
       }
 
+      // Obtener precio efectivo (normal u oferta)
+      const precioInfo = obtenerPrecioEfectivo(productoData);
+      const precioUnitario = precioInfo.precio;
+      const subtotal = precioUnitario * producto.cantidad;
+
+      // Agregar al total
+      total += subtotal;
+
       // Descontar stock al crear la orden (solo si el estado es "pendiente")
       productoData.stock -= producto.cantidad;
 
@@ -110,15 +158,12 @@ export const createOrder = async (req, res) => {
         productoId: productoData._id,
         cantidad: producto.cantidad,
         producto: productoData,
-        precio: productoData.precio,
+        precio: precioUnitario,
+        precioOriginal: productoData.precio,
+        esOferta: precioInfo.esOferta,
+        descuento: precioInfo.descuento,
+        subtotal: subtotal,
       });
-    }
-
-    // Calcular el total del pedido
-    let total = 0;
-    for (const producto of productos) {
-      const productoData = await Product.findById(producto.productoId);
-      total += productoData.precio * producto.cantidad;
     }
 
     // Crear la orden

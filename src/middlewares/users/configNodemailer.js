@@ -27,37 +27,37 @@ export const generarHtmlCorreo = (nombreRol) => {
   const resetUrl = `${baseUrl}/`;
 
   return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-      <h2 style="color: #333; text-align: center;">Bienvenido a <span style="color: #007bff;">Build Mart</span> 🎉</h2>
-      <p style="color: #555; font-size: 16px;">
-        ¡Su registro fue exitoso! 
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #333; text-align: center;">Bienvenido a <span style="color: #007bff;">Build Mart</span> 🎉</h2>
+        <p style="color: #555; font-size: 16px;">
+          ¡Su registro fue exitoso! 
+          ${
+            nombreRol === "Administrador"
+              ? "Para gestionar la plataforma, inicie sesión y configure sus preferencias. Además, le recomendamos cambiar su contraseña:"
+              : "Gracias por registrarse en nuestra tienda. ¡Esperamos que disfrute su experiencia con nosotros!"
+          }
+        </p>
+        
         ${
           nombreRol === "Administrador"
-            ? "Para gestionar la plataforma, inicie sesión y configure sus preferencias. Además, le recomendamos cambiar su contraseña:"
-            : "Gracias por registrarse en nuestra tienda. ¡Esperamos que disfrute su experiencia con nosotros!"
+            ? `
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${resetUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
+            🔐 Cambiar Contraseña
+          </a>
+        </div>`
+            : ""
         }
-      </p>
-      
-      ${
-        nombreRol === "Administrador"
-          ? `
-      <div style="text-align: center; margin: 20px 0;">
-        <a href="${resetUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
-          🔐 Cambiar Contraseña
-        </a>
-      </div>`
-          : ""
-      }
 
-      <p style="color: #777; font-size: 14px; text-align: center;">
-        Si no ha solicitado este registro, ignore este mensaje.
-      </p>
-      <hr style="border: none; border-top: 1px solid #ddd;">
-      <p style="color: #aaa; font-size: 12px; text-align: center;">
-        © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
-      </p>
-    </div>
-  `;
+        <p style="color: #777; font-size: 14px; text-align: center;">
+          Si no ha solicitado este registro, ignore este mensaje.
+        </p>
+        <hr style="border: none; border-top: 1px solid #ddd;">
+        <p style="color: #aaa; font-size: 12px; text-align: center;">
+          © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
+        </p>
+      </div>
+    `;
 };
 
 export const enviarCorreoRegistro = async (emailDestino, rol) => {
@@ -103,27 +103,27 @@ export const generarHtmlRecuperacion = (token) => {
   const resetUrl = `${baseUrl}/restablecer-contrasena?token=${token}`;
 
   return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-      <h2 style="color: #333; text-align: center;">Recuperación de Contraseña en <span style="color: #007bff;">Build Mart</span> 🔑</h2>
-      <p style="color: #555; font-size: 16px; text-align: center;">
-        Hemos recibido una solicitud para restablecer su contraseña. Haga clic en el siguiente botón para crear una nueva contraseña:
-      </p>
-      
-      <div style="text-align: center; margin: 20px 0;">
-        <a href="${resetUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
-          🔐 Restablecer Contraseña
-        </a>
-      </div>
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #333; text-align: center;">Recuperación de Contraseña en <span style="color: #007bff;">Build Mart</span> 🔑</h2>
+        <p style="color: #555; font-size: 16px; text-align: center;">
+          Hemos recibido una solicitud para restablecer su contraseña. Haga clic en el siguiente botón para crear una nueva contraseña:
+        </p>
+        
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${resetUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
+            🔐 Restablecer Contraseña
+          </a>
+        </div>
 
-      <p style="color: #777; font-size: 14px; text-align: center;">
-        Este enlace expirará en 1 hora. Si no solicitó restablecer su contraseña, puede ignorar este correo.
-      </p>
-      <hr style="border: none; border-top: 1px solid #ddd;">
-      <p style="color: #aaa; font-size: 12px; text-align: center;">
-        © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
-      </p>
-    </div>
-  `;
+        <p style="color: #777; font-size: 14px; text-align: center;">
+          Este enlace expirará en 1 hora. Si no solicitó restablecer su contraseña, puede ignorar este correo.
+        </p>
+        <hr style="border: none; border-top: 1px solid #ddd;">
+        <p style="color: #aaa; font-size: 12px; text-align: center;">
+          © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
+        </p>
+      </div>
+    `;
 };
 
 // Función para enviar el correo de recuperación
@@ -176,27 +176,27 @@ export const enviarCorreoConfirmacionCambio = async (emailDestino) => {
     const loginUrl = `${baseUrl}/login`;
 
     const htmlCorreo = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-        <h2 style="color: #333; text-align: center;">Contraseña Actualizada en <span style="color: #007bff;">Build Mart</span> 🔐</h2>
-        <p style="color: #555; font-size: 16px; text-align: center;">
-          Su contraseña ha sido actualizada correctamente. Ahora puede iniciar sesión con su nueva contraseña.
-        </p>
-        
-        <div style="text-align: center; margin: 20px 0;">
-          <a href="${loginUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
-            🔐 Iniciar Sesión
-          </a>
-        </div>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <h2 style="color: #333; text-align: center;">Contraseña Actualizada en <span style="color: #007bff;">Build Mart</span> 🔐</h2>
+          <p style="color: #555; font-size: 16px; text-align: center;">
+            Su contraseña ha sido actualizada correctamente. Ahora puede iniciar sesión con su nueva contraseña.
+          </p>
+          
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="${loginUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
+              🔐 Iniciar Sesión
+            </a>
+          </div>
 
-        <p style="color: #777; font-size: 14px; text-align: center;">
-          Si no ha solicitado este cambio, contacte con soporte inmediatamente.
-        </p>
-        <hr style="border: none; border-top: 1px solid #ddd;">
-        <p style="color: #aaa; font-size: 12px; text-align: center;">
-          © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
-        </p>
-      </div>
-    `;
+          <p style="color: #777; font-size: 14px; text-align: center;">
+            Si no ha solicitado este cambio, contacte con soporte inmediatamente.
+          </p>
+          <hr style="border: none; border-top: 1px solid #ddd;">
+          <p style="color: #aaa; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
+          </p>
+        </div>
+      `;
 
     const mailOptions = {
       from: `"Build Mart" <${userGmail}>`,
@@ -229,46 +229,136 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
   const clienteNombre = usuario?.nombre || usuario?.nombreNegocio || "Cliente";
 
   return `
-    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-      <h2 style="color: #333; text-align: center;">¡Gracias por tu pedido en <span style="color: #007bff;">Build Mart</span>! 🛒</h2>
-      
-      <p style="color: #555; font-size: 16px;">
-        Hola ${clienteNombre},
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+        <h2 style="color: #333; text-align: center;">¡Gracias por tu pedido en <span style="color: #007bff;">Build Mart</span>! 🛒</h2>
         
-        Hemos recibido tu pedido correctamente y está siendo procesado.
-      </p>
-      
-      <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <h3 style="color: #007bff; margin-top: 0;">Resumen de tu pedido:</h3>
-        <ul style="padding-left: 20px; color: #555;">
-          ${order.items
-            .map(
-              (item) => `
-            <li style="margin-bottom: 8px;">
-                ${item.producto.nombre} x ${item.cantidad} - ${formatearPrecio(
-                item.precio * item.cantidad
-              )}
-            </li>
-            `
-            )
-            .join("")}
-        </ul>
-        <p style="font-weight: bold; margin-top: 15px; color: #333;">
-          Total: ${formatearPrecio(order.total)}
+        <p style="color: #555; font-size: 16px;">
+          Hola ${clienteNombre},
+          
+          Hemos recibido tu pedido correctamente y está siendo procesado.
+        </p>
+        
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <h3 style="color: #007bff; margin-top: 0;">Resumen de tu pedido:</h3>
+          <ul style="padding-left: 20px; color: #555;">
+            ${order.items
+              .map((item) => {
+                // Construir el HTML del item
+                let itemHtml = `
+                    <li style="margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                          <strong>${item.producto.nombre}</strong> x ${item.cantidad}
+                  `;
+
+                // Si es una oferta, mostrar precios especiales
+                if (item.esOferta) {
+                  itemHtml += `
+                          <div style="margin-top: 4px;">
+                            <span style="color: #dc3545; font-weight: bold;">🏷️ EN OFERTA</span>
+                            ${
+                              item.descuento > 0
+                                ? `<span style="color: #28a745; font-size: 12px; margin-left: 8px;">${item.descuento}% OFF</span>`
+                                : ""
+                            }
+                          </div>
+                          <div style="margin-top: 2px; font-size: 12px;">
+                            <span style="text-decoration: line-through; color: #999;">
+                              Precio normal: ${formatearPrecio(
+                                item.precioOriginal
+                              )} c/u
+                            </span>
+                          </div>
+                          <div style="color: #dc3545; font-weight: bold; font-size: 14px;">
+                            Precio oferta: ${formatearPrecio(item.precio)} c/u
+                          </div>
+                    `;
+                } else {
+                  itemHtml += `
+                          <div style="margin-top: 4px; font-size: 14px;">
+                            Precio: ${formatearPrecio(item.precio)} c/u
+                          </div>
+                    `;
+                }
+
+                itemHtml += `
+                        </div>
+                        <div style="text-align: right; font-weight: bold; color: #333;">
+                          ${formatearPrecio(item.subtotal)}
+                        </div>
+                      </div>
+                    </li>
+                  `;
+
+                return itemHtml;
+              })
+              .join("")}
+          </ul>
+          
+          <!-- Mostrar resumen de ahorros si hay ofertas -->
+          ${(() => {
+            const itemsConOferta = order.items.filter((item) => item.esOferta);
+            if (itemsConOferta.length > 0) {
+              const totalSinOferta = order.items.reduce(
+                (sum, item) => sum + item.precioOriginal * item.cantidad,
+                0
+              );
+              const ahorroTotal = totalSinOferta - order.total;
+
+              return `
+                <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 10px; margin: 15px 0;">
+                  <div style="color: #155724; font-weight: bold; text-align: center;">
+                    🎉 ¡Felicitaciones! Has ahorrado ${formatearPrecio(
+                      ahorroTotal
+                    )} con nuestras ofertas
+                  </div>
+                  <div style="font-size: 12px; color: #155724; text-align: center; margin-top: 5px;">
+                    Total sin ofertas: <span style="text-decoration: line-through;">${formatearPrecio(
+                      totalSinOferta
+                    )}</span>
+                  </div>
+                </div>
+              `;
+            }
+            return "";
+          })()}
+          
+          <div style="border-top: 2px solid #007bff; padding-top: 15px; margin-top: 15px;">
+            <p style="font-weight: bold; font-size: 18px; margin: 0; color: #333; text-align: right;">
+              Total a pagar: <span style="color: #007bff;">${formatearPrecio(
+                order.total
+              )}</span>
+            </p>
+          </div>
+        </div>
+        
+        <div style="background-color: #fff3cd; border: 1px solid #ffeeba; border-radius: 5px; padding: 15px; margin: 20px 0;">
+          <h4 style="color: #856404; margin-top: 0;">📋 Estado del pedido:</h4>
+          <p style="color: #856404; margin: 0;">
+            Tu pedido está actualmente en estado: <strong>PENDIENTE</strong>
+          </p>
+          <p style="color: #856404; margin: 5px 0 0 0; font-size: 14px;">
+            Te notificaremos cuando cambie el estado de tu pedido.
+          </p>
+        </div>
+        
+        <div style="text-align: center; margin: 25px 0;">
+          <a href="${orderUrl}" 
+            style="background-color: #007bff; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+            Ver detalles del pedido
+          </a>
+        </div>
+        
+        <p style="color: #555; font-size: 16px;">
+          Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos.
+        </p>
+        
+        <hr style="border: none; border-top: 1px solid #ddd;">
+        <p style="color: #aaa; font-size: 12px; text-align: center;">
+          © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
         </p>
       </div>
-    
-      
-      <p style="color: #555; font-size: 16px;">
-        Si tienes alguna pregunta sobre tu pedido, no dudes en contactarnos.
-      </p>
-      
-      <hr style="border: none; border-top: 1px solid #ddd;">
-      <p style="color: #aaa; font-size: 12px; text-align: center;">
-        © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
-      </p>
-    </div>
-  `;
+    `;
 };
 
 // Función para enviar correo de confirmación de pedido
@@ -314,30 +404,30 @@ export const enviarCorreoConfiguracionAdmin = async (
     const resetUrl = `${baseUrl}/restablecer-contrasena?token=${token}`;
 
     const htmlCorreo = `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
-        <h2 style="color: #333; text-align: center;">Bienvenido a <span style="color: #007bff;">Build Mart</span> 🏗️</h2>
-        <p style="color: #555; font-size: 16px; text-align: center;">
-          Has sido registrado como <strong>Administrador</strong> en nuestra plataforma.
-        </p>
-        <p style="color: #555; font-size: 16px; text-align: center;">
-          Para completar tu registro y establecer tu contraseña, por favor haz clic en el siguiente botón:
-        </p>
-        
-        <div style="text-align: center; margin: 20px 0;">
-          <a href="${resetUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
-            🔐 Configurar mi contraseña
-          </a>
-        </div>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+          <h2 style="color: #333; text-align: center;">Bienvenido a <span style="color: #007bff;">Build Mart</span> 🏗️</h2>
+          <p style="color: #555; font-size: 16px; text-align: center;">
+            Has sido registrado como <strong>Administrador</strong> en nuestra plataforma.
+          </p>
+          <p style="color: #555; font-size: 16px; text-align: center;">
+            Para completar tu registro y establecer tu contraseña, por favor haz clic en el siguiente botón:
+          </p>
+          
+          <div style="text-align: center; margin: 20px 0;">
+            <a href="${resetUrl}" target="_blank" style="background-color: #007bff; color: #fff; padding: 12px 20px; text-decoration: none; font-size: 16px; border-radius: 5px; display: inline-block;">
+              🔐 Configurar mi contraseña
+            </a>
+          </div>
 
-        <p style="color: #777; font-size: 14px; text-align: center;">
-          Este enlace expirará en 24 horas. Si no configuras tu cuenta en este tiempo, deberás solicitar un nuevo enlace.
-        </p>
-        <hr style="border: none; border-top: 1px solid #ddd;">
-        <p style="color: #aaa; font-size: 12px; text-align: center;">
-          © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
-        </p>
-      </div>
-    `;
+          <p style="color: #777; font-size: 14px; text-align: center;">
+            Este enlace expirará en 24 horas. Si no configuras tu cuenta en este tiempo, deberás solicitar un nuevo enlace.
+          </p>
+          <hr style="border: none; border-top: 1px solid #ddd;">
+          <p style="color: #aaa; font-size: 12px; text-align: center;">
+            © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
+          </p>
+        </div>
+      `;
 
     const mailOptions = {
       from: `"Build Mart" <${userGmail}>`,
