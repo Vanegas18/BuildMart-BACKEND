@@ -20,7 +20,21 @@ const orderSchema = new mongoose.Schema(
         cantidad: { type: Number, required: true },
       },
     ],
-    total: { type: Number, required: true },
+    subtotal: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    iva: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
+    total: {
+      type: Number,
+      required: true,
+      min: 0,
+    },
     estado: {
       type: String,
       enum: ["pendiente", "confirmado", "rechazado"],
@@ -29,6 +43,21 @@ const orderSchema = new mongoose.Schema(
   },
   { timestamps: true, versionKey: false }
 );
+
+// Middleware para validar que total = subtotal + iva
+orderSchema.pre("save", function (next) {
+  const calculatedTotal = this.subtotal + this.iva;
+  const tolerance = 0.01; // Tolerancia para errores de punto flotante
+
+  if (Math.abs(this.total - calculatedTotal) > tolerance) {
+    const error = new Error(
+      `El total (${this.total}) no coincide con subtotal + IVA (${calculatedTotal})`
+    );
+    return next(error);
+  }
+
+  next();
+});
 
 const Orders = createAutoIncrementModel("pedidos", orderSchema, "pedidoId");
 

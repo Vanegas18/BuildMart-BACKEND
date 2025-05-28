@@ -303,7 +303,7 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
                 (sum, item) => sum + item.precioOriginal * item.cantidad,
                 0
               );
-              const ahorroTotal = totalSinOferta - order.total;
+              const ahorroTotal = totalSinOferta - order.subtotal; // Usar subtotal para el cálculo de ahorro
 
               return `
                 <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 10px; margin: 15px 0;">
@@ -313,7 +313,7 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
                     )} con nuestras ofertas
                   </div>
                   <div style="font-size: 12px; color: #155724; text-align: center; margin-top: 5px;">
-                    Total sin ofertas: <span style="text-decoration: line-through;">${formatearPrecio(
+                    Subtotal sin ofertas: <span style="text-decoration: line-through;">${formatearPrecio(
                       totalSinOferta
                     )}</span>
                   </div>
@@ -323,12 +323,30 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
             return "";
           })()}
           
+          <!-- Desglose de precios con IVA -->
           <div style="border-top: 2px solid #007bff; padding-top: 15px; margin-top: 15px;">
-            <p style="font-weight: bold; font-size: 18px; margin: 0; color: #333; text-align: right;">
-              Total a pagar: <span style="color: #007bff;">${formatearPrecio(
-                order.total
-              )}</span>
-            </p>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+              <span style="color: #666; font-size: 16px;">Subtotal (sin IVA):</span>
+              <span style="color: #333; font-size: 16px; font-weight: bold;">
+                ${formatearPrecio(order.subtotal)}
+              </span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span style="color: #666; font-size: 16px;">IVA (8%):</span>
+              <span style="color: #333; font-size: 16px; font-weight: bold;">
+                ${formatearPrecio(order.iva)}
+              </span>
+            </div>
+            
+            <div style="border-top: 1px solid #ddd; padding-top: 12px;">
+              <div style="display: flex; justify-content: space-between;">
+                <span style="font-weight: bold; font-size: 18px; color: #333;">Total a pagar:</span>
+                <span style="color: #007bff; font-weight: bold; font-size: 20px;">
+                  ${formatearPrecio(order.total)}
+                </span>
+              </div>
+            </div>
           </div>
         </div>
         

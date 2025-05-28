@@ -94,7 +94,7 @@ export const createOrder = async (req, res) => {
 
     // Verificación de stock, cantidades y precios
     const productosConDetalles = [];
-    let total = 0;
+    let subtotal = 0; // Cambiado de 'total' a 'subtotal'
 
     for (const producto of productos) {
       const productoData = await Product.findById(producto.productoId);
@@ -138,10 +138,10 @@ export const createOrder = async (req, res) => {
       // Obtener precio efectivo (normal u oferta)
       const precioInfo = obtenerPrecioEfectivo(productoData);
       const precioUnitario = precioInfo.precio;
-      const subtotal = precioUnitario * producto.cantidad;
+      const subtotalProducto = precioUnitario * producto.cantidad;
 
-      // Agregar al total
-      total += subtotal;
+      // Agregar al subtotal
+      subtotal += subtotalProducto;
 
       // Descontar stock al crear la orden (solo si el estado es "pendiente")
       productoData.stock -= producto.cantidad;
@@ -162,9 +162,13 @@ export const createOrder = async (req, res) => {
         precioOriginal: productoData.precio,
         esOferta: precioInfo.esOferta,
         descuento: precioInfo.descuento,
-        subtotal: subtotal,
+        subtotal: subtotalProducto,
       });
     }
+
+    // Calcular IVA y total
+    const iva = subtotal * 0.08; // 8% de IVA
+    const total = subtotal + iva;
 
     // Crear la orden
     const newOrder = new Order({
@@ -173,7 +177,9 @@ export const createOrder = async (req, res) => {
         productoId: new mongoose.Types.ObjectId(p.productoId),
         cantidad: p.cantidad,
       })),
-      total,
+      subtotal, // Nuevo campo para el subtotal sin IVA
+      iva, // Nuevo campo para el IVA
+      total, // Total con IVA incluido
       estado: "pendiente", // Establecer el estado inicial como "pendiente"
     });
 
@@ -185,6 +191,9 @@ export const createOrder = async (req, res) => {
       ...newOrder._doc,
       items: productosConDetalles,
       _id: newOrder._id,
+      subtotal,
+      iva,
+      total,
     };
 
     // Enviar correo de confirmación
@@ -266,6 +275,8 @@ export const updateOrderStatus = async (req, res) => {
           productoId: producto.productoId,
           cantidad: producto.cantidad,
         })),
+        subtotal: order.subtotal, // Incluir subtotal en la venta
+        iva: order.iva, // Incluir IVA en la venta
         total: order.total,
         estado: "procesando", // Nuevo estado inicial para ventas
       });
