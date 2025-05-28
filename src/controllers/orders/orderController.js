@@ -349,7 +349,10 @@ export const updateOrderStatus = async (req, res) => {
         precioUnitario: producto.precioUnitario,
         precioOriginal: producto.precioOriginal,
         enOferta: producto.enOferta,
-        infoOferta: producto.infoOferta,
+        infoOferta: {
+          descuento: producto.infoOferta.descuento || 0,
+          descripcion: producto.infoOferta.descripcion || null,
+        },
         subtotalProducto: producto.subtotalProducto,
       }));
 

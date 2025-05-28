@@ -13,16 +13,17 @@ export const getSales = async (req, res) => {
         return res.status(400).json({ message: "ID de venta no válido." });
       }
       const venta = await Sale.findById(id)
-        .populate("clienteId", "nombre")
-        .populate("productos.productoId", "nombre precio");
+        .populate("clienteId", "nombre correo telefono")
+        .populate("productos.productoId", "nombre precio imagen categoria");
       if (!venta) {
         return res.status(404).json({ message: "Venta no encontrada." });
       }
       return res.status(200).json(venta);
     }
     const ventas = await Sale.find()
-      .populate("clienteId", "nombre")
-      .populate("productos.productoId", "nombre precio");
+      .populate("clienteId", "nombre correo telefono")
+      .populate("productos.productoId", "nombre precio imagen categoria")
+      .sort({ createdAt: -1 }); // Ordenar por más recientes primero
     res.status(200).json(ventas);
   } catch (error) {
     console.error(error.message);
@@ -68,8 +69,9 @@ export const createSale = async (req, res) => {
       });
     }
 
-    let total = 0;
+    let subtotal = 0;
     let productosIds = [];
+    const productosParaVenta = [];
 
     for (const producto of productos) {
       const productData = await Product.findById(producto.producto);
@@ -91,22 +93,45 @@ export const createSale = async (req, res) => {
         });
       }
 
+      // Calcular precio y subtotal del producto
+      const precioUnitario = productData.precio;
+      const subtotalProducto = precioUnitario * producto.cantidad;
+      subtotal += subtotalProducto;
+
+      // Actualizar stock
       productData.stock -= producto.cantidad;
       await productData.save();
       productosIds.push(producto.producto);
 
-      total += productData.precio * producto.cantidad;
+      // Preparar producto para la venta
+      productosParaVenta.push({
+        productoId: new mongoose.Types.ObjectId(producto.producto),
+        cantidad: producto.cantidad,
+        precioUnitario: precioUnitario,
+        precioOriginal: precioUnitario, // En venta manual, precio original = precio actual
+        enOferta: false,
+        infoOferta: {
+          descuento: 0,
+          descripcion: null,
+        },
+        subtotalProducto: subtotalProducto,
+      });
     }
+
+    // Calcular IVA, domicilio y total
+    const iva = Math.round(subtotal * 0.08 * 100) / 100; // 8% de IVA
+    const domicilio = 15000; // Costo fijo de domicilio
+    const total = Math.round((subtotal + iva + domicilio) * 100) / 100;
 
     // Actualizar estados según stock después de todas las actualizaciones
     await actualizarEstadoSegunStock({ _id: { $in: productosIds } });
 
     const newSale = new Sale({
       clienteId,
-      productos: productos.map((p) => ({
-        productoId: new mongoose.Types.ObjectId(p.producto),
-        cantidad: p.cantidad,
-      })),
+      productos: productosParaVenta,
+      subtotal: Math.round(subtotal * 100) / 100,
+      iva,
+      domicilio,
       total,
       estado: "procesando", // Estado inicial
     });
