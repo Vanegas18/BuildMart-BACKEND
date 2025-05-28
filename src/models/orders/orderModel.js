@@ -17,7 +17,46 @@ const orderSchema = new mongoose.Schema(
           ref: "productos",
           required: true,
         },
-        cantidad: { type: Number, required: true },
+        cantidad: {
+          type: Number,
+          required: true,
+        },
+        // Precio unitario al momento de la compra
+        precioUnitario: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        // Precio original del producto (sin oferta)
+        precioOriginal: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
+        // Indicador si estaba en oferta
+        enOferta: {
+          type: Boolean,
+          default: false,
+        },
+        // Información de la oferta (opcional)
+        infoOferta: {
+          descuento: {
+            type: Number,
+            min: 0,
+            max: 100,
+            default: 0,
+          },
+          descripcion: {
+            type: String,
+            trim: true,
+          },
+        },
+        // Subtotal de este producto (cantidad * precioUnitario)
+        subtotalProducto: {
+          type: Number,
+          required: true,
+          min: 0,
+        },
       },
     ],
     subtotal: {
@@ -49,16 +88,48 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-// Middleware para validar que total = subtotal + iva + domicilio
+// Middleware para validar que el subtotal coincida con la suma de subtotales de productos
 orderSchema.pre("save", function (next) {
-  const calculatedTotal = this.subtotal + this.iva + this.domicilio;
+  // Calcular subtotal basado en los productos
+  const subtotalCalculado = this.productos.reduce((total, producto) => {
+    return total + producto.subtotalProducto;
+  }, 0);
+
   const tolerance = 0.01; // Tolerancia para errores de punto flotante
+
+  if (Math.abs(this.subtotal - subtotalCalculado) > tolerance) {
+    const error = new Error(
+      `El subtotal (${this.subtotal}) no coincide con la suma de subtotales de productos (${subtotalCalculado})`
+    );
+    return next(error);
+  }
+
+  // Validar que total = subtotal + iva + domicilio
+  const calculatedTotal = this.subtotal + this.iva + this.domicilio;
 
   if (Math.abs(this.total - calculatedTotal) > tolerance) {
     const error = new Error(
       `El total (${this.total}) no coincide con subtotal + IVA + domicilio (${calculatedTotal})`
     );
     return next(error);
+  }
+
+  next();
+});
+
+// Middleware para validar subtotal de cada producto antes de guardar
+orderSchema.pre("save", function (next) {
+  const tolerance = 0.01;
+
+  for (const producto of this.productos) {
+    const subtotalEsperado = producto.cantidad * producto.precioUnitario;
+
+    if (Math.abs(producto.subtotalProducto - subtotalEsperado) > tolerance) {
+      const error = new Error(
+        `El subtotal del producto ${producto.productoId} (${producto.subtotalProducto}) no coincide con cantidad × precio unitario (${subtotalEsperado})`
+      );
+      return next(error);
+    }
   }
 
   next();

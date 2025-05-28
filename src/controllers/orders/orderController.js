@@ -26,6 +26,9 @@ const obtenerPrecioEfectivo = (producto) => {
           precio: producto.oferta.precioOferta,
           esOferta: true,
           descuento: producto.oferta.descuento,
+          descripcionOferta:
+            producto.oferta.descripcion ||
+            `Descuento del ${producto.oferta.descuento}%`,
         };
       }
     } else if (producto.oferta.precioOferta > 0) {
@@ -34,6 +37,9 @@ const obtenerPrecioEfectivo = (producto) => {
         precio: producto.oferta.precioOferta,
         esOferta: true,
         descuento: producto.oferta.descuento,
+        descripcionOferta:
+          producto.oferta.descripcion ||
+          `Descuento del ${producto.oferta.descuento}%`,
       };
     }
   }
@@ -43,6 +49,7 @@ const obtenerPrecioEfectivo = (producto) => {
     precio: producto.precio,
     esOferta: false,
     descuento: 0,
+    descripcionOferta: null,
   };
 };
 
@@ -52,19 +59,20 @@ export const getOrders = async (req, res) => {
     const { id } = req.params;
     if (id) {
       const order = await Order.findById(id)
-        .populate("clienteId", "nombre")
-        .populate("productos.productoId", "nombre precio");
+        .populate("clienteId", "nombre correo telefono")
+        .populate("productos.productoId", "nombre precio imagen categoria");
       if (!order) {
         return res.status(404).json({ message: "Orden no encontrada" });
       }
       return res.status(200).json(order);
     }
     const orders = await Order.find()
-      .populate("clienteId", "nombre")
-      .populate("productos.productoId", "nombre precio");
+      .populate("clienteId", "nombre correo telefono")
+      .populate("productos.productoId", "nombre precio imagen categoria")
+      .sort({ createdAt: -1 }); // Ordenar por más recientes primero
     res.status(200).json(orders);
   } catch (error) {
-    console.error(error.message);
+    console.error("Error al obtener pedidos:", error.message);
     res.status(500).json({ message: error.message });
   }
 };
@@ -76,13 +84,18 @@ export const createOrder = async (req, res) => {
   if (!errors.isEmpty()) {
     return res.status(400).json({ errors: errors.array() });
   }
+
   const { clienteId, productos } = req.body;
+
   try {
+    // Validar ObjectId del cliente
     if (!mongoose.Types.ObjectId.isValid(clienteId)) {
       return res
         .status(400)
         .json({ message: "El clientId proporcionado no es válido." });
     }
+
+    // Verificar que el cliente existe y está activo
     const client = await Client.findById(clienteId);
     if (!client) {
       return res.status(404).json({
@@ -96,10 +109,17 @@ export const createOrder = async (req, res) => {
     }
 
     // Verificación de stock, cantidades y precios
-    const productosConDetalles = [];
+    const productosParaOrden = [];
     let subtotal = 0;
 
     for (const producto of productos) {
+      // Validar ObjectId del producto
+      if (!mongoose.Types.ObjectId.isValid(producto.productoId)) {
+        return res.status(400).json({
+          message: `El ID del producto ${producto.productoId} no es válido.`,
+        });
+      }
+
       const productoData = await Product.findById(producto.productoId);
       if (!productoData) {
         return res.status(404).json({
@@ -107,7 +127,7 @@ export const createOrder = async (req, res) => {
         });
       }
 
-      // Verificación de estado del producto según los nuevos estados
+      // Verificación de estado del producto
       if (
         productoData.estado === "Descontinuado" ||
         productoData.estado === "Agotado"
@@ -127,14 +147,17 @@ export const createOrder = async (req, res) => {
         });
       }
 
+      // Validar cantidad
+      if (!producto.cantidad || producto.cantidad <= 0) {
+        return res.status(400).json({
+          message: `La cantidad solicitada para el producto ${productoData.nombre} debe ser mayor a cero.`,
+        });
+      }
+
+      // Verificar stock disponible
       if (producto.cantidad > productoData.stock) {
         return res.status(400).json({
           message: `El producto ${productoData.nombre} solo tiene ${productoData.stock} unidades en stock, no puedes pedir ${producto.cantidad}.`,
-        });
-      }
-      if (producto.cantidad <= 0) {
-        return res.status(400).json({
-          message: `La cantidad solicitada para el producto ${productoData.nombre} no puede ser cero.`,
         });
       }
 
@@ -143,10 +166,10 @@ export const createOrder = async (req, res) => {
       const precioUnitario = precioInfo.precio;
       const subtotalProducto = precioUnitario * producto.cantidad;
 
-      // Agregar al subtotal
+      // Agregar al subtotal general
       subtotal += subtotalProducto;
 
-      // Descontar stock al crear la orden (solo si el estado es "pendiente")
+      // Descontar stock al crear la orden (ya que el estado inicial es "pendiente")
       productoData.stock -= producto.cantidad;
 
       // Actualizar automáticamente el estado si el stock llega a cero
@@ -156,32 +179,36 @@ export const createOrder = async (req, res) => {
 
       await productoData.save();
 
-      // Guardar producto con detalles para el correo
-      productosConDetalles.push({
-        productoId: productoData._id,
+      // Preparar producto para la orden con el nuevo esquema
+      productosParaOrden.push({
+        productoId: new mongoose.Types.ObjectId(producto.productoId),
         cantidad: producto.cantidad,
-        producto: productoData,
-        precio: precioUnitario,
+        precioUnitario: precioUnitario,
         precioOriginal: productoData.precio,
-        esOferta: precioInfo.esOferta,
-        descuento: precioInfo.descuento,
-        subtotal: subtotalProducto,
+        enOferta: precioInfo.esOferta,
+        infoOferta: precioInfo.esOferta
+          ? {
+              descuento: precioInfo.descuento,
+              descripcion: precioInfo.descripcionOferta,
+            }
+          : {
+              descuento: 0,
+              descripcion: null,
+            },
+        subtotalProducto: subtotalProducto,
       });
     }
 
     // Calcular IVA, domicilio y total
-    const iva = subtotal * 0.08; // 8% de IVA
-    const domicilio = COSTO_DOMICILIO; // Costo fijo de domicilio
-    const total = subtotal + iva + domicilio;
+    const iva = Math.round(subtotal * 0.08 * 100) / 100; // 8% de IVA, redondeado
+    const domicilio = COSTO_DOMICILIO;
+    const total = Math.round((subtotal + iva + domicilio) * 100) / 100; // Redondeado
 
-    // Crear la orden
+    // Crear la orden con el nuevo esquema
     const newOrder = new Order({
-      clienteId,
-      productos: productos.map((p) => ({
-        productoId: new mongoose.Types.ObjectId(p.productoId),
-        cantidad: p.cantidad,
-      })),
-      subtotal,
+      clienteId: new mongoose.Types.ObjectId(clienteId),
+      productos: productosParaOrden,
+      subtotal: Math.round(subtotal * 100) / 100, // Redondeado
       iva,
       domicilio,
       total,
@@ -192,14 +219,26 @@ export const createOrder = async (req, res) => {
     await newOrder.save();
 
     // Preparar datos para el correo
+    const productosConDetalles = productosParaOrden.map((p, index) => ({
+      productoId: p.productoId,
+      cantidad: p.cantidad,
+      precio: p.precioUnitario,
+      precioOriginal: p.precioOriginal,
+      esOferta: p.enOferta,
+      descuento: p.infoOferta.descuento,
+      subtotal: p.subtotalProducto,
+      producto: productos[index], // Para mantener compatibilidad con el sistema de correos
+    }));
+
     const orderCompleta = {
       ...newOrder._doc,
       items: productosConDetalles,
       _id: newOrder._id,
-      subtotal,
-      iva,
-      domicilio,
-      total,
+      pedidoId: newOrder.pedidoId,
+      subtotal: newOrder.subtotal,
+      iva: newOrder.iva,
+      domicilio: newOrder.domicilio,
+      total: newOrder.total,
     };
 
     // Enviar correo de confirmación
@@ -213,12 +252,24 @@ export const createOrder = async (req, res) => {
       // No devolvemos error al cliente, solo lo registramos
     }
 
-    res.status(201).json(newOrder);
+    res.status(201).json({
+      message: "Pedido creado exitosamente",
+      pedido: newOrder,
+    });
   } catch (error) {
-    console.error(error.message);
+    console.error("Error al crear pedido:", error.message);
+
+    // Si hay error de validación del modelo (middleware pre-save)
+    if (error.message.includes("no coincide")) {
+      return res.status(400).json({
+        message: "Error en los cálculos del pedido",
+        error: error.message,
+      });
+    }
+
     res.status(500).json({
       message: "Error al crear el pedido, intente nuevamente.",
-      error,
+      error: error.message,
     });
   }
 };
@@ -229,9 +280,24 @@ export const updateOrderStatus = async (req, res) => {
   const { estado } = req.body;
 
   try {
+    // Validar ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({ message: "ID de pedido no válido." });
+    }
+
     const order = await Order.findById(id).populate("productos.productoId");
     if (!order) {
       return res.status(404).json({ message: "Pedido no encontrado." });
+    }
+
+    // Validar que el estado proporcionado es válido
+    const estadosPermitidos = ["pendiente", "confirmado", "rechazado"];
+    if (!estadosPermitidos.includes(estado)) {
+      return res.status(400).json({
+        message: `Estado '${estado}' no válido. Estados permitidos: ${estadosPermitidos.join(
+          ", "
+        )}`,
+      });
     }
 
     // Validar transiciones de estado permitidas
@@ -269,37 +335,53 @@ export const updateOrderStatus = async (req, res) => {
 
         await productData.save();
       }
+
+      console.log(`✅ Stock devuelto para pedido rechazado: ${order.pedidoId}`);
     }
     // Manejar cambio a "confirmado"
     else if (estado === "confirmado" && order.estado === "pendiente") {
       order.estado = "confirmado";
 
-      // Crear la venta correspondiente
+      // Crear la venta correspondiente usando los datos detallados del pedido
+      const productosVenta = order.productos.map((producto) => ({
+        productoId: producto.productoId,
+        cantidad: producto.cantidad,
+        precioUnitario: producto.precioUnitario,
+        precioOriginal: producto.precioOriginal,
+        enOferta: producto.enOferta,
+        infoOferta: producto.infoOferta,
+        subtotalProducto: producto.subtotalProducto,
+      }));
+
       const newSale = new Sale({
         clienteId: order.clienteId,
-        productos: order.productos.map((producto) => ({
-          productoId: producto.productoId,
-          cantidad: producto.cantidad,
-        })),
+        productos: productosVenta,
         subtotal: order.subtotal,
         iva: order.iva,
-        domicilio: order.domicilio, // Incluir domicilio en la venta
+        domicilio: order.domicilio,
         total: order.total,
         estado: "procesando",
+        pedidoId: order.pedidoId, // Referencia al pedido original
       });
 
       await newSale.save();
+      console.log(`✅ Venta creada para pedido confirmado: ${order.pedidoId}`);
 
       // Opcional: Agregar referencia a la venta en el pedido
       // order.ventaId = newSale._id;
     }
 
     await order.save();
-    res.status(200).json(order);
+
+    res.status(200).json({
+      message: `Estado del pedido actualizado a '${estado}' exitosamente`,
+      pedido: order,
+    });
   } catch (error) {
-    console.error(error.message);
+    console.error("Error al actualizar estado del pedido:", error.message);
     res.status(500).json({
       message: "Error al actualizar el estado del pedido, intente nuevamente.",
+      error: error.message,
     });
   }
 };
