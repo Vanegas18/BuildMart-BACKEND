@@ -30,6 +30,11 @@ const orderSchema = new mongoose.Schema(
       required: true,
       min: 0,
     },
+    domicilio: {
+      type: Number,
+      default: 15000,
+      min: 0,
+    },
     total: {
       type: Number,
       required: true,
@@ -44,14 +49,14 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-// Middleware para validar que total = subtotal + iva
+// Middleware para validar que total = subtotal + iva + domicilio
 orderSchema.pre("save", function (next) {
-  const calculatedTotal = this.subtotal + this.iva;
+  const calculatedTotal = this.subtotal + this.iva + this.domicilio;
   const tolerance = 0.01; // Tolerancia para errores de punto flotante
 
   if (Math.abs(this.total - calculatedTotal) > tolerance) {
     const error = new Error(
-      `El total (${this.total}) no coincide con subtotal + IVA (${calculatedTotal})`
+      `El total (${this.total}) no coincide con subtotal + IVA + domicilio (${calculatedTotal})`
     );
     return next(error);
   }

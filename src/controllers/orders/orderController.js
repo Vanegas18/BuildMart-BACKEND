@@ -6,6 +6,9 @@ import Sale from "../../models/sales/saleModel.js";
 import mongoose from "mongoose";
 import { enviarCorreoPedido } from "../../middlewares/users/configNodemailer.js";
 
+// Constante para el costo de domicilio
+const COSTO_DOMICILIO = 15000;
+
 // Función auxiliar para obtener el precio efectivo del producto
 const obtenerPrecioEfectivo = (producto) => {
   const ahora = new Date();
@@ -94,7 +97,7 @@ export const createOrder = async (req, res) => {
 
     // Verificación de stock, cantidades y precios
     const productosConDetalles = [];
-    let subtotal = 0; // Cambiado de 'total' a 'subtotal'
+    let subtotal = 0;
 
     for (const producto of productos) {
       const productoData = await Product.findById(producto.productoId);
@@ -166,9 +169,10 @@ export const createOrder = async (req, res) => {
       });
     }
 
-    // Calcular IVA y total
+    // Calcular IVA, domicilio y total
     const iva = subtotal * 0.08; // 8% de IVA
-    const total = subtotal + iva;
+    const domicilio = COSTO_DOMICILIO; // Costo fijo de domicilio
+    const total = subtotal + iva + domicilio;
 
     // Crear la orden
     const newOrder = new Order({
@@ -177,10 +181,11 @@ export const createOrder = async (req, res) => {
         productoId: new mongoose.Types.ObjectId(p.productoId),
         cantidad: p.cantidad,
       })),
-      subtotal, // Nuevo campo para el subtotal sin IVA
-      iva, // Nuevo campo para el IVA
-      total, // Total con IVA incluido
-      estado: "pendiente", // Establecer el estado inicial como "pendiente"
+      subtotal,
+      iva,
+      domicilio,
+      total,
+      estado: "pendiente",
     });
 
     // Guardar la orden en la base de datos
@@ -193,6 +198,7 @@ export const createOrder = async (req, res) => {
       _id: newOrder._id,
       subtotal,
       iva,
+      domicilio,
       total,
     };
 
@@ -275,10 +281,11 @@ export const updateOrderStatus = async (req, res) => {
           productoId: producto.productoId,
           cantidad: producto.cantidad,
         })),
-        subtotal: order.subtotal, // Incluir subtotal en la venta
-        iva: order.iva, // Incluir IVA en la venta
+        subtotal: order.subtotal,
+        iva: order.iva,
+        domicilio: order.domicilio, // Incluir domicilio en la venta
         total: order.total,
-        estado: "procesando", // Nuevo estado inicial para ventas
+        estado: "procesando",
       });
 
       await newSale.save();

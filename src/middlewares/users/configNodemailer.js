@@ -303,7 +303,7 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
                 (sum, item) => sum + item.precioOriginal * item.cantidad,
                 0
               );
-              const ahorroTotal = totalSinOferta - order.subtotal; // Usar subtotal para el cálculo de ahorro
+              const ahorroTotal = totalSinOferta - order.subtotal;
 
               return `
                 <div style="background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 5px; padding: 10px; margin: 15px 0;">
@@ -323,7 +323,7 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
             return "";
           })()}
           
-          <!-- Desglose de precios con IVA -->
+          <!-- Desglose de precios con IVA y domicilio -->
           <div style="border-top: 2px solid #007bff; padding-top: 15px; margin-top: 15px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
               <span style="color: #666; font-size: 16px;">Subtotal (sin IVA):</span>
@@ -332,10 +332,17 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
               </span>
             </div>
             
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
               <span style="color: #666; font-size: 16px;">IVA (8%):</span>
               <span style="color: #333; font-size: 16px; font-weight: bold;">
                 ${formatearPrecio(order.iva)}
+              </span>
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+              <span style="color: #666; font-size: 16px;">🚚 Domicilio:</span>
+              <span style="color: #333; font-size: 16px; font-weight: bold;">
+                ${formatearPrecio(order.domicilio)}
               </span>
             </div>
             
@@ -357,6 +364,15 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
           </p>
           <p style="color: #856404; margin: 5px 0 0 0; font-size: 14px;">
             Te notificaremos cuando cambie el estado de tu pedido.
+          </p>
+        </div>
+        
+        <div style="background-color: #e7f3ff; border: 1px solid #b6d7ff; border-radius: 5px; padding: 15px; margin: 20px 0;">
+          <h4 style="color: #0056b3; margin-top: 0;">🚚 Información de entrega:</h4>
+          <p style="color: #0056b3; margin: 0; font-size: 14px;">
+            Tu pedido será entregado a domicilio por un costo de <strong>${formatearPrecio(
+              order.domicilio
+            )}</strong>
           </p>
         </div>
         
