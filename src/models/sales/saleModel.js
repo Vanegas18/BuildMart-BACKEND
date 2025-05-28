@@ -23,8 +23,8 @@ const saleSchema = new mongoose.Schema({
   total: { type: Number, required: true },
   estado: {
     type: String,
-    enum: ["Pendiente", "Completada", "Cancelada", "Reembolsada"], // Agregamos el nuevo estado "Reembolsada"
-    default: "Pendiente", // Valor por defecto
+    enum: ["procesando", "enviado", "entregado", "completado", "reembolsado"],
+    default: "procesando", // Estado inicial cuando se crea desde un pedido confirmado
   },
 });
 

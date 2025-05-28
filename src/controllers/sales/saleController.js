@@ -32,6 +32,7 @@ export const getSales = async (req, res) => {
   }
 };
 
+// Método para crear venta manual (casos excepcionales - normalmente se crean desde pedidos confirmados)
 export const createSale = async (req, res) => {
   try {
     const parsedData = saleSchema.safeParse(req.body);
@@ -92,7 +93,7 @@ export const createSale = async (req, res) => {
 
       productData.stock -= producto.cantidad;
       await productData.save();
-      productosIds.push(producto.producto); // Guardar el ID
+      productosIds.push(producto.producto);
 
       total += productData.precio * producto.cantidad;
     }
@@ -107,7 +108,7 @@ export const createSale = async (req, res) => {
         cantidad: p.cantidad,
       })),
       total,
-      estado: "Pendiente",
+      estado: "procesando", // Estado inicial
     });
 
     await newSale.save();
@@ -130,10 +131,11 @@ export const updateSaleStatus = async (req, res) => {
     const { estado } = req.body;
 
     const validStatuses = [
-      "Pendiente",
-      "Completada",
-      "Cancelada",
-      "Reembolsada",
+      "procesando",
+      "enviado",
+      "entregado",
+      "completado",
+      "reembolsado",
     ];
 
     if (!validStatuses.includes(estado)) {
@@ -145,20 +147,24 @@ export const updateSaleStatus = async (req, res) => {
       return res.status(404).json({ message: "Venta no encontrada." });
     }
 
-    if (venta.estado === "Reembolsada") {
+    // Definir transiciones válidas
+    const transicionesValidas = {
+      procesando: ["enviado", "reembolsado"],
+      enviado: ["entregado", "reembolsado"],
+      entregado: ["completado", "reembolsado"],
+      completado: ["reembolsado"],
+      reembolsado: [], // Estado final
+    };
+
+    // Verificar si la transición es válida
+    if (!transicionesValidas[venta.estado].includes(estado)) {
       return res.status(400).json({
-        message: "No se puede cambiar el estado, la venta ya está reembolsada.",
+        message: `No se puede cambiar el estado de '${venta.estado}' a '${estado}'.`,
       });
     }
 
-    if (venta.estado === "Cancelada") {
-      return res.status(400).json({
-        message: "No se puede cambiar el estado, la venta ya está cancelada.",
-      });
-    }
-
-    // Si la venta está en estado "Pendiente" y se pasa a "Cancelada", devolver stock
-    if (venta.estado === "Pendiente" && estado === "Cancelada") {
+    // Manejar reembolso
+    if (estado === "reembolsado") {
       const productosIds = [];
 
       for (const producto of venta.productos) {
@@ -175,54 +181,21 @@ export const updateSaleStatus = async (req, res) => {
 
       venta.estado = estado;
       await venta.save();
+
       return res.status(200).json({
-        message: "Venta cancelada correctamente y stock restaurado.",
+        message: "Venta reembolsada correctamente y stock restaurado.",
+        venta,
       });
     }
 
-    // Si la venta estaba completada y se cancela o reembolsa, también se devuelve stock
-    if (
-      venta.estado === "Completada" &&
-      (estado === "Reembolsada" || estado === "Cancelada")
-    ) {
-      for (const producto of venta.productos) {
-        const productData = await Product.findById(producto.productoId);
-        if (productData) {
-          productData.stock += producto.cantidad;
-          await productData.save();
-        }
-      }
-      venta.estado = estado;
-      await venta.save();
-      return res.status(200).json({
-        message: `Venta actualizada a estado ${estado} y stock restaurado.`,
-      });
-    }
+    // Para otros cambios de estado normales
+    venta.estado = estado;
+    await venta.save();
 
-    if (
-      venta.estado === "Completada" &&
-      (estado === "Reembolsada" || estado === "Cancelada")
-    ) {
-      const productosIds = [];
-
-      for (const producto of venta.productos) {
-        const productData = await Product.findById(producto.productoId);
-        if (productData) {
-          productData.stock += producto.cantidad;
-          await productData.save();
-          productosIds.push(producto.productoId);
-        }
-      }
-
-      // Actualizar estados según stock
-      await actualizarEstadoSegunStock({ _id: { $in: productosIds } });
-
-      venta.estado = estado;
-      await venta.save();
-      return res.status(200).json({
-        message: `Venta actualizada a estado ${estado} y stock restaurado.`,
-      });
-    }
+    res.status(200).json({
+      message: `Estado de venta actualizado a '${estado}' correctamente.`,
+      venta,
+    });
   } catch (error) {
     console.error("Error al actualizar el estado de la venta:", error);
     res.status(500).json({ message: "Error al actualizar la venta." });

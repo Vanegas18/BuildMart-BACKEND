@@ -18,23 +18,22 @@ export const orderSchema = z.object({
           .regex(/^[0-9a-fA-F]{24}$/, {
             message: "El ID del producto debe ser un ObjectId válido",
           }),
-        cantidad: z
-          .number()
-          .int()
-          .positive({ message: "La cantidad debe ser un número entero positivo" }),
+        cantidad: z.number().int().positive({
+          message: "La cantidad debe ser un número entero positivo",
+        }),
       })
     )
     .nonempty({ message: "Debe incluir al menos un producto" }),
 
   estado: z
-    .enum(["pendiente", "pagado", "cancelado"])
+    .enum(["pendiente", "confirmado", "rechazado"])
     .default("pendiente")
     .optional(),
 });
 
 // Definir el esquema de validación para el estado
 export const updateOrderStatusSchema = z.object({
-    estado: z.enum(["pendiente", "pagado", "cancelado"], {
-      message: "El estado debe ser 'pendiente', 'pagado' o 'cancelado'",
-    }),
-  });
+  estado: z.enum(["pendiente", "confirmado", "rechazado"], {
+    message: "El estado debe ser 'pendiente', 'confirmado' o 'rechazado'",
+  }),
+});

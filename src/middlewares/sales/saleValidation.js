@@ -6,8 +6,23 @@ const productSchema = z.object({
   cantidad: z.number().min(1, { message: "La cantidad debe ser al menos 1" }), // Cantidad debe ser positiva
 });
 
-// Esquema de validación para la venta
+// Esquema de validación para la venta (creación manual - casos excepcionales)
 export const saleSchema = z.object({
-  clienteId: z.string().min(24, { message: "El clienteId debe ser un ObjectId válido" }), // Verifica que el clienteId sea un ObjectId válido
-  productos: z.array(productSchema).nonempty({ message: "Debe proporcionar al menos un producto" }), // Verifica que haya al menos un producto
+  clienteId: z
+    .string()
+    .min(24, { message: "El clienteId debe ser un ObjectId válido" }),
+  productos: z
+    .array(productSchema)
+    .nonempty({ message: "Debe proporcionar al menos un producto" }),
+});
+
+// Esquema de validación para actualizar el estado de una venta
+export const updateSaleStatusSchema = z.object({
+  estado: z.enum(
+    ["procesando", "enviado", "entregado", "completado", "reembolsado"],
+    {
+      message:
+        "El estado debe ser 'procesando', 'enviado', 'entregado', 'completado' o 'reembolsado'",
+    }
+  ),
 });

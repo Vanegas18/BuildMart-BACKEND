@@ -94,6 +94,7 @@ export const createOrder = async (req, res) => {
           message: `La cantidad solicitada para el producto ${productoData.nombre} no puede ser cero.`,
         });
       }
+
       // Descontar stock al crear la orden (solo si el estado es "pendiente")
       productoData.stock -= producto.cantidad;
 
@@ -119,6 +120,7 @@ export const createOrder = async (req, res) => {
       const productoData = await Product.findById(producto.productoId);
       total += productoData.precio * producto.cantidad;
     }
+
     // Crear la orden
     const newOrder = new Order({
       clienteId,
@@ -151,16 +153,13 @@ export const createOrder = async (req, res) => {
       // No devolvemos error al cliente, solo lo registramos
     }
 
-    // Enviar correo de confirmación
-    res.status(201).json(newOrder); // Respondemos con el pedido creado
+    res.status(201).json(newOrder);
   } catch (error) {
     console.error(error.message);
-    res
-      .status(500)
-      .json({
-        message: "Error al crear el pedido, intente nuevamente.",
-        error,
-      });
+    res.status(500).json({
+      message: "Error al crear el pedido, intente nuevamente.",
+      error,
+    });
   }
 };
 
@@ -168,35 +167,38 @@ export const createOrder = async (req, res) => {
 export const updateOrderStatus = async (req, res) => {
   const { id } = req.params;
   const { estado } = req.body;
+
   try {
     const order = await Order.findById(id).populate("productos.productoId");
     if (!order) {
       return res.status(404).json({ message: "Pedido no encontrado." });
     }
-    // Si el estado de la orden es "pagado", no se puede cancelar ni modificar
-    if (order.estado === "pagado" && estado === "cancelado") {
-      return res
-        .status(400)
-        .json({ message: "La orden ya está pagada, no se puede cancelar." });
-    }
-    // Si la orden está en "cancelado", no se puede modificar
-    if (order.estado === "cancelado") {
+
+    // Validar transiciones de estado permitidas
+    const estadosValidos = {
+      pendiente: ["confirmado", "rechazado"],
+      confirmado: [], // Una vez confirmado, no puede cambiar (se convierte en venta)
+      rechazado: [], // Una vez rechazado, no puede cambiar
+    };
+
+    if (!estadosValidos[order.estado].includes(estado)) {
       return res.status(400).json({
-        message: "El pedido ya está cancelado y no puede ser modificado.",
+        message: `No se puede cambiar el estado de '${order.estado}' a '${estado}'.`,
       });
     }
 
-    // Permitir el cambio a "cancelado" desde "pendiente"
-    if (estado === "cancelado" && order.estado === "pendiente") {
-      order.estado = "cancelado";
-      // Si la orden estaba en "pendiente" y es cancelada, debemos devolver el stock
+    // Manejar cambio a "rechazado"
+    if (estado === "rechazado" && order.estado === "pendiente") {
+      order.estado = "rechazado";
+
+      // Devolver el stock de los productos
       for (const producto of order.productos) {
         const productData = await Product.findById(producto.productoId);
         if (!productData) {
-          return res.status(404).json({
-            message: `Producto con ID ${producto.productoId} no encontrado`,
-          });
+          console.error(`Producto con ID ${producto.productoId} no encontrado`);
+          continue;
         }
+
         // Devolvemos el stock del producto
         productData.stock += producto.cantidad;
 
@@ -207,9 +209,10 @@ export const updateOrderStatus = async (req, res) => {
 
         await productData.save();
       }
-    } else if (estado === "pagado" && order.estado === "pendiente") {
-      // Si la orden pasa a estado "pagado", ya no se descuentan más productos si ya se hizo antes.
-      order.estado = "pagado";
+    }
+    // Manejar cambio a "confirmado"
+    else if (estado === "confirmado" && order.estado === "pendiente") {
+      order.estado = "confirmado";
 
       // Crear la venta correspondiente
       const newSale = new Sale({
@@ -219,12 +222,15 @@ export const updateOrderStatus = async (req, res) => {
           cantidad: producto.cantidad,
         })),
         total: order.total,
-        estado: "Completada",
+        estado: "procesando", // Nuevo estado inicial para ventas
       });
+
       await newSale.save();
-    } else if (estado !== "cancelado" && estado !== "pagado") {
-      order.estado = estado;
+
+      // Opcional: Agregar referencia a la venta en el pedido
+      // order.ventaId = newSale._id;
     }
+
     await order.save();
     res.status(200).json(order);
   } catch (error) {
