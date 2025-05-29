@@ -44,7 +44,7 @@ export const createSale = async (req, res) => {
       });
     }
 
-    const { clienteId, productos } = parsedData.data;
+    const { clienteId, productos, direccionEntrega } = parsedData.data;
 
     if (!Array.isArray(productos) || productos.length === 0) {
       return res.status(400).json({
@@ -132,6 +132,7 @@ export const createSale = async (req, res) => {
       subtotal: Math.round(subtotal * 100) / 100,
       iva,
       domicilio,
+      direccionEntrega,
       total,
       estado: "procesando", // Estado inicial
     });

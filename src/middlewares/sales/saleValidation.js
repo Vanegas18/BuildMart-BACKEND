@@ -14,6 +14,11 @@ export const saleSchema = z.object({
   productos: z
     .array(productSchema)
     .nonempty({ message: "Debe proporcionar al menos un producto" }),
+  direccionEntrega: z
+    .string()
+    .min(10, { message: "La dirección debe tener al menos 10 caracteres" })
+    .max(200, { message: "La dirección no puede exceder 200 caracteres" })
+    .trim(),
 });
 
 // Esquema de validación para actualizar el estado de una venta

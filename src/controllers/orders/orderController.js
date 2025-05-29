@@ -85,7 +85,7 @@ export const createOrder = async (req, res) => {
     return res.status(400).json({ errors: errors.array() });
   }
 
-  const { clienteId, productos } = req.body;
+  const { clienteId, productos, direccionEntrega } = req.body;
 
   try {
     // Validar ObjectId del cliente
@@ -211,6 +211,7 @@ export const createOrder = async (req, res) => {
       subtotal: Math.round(subtotal * 100) / 100, // Redondeado
       iva,
       domicilio,
+      direccionEntrega,
       total,
       estado: "pendiente",
     });
@@ -362,6 +363,7 @@ export const updateOrderStatus = async (req, res) => {
         subtotal: order.subtotal,
         iva: order.iva,
         domicilio: order.domicilio,
+        direccionEntrega: order.direccionEntrega,
         total: order.total,
         estado: "procesando",
         pedidoId: order.pedidoId, // Referencia al pedido original

@@ -76,6 +76,13 @@ const saleSchema = new mongoose.Schema(
       default: 15000,
       min: 0,
     },
+    direccionEntrega: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: [10, "La dirección debe tener al menos 10 caracteres"],
+      maxlength: [200, "La dirección no puede exceder 200 caracteres"],
+    },
     total: {
       type: Number,
       required: true,

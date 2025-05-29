@@ -24,7 +24,11 @@ export const orderSchema = z.object({
       })
     )
     .nonempty({ message: "Debe incluir al menos un producto" }),
-
+  direccionEntrega: z
+    .string()
+    .min(10, { message: "La dirección debe tener al menos 10 caracteres" })
+    .max(200, { message: "La dirección no puede exceder 200 caracteres" })
+    .trim(),
   estado: z
     .enum(["pendiente", "confirmado", "rechazado"])
     .default("pendiente")
