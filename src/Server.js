@@ -54,6 +54,7 @@ class Server {
           "http://localhost:5173",
           "https://buildmart-back-billowing-feather-8375.fly.dev",
           "https://build-bhzqz1dka-vanegas18s-projects.vercel.app",
+          "https://build-two-sage.vercel.app",
         ],
         credentials: true,
       })
