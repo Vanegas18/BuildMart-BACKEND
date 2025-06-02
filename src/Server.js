@@ -53,6 +53,7 @@ class Server {
         origin: [
           "http://localhost:5173",
           "https://buildmart-back-billowing-feather-8375.fly.dev",
+          "https://build-bhzqz1dka-vanegas18s-projects.vercel.app/login",
         ],
         credentials: true,
       })
