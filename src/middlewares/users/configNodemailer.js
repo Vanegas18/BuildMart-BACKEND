@@ -23,7 +23,7 @@ function formatearPrecio(precio) {
 
 // Función para generar HTML dinámico del correo según el rol
 export const generarHtmlCorreo = (nombreRol) => {
-  const baseUrl = process.env.BASE_URL || "http://localhost:5173";
+  const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
   const resetUrl = `${baseUrl}/`;
 
   return `
@@ -99,11 +99,11 @@ export const generarTokenRecuperacion = (usuarioId, correo) => {
 
 // Generar el HTML para el correo de solicitud de cambio de contraseña
 export const generarHtmlRecuperacion = (token) => {
-  const baseUrl = process.env.BASE_URL || "http://localhost:5173";
+  const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
   const resetUrl = `${baseUrl}/restablecer-contrasena?token=${token}`;
 
   return `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: al1px solid #ddd; border-radius: 10px;">
         <h2 style="color: #333; text-align: center;">Recuperación de Contraseña en <span style="color: #007bff;">Build Mart</span> 🔑</h2>
         <p style="color: #555; font-size: 16px; text-align: center;">
           Hemos recibido una solicitud para restablecer su contraseña. Haga clic en el siguiente botón para crear una nueva contraseña:
@@ -146,7 +146,7 @@ export const enviarCorreoRecuperacion = async (emailDestino, token) => {
       subject: `🔑 Build Mart - Recuperación de Contraseña`,
       html: htmlCorreo,
       text: `Hemos recibido una solicitud para restablecer su contraseña en Build Mart. Por favor visite ${
-        process.env.BASE_URL || "http://localhost:5173"
+        process.env.BASE_URL || "https://build-two-sage.vercel.app"
       }/restablecer-contrasena?token=${token} para crear una nueva contraseña. Este enlace expirará en 1 hora.`,
     };
 
@@ -172,7 +172,8 @@ export const enviarCorreoConfirmacionCambio = async (emailDestino) => {
 
   try {
     const { userGmail } = process.env;
-    const baseUrl = process.env.BASE_URL || "http://localhost:5173";
+    const baseUrl =
+      process.env.BASE_URL || "https://build-two-sage.vercel.app";
     const loginUrl = `${baseUrl}/login`;
 
     const htmlCorreo = `
@@ -222,7 +223,8 @@ export const enviarCorreoConfirmacionCambio = async (emailDestino) => {
 
 // Función para generar HTML dinámico del correo de confirmación de pedido
 export const generarHtmlCorreoPedido = (order, usuario) => {
-  const baseUrl = process.env.BASE_URL || "http://localhost:5173";
+  const baseUrl =
+    process.env.BASE_URL || "https://build-two-sage.vercel.app";
   const orderUrl = `${baseUrl}/orders/${order._id}`;
 
   // Convertir a string y usar substring
@@ -434,7 +436,8 @@ export const enviarCorreoConfiguracionAdmin = async (
     const token = generarTokenRecuperacion(usuarioId, emailDestino);
 
     // Usamos tu función existente pero con un mensaje adaptado para administradores
-    const baseUrl = process.env.BASE_URL || "http://localhost:5173";
+    const baseUrl =
+      process.env.BASE_URL || "https://build-two-sage.vercel.app/login";
     const resetUrl = `${baseUrl}/restablecer-contrasena?token=${token}`;
 
     const htmlCorreo = `
