@@ -4,6 +4,7 @@ import Client from "../../models/customers/clientModel.js";
 import mongoose from "mongoose";
 import { saleSchema } from "../../middlewares/sales/saleValidation.js";
 import { actualizarEstadoSegunStock } from "../products/productController.js";
+import { enviarCorreoCambioEstadoVenta } from "../../middlewares/users/configNodemailer.js";
 
 export const getSales = async (req, res) => {
   try {
@@ -168,9 +169,16 @@ export const updateSaleStatus = async (req, res) => {
       return res.status(400).json({ message: "Estado inválido." });
     }
 
-    const venta = await Sale.findById(id);
+    const venta = await Sale.findById(id).populate("productos.productoId");
     if (!venta) {
       return res.status(404).json({ message: "Venta no encontrada." });
+    }
+
+    // Obtener información del cliente para el correo
+    const client = await Client.findById(venta.clienteId);
+    if (!client) {
+      console.error(`Cliente con ID ${venta.clienteId} no encontrado`);
+      return res.status(404).json({ message: "Cliente no encontrado." });
     }
 
     // Definir transiciones válidas
@@ -208,6 +216,16 @@ export const updateSaleStatus = async (req, res) => {
       venta.estado = estado;
       await venta.save();
 
+      // Enviar correo de notificación
+      try {
+        await enviarCorreoCambioEstadoVenta(venta, estado, client);
+        console.log(`✅ Correo de reembolso enviado a ${client.correo}`);
+      } catch (emailError) {
+        console.error(
+          `❌ Error al enviar correo de reembolso: ${emailError.message}`
+        );
+      }
+
       return res.status(200).json({
         message: "Venta reembolsada correctamente y stock restaurado.",
         venta,
@@ -217,6 +235,19 @@ export const updateSaleStatus = async (req, res) => {
     // Para otros cambios de estado normales
     venta.estado = estado;
     await venta.save();
+
+    // Enviar correo de notificación de cambio de estado
+    try {
+      await enviarCorreoCambioEstadoVenta(venta, estado, client);
+      console.log(
+        `✅ Correo de cambio de estado de venta enviado a ${client.correo}`
+      );
+    } catch (emailError) {
+      console.error(
+        `❌ Error al enviar correo de cambio de estado: ${emailError.message}`
+      );
+      // No devolvemos error al cliente, solo lo registramos
+    }
 
     res.status(200).json({
       message: `Estado de venta actualizado a '${estado}' correctamente.`,

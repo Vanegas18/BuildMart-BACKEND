@@ -172,8 +172,7 @@ export const enviarCorreoConfirmacionCambio = async (emailDestino) => {
 
   try {
     const { userGmail } = process.env;
-    const baseUrl =
-      process.env.BASE_URL || "https://build-two-sage.vercel.app";
+    const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
     const loginUrl = `${baseUrl}/login`;
 
     const htmlCorreo = `
@@ -223,8 +222,7 @@ export const enviarCorreoConfirmacionCambio = async (emailDestino) => {
 
 // Función para generar HTML dinámico del correo de confirmación de pedido
 export const generarHtmlCorreoPedido = (order, usuario) => {
-  const baseUrl =
-    process.env.BASE_URL || "https://build-two-sage.vercel.app";
+  const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
   const orderUrl = `${baseUrl}/orders/${order._id}`;
 
   // Convertir a string y usar substring
@@ -482,6 +480,387 @@ export const enviarCorreoConfiguracionAdmin = async (
   } catch (error) {
     console.error(
       `❌ Error al enviar el correo de configuración a ${emailDestino}:`,
+      error
+    );
+    throw error;
+  }
+};
+
+export const generarHtmlCambioEstadoPedido = (order, nuevoEstado, usuario) => {
+  const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
+  const orderUrl = `${baseUrl}/orders/${order._id}`;
+  const clienteNombre = usuario?.nombre || usuario?.nombreNegocio || "Cliente";
+
+  // Configuración de estados con colores y mensajes
+  const estadosConfig = {
+    confirmado: {
+      color: "#28a745",
+      emoji: "✅",
+      titulo: "¡Tu pedido ha sido confirmado!",
+      mensaje:
+        "Hemos confirmado tu pedido y pronto comenzaremos con el proceso de preparación.",
+      accion: "Tu pedido será procesado y convertido en una venta.",
+    },
+    rechazado: {
+      color: "#dc3545",
+      emoji: "❌",
+      titulo: "Tu pedido ha sido rechazado",
+      mensaje:
+        "Lamentamos informarte que no pudimos procesar tu pedido en este momento.",
+      accion: "El stock de los productos ha sido restaurado automáticamente.",
+    },
+  };
+
+  const config = estadosConfig[nuevoEstado];
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+      <h2 style="color: ${config.color}; text-align: center;">
+        ${config.emoji} ${config.titulo}
+      </h2>
+      
+      <p style="color: #555; font-size: 16px;">
+        Hola ${clienteNombre},
+      </p>
+      
+      <p style="color: #555; font-size: 16px;">
+        ${config.mensaje}
+      </p>
+      
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid ${
+        config.color
+      };">
+        <h3 style="color: ${
+          config.color
+        }; margin-top: 0;">📋 Información del pedido:</h3>
+        <p><strong>Pedido ID:</strong> #${order.pedidoId}</p>
+        <p><strong>Estado:</strong> <span style="color: ${
+          config.color
+        }; font-weight: bold; text-transform: uppercase;">${nuevoEstado}</span></p>
+        <p><strong>Total:</strong> ${formatearPrecio(order.total)}</p>
+        <p style="margin-bottom: 0;"><strong>Fecha:</strong> ${new Date(
+          order.createdAt
+        ).toLocaleDateString("es-CO")}</p>
+      </div>
+
+      <div style="background-color: ${
+        nuevoEstado === "confirmado" ? "#d4edda" : "#f8d7da"
+      }; 
+                  border: 1px solid ${
+                    nuevoEstado === "confirmado" ? "#c3e6cb" : "#f5c6cb"
+                  }; 
+                  border-radius: 5px; padding: 15px; margin: 20px 0;">
+        <p style="color: ${
+          nuevoEstado === "confirmado" ? "#155724" : "#721c24"
+        }; margin: 0; font-weight: bold;">
+          ${config.emoji} ${config.accion}
+        </p>
+        ${
+          nuevoEstado === "confirmado"
+            ? `
+          <p style="color: #155724; margin: 8px 0 0 0; font-size: 14px;">
+            Recibirás otra notificación cuando tu venta cambie de estado (enviado, entregado, etc.).
+          </p>
+        `
+            : `
+          <p style="color: #721c24; margin: 8px 0 0 0; font-size: 14px;">
+            Si tienes alguna pregunta sobre el rechazo de tu pedido, no dudes en contactarnos.
+          </p>
+        `
+        }
+      </div>
+      
+      <div style="text-align: center; margin: 25px 0;">
+        <a href="${orderUrl}" 
+          style="background-color: ${
+            config.color
+          }; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+          Ver detalles del pedido
+        </a>
+      </div>
+      
+      <p style="color: #555; font-size: 14px; text-align: center;">
+        Si tienes alguna pregunta, no dudes en contactarnos.
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #ddd;">
+      <p style="color: #aaa; font-size: 12px; text-align: center;">
+        © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
+      </p>
+    </div>
+  `;
+};
+
+export const generarHtmlCambioEstadoVenta = (venta, nuevoEstado, usuario) => {
+  const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
+  const ventaUrl = `${baseUrl}/sales/${venta._id}`;
+  const clienteNombre = usuario?.nombre || usuario?.nombreNegocio || "Cliente";
+
+  // Configuración de estados con colores y mensajes
+  const estadosConfig = {
+    procesando: {
+      color: "#ffc107",
+      emoji: "⏳",
+      titulo: "Tu pedido está siendo procesado",
+      mensaje: "Hemos comenzado a preparar tu pedido.",
+      accion: "Estamos verificando el inventario y preparando los productos.",
+    },
+    enviado: {
+      color: "#17a2b8",
+      emoji: "🚚",
+      titulo: "¡Tu pedido ha sido enviado!",
+      mensaje: "Tu pedido está en camino hacia la dirección de entrega.",
+      accion: "Pronto recibirás tu pedido en la dirección especificada.",
+    },
+    entregado: {
+      color: "#28a745",
+      emoji: "📦",
+      titulo: "¡Tu pedido ha sido entregado!",
+      mensaje: "Tu pedido ha sido entregado exitosamente.",
+      accion: "Esperamos que disfrutes de tu compra.",
+    },
+    completado: {
+      color: "#28a745",
+      emoji: "✅",
+      titulo: "¡Venta completada!",
+      mensaje: "Tu compra ha sido completada exitosamente.",
+      accion: "Gracias por elegirnos. ¡Esperamos verte pronto!",
+    },
+    reembolsado: {
+      color: "#dc3545",
+      emoji: "↩️",
+      titulo: "Tu compra ha sido reembolsada",
+      mensaje: "Hemos procesado el reembolso de tu compra.",
+      accion:
+        "El stock de los productos ha sido restaurado y el reembolso será procesado.",
+    },
+  };
+
+  const config = estadosConfig[nuevoEstado];
+
+  return `
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
+      <h2 style="color: ${config.color}; text-align: center;">
+        ${config.emoji} ${config.titulo}
+      </h2>
+      
+      <p style="color: #555; font-size: 16px;">
+        Hola ${clienteNombre},
+      </p>
+      
+      <p style="color: #555; font-size: 16px;">
+        ${config.mensaje}
+      </p>
+      
+      <div style="background-color: #f8f9fa; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid ${
+        config.color
+      };">
+        <h3 style="color: ${
+          config.color
+        }; margin-top: 0;">📋 Información de la venta:</h3>
+        <p><strong>Venta ID:</strong> #${
+          venta.ventaId || venta._id.toString().slice(-8).toUpperCase()
+        }</p>
+        ${
+          venta.pedidoId
+            ? `<p><strong>Pedido relacionado:</strong> #${venta.pedidoId}</p>`
+            : ""
+        }
+        <p><strong>Estado:</strong> <span style="color: ${
+          config.color
+        }; font-weight: bold; text-transform: uppercase;">${nuevoEstado}</span></p>
+        <p><strong>Total:</strong> ${formatearPrecio(venta.total)}</p>
+        <p style="margin-bottom: 0;"><strong>Fecha:</strong> ${new Date(
+          venta.createdAt
+        ).toLocaleDateString("es-CO")}</p>
+      </div>
+
+      <!-- Mostrar productos si es necesario -->
+      ${
+        nuevoEstado === "entregado" || nuevoEstado === "completado"
+          ? `
+        <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
+          <h4 style="color: #333; margin-top: 0;">📦 Productos entregados:</h4>
+          <ul style="padding-left: 20px; color: #555; margin: 0;">
+            ${venta.productos
+              .map(
+                (producto) => `
+              <li style="margin-bottom: 8px;">
+                <strong>${
+                  producto.productoId?.nombre || "Producto"
+                }</strong> x ${producto.cantidad}
+                ${
+                  producto.enOferta
+                    ? '<span style="color: #dc3545; font-size: 12px; margin-left: 8px;">🏷️ OFERTA</span>'
+                    : ""
+                }
+              </li>
+            `
+              )
+              .join("")}
+          </ul>
+        </div>
+      `
+          : ""
+      }
+
+      <div style="background-color: ${getBackgroundColor(nuevoEstado)}; 
+                  border: 1px solid ${getBorderColor(nuevoEstado)}; 
+                  border-radius: 5px; padding: 15px; margin: 20px 0;">
+        <p style="color: ${getTextColor(
+          nuevoEstado
+        )}; margin: 0; font-weight: bold;">
+          ${config.emoji} ${config.accion}
+        </p>
+      </div>
+      
+      <div style="text-align: center; margin: 25px 0;">
+        <a href="${ventaUrl}" 
+          style="background-color: ${
+            config.color
+          }; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+          Ver detalles de la venta
+        </a>
+      </div>
+      
+      <p style="color: #555; font-size: 14px; text-align: center;">
+        Si tienes alguna pregunta sobre tu compra, no dudes en contactarnos.
+      </p>
+      
+      <hr style="border: none; border-top: 1px solid #ddd;">
+      <p style="color: #aaa; font-size: 12px; text-align: center;">
+        © ${new Date().getFullYear()} Build Mart. Todos los derechos reservados.
+      </p>
+    </div>
+  `;
+};
+
+// Funciones auxiliares para colores según estado
+function getBackgroundColor(estado) {
+  const colors = {
+    procesando: "#fff3cd",
+    enviado: "#d1ecf1",
+    entregado: "#d4edda",
+    completado: "#d4edda",
+    reembolsado: "#f8d7da",
+  };
+  return colors[estado] || "#f8f9fa";
+}
+
+function getBorderColor(estado) {
+  const colors = {
+    procesando: "#ffeeba",
+    enviado: "#bee5eb",
+    entregado: "#c3e6cb",
+    completado: "#c3e6cb",
+    reembolsado: "#f5c6cb",
+  };
+  return colors[estado] || "#dee2e6";
+}
+
+function getTextColor(estado) {
+  const colors = {
+    procesando: "#856404",
+    enviado: "#0c5460",
+    entregado: "#155724",
+    completado: "#155724",
+    reembolsado: "#721c24",
+  };
+  return colors[estado] || "#495057";
+}
+
+export const enviarCorreoCambioEstadoPedido = async (
+  order,
+  nuevoEstado,
+  usuario
+) => {
+  try {
+    const { userGmail } = process.env;
+    const htmlCorreo = generarHtmlCambioEstadoPedido(
+      order,
+      nuevoEstado,
+      usuario
+    );
+
+    const estadoTitulos = {
+      confirmado: "Pedido Confirmado",
+      rechazado: "Pedido Rechazado",
+    };
+
+    const estadoEmojis = {
+      confirmado: "✅",
+      rechazado: "❌",
+    };
+
+    const mailOptions = {
+      from: `"Build Mart" <${userGmail}>`,
+      to: usuario.correo,
+      subject: `${estadoEmojis[nuevoEstado]} Build Mart - ${estadoTitulos[nuevoEstado]} #${order.pedidoId}`,
+      html: htmlCorreo,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(
+      `✅ Correo de cambio de estado de pedido enviado a ${usuario.correo}: ${info.response}`
+    );
+    return info;
+  } catch (error) {
+    console.error(
+      `❌ Error al enviar correo de cambio de estado de pedido a ${usuario.correo}:`,
+      error
+    );
+    throw error;
+  }
+};
+
+// Función para enviar correo de cambio de estado de venta
+export const enviarCorreoCambioEstadoVenta = async (
+  venta,
+  nuevoEstado,
+  usuario
+) => {
+  try {
+    const { userGmail } = process.env;
+    const htmlCorreo = generarHtmlCambioEstadoVenta(
+      venta,
+      nuevoEstado,
+      usuario
+    );
+
+    const estadoTitulos = {
+      procesando: "Procesando tu Pedido",
+      enviado: "Pedido Enviado",
+      entregado: "Pedido Entregado",
+      completado: "Compra Completada",
+      reembolsado: "Compra Reembolsada",
+    };
+
+    const estadoEmojis = {
+      procesando: "⏳",
+      enviado: "🚚",
+      entregado: "📦",
+      completado: "✅",
+      reembolsado: "↩️",
+    };
+
+    const ventaId =
+      venta.ventaId || venta._id.toString().slice(-8).toUpperCase();
+
+    const mailOptions = {
+      from: `"Build Mart" <${userGmail}>`,
+      to: usuario.correo,
+      subject: `${estadoEmojis[nuevoEstado]} Build Mart - ${estadoTitulos[nuevoEstado]} #${ventaId}`,
+      html: htmlCorreo,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    console.log(
+      `✅ Correo de cambio de estado de venta enviado a ${usuario.correo}: ${info.response}`
+    );
+    return info;
+  } catch (error) {
+    console.error(
+      `❌ Error al enviar correo de cambio de estado de venta a ${usuario.correo}:`,
       error
     );
     throw error;

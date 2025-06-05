@@ -4,7 +4,10 @@ import Product from "../../models/products/productModel.js";
 import Client from "../../models/customers/clientModel.js";
 import Sale from "../../models/sales/saleModel.js";
 import mongoose from "mongoose";
-import { enviarCorreoPedido } from "../../middlewares/users/configNodemailer.js";
+import {
+  enviarCorreoPedido,
+  enviarCorreoCambioEstadoPedido,
+} from "../../middlewares/users/configNodemailer.js";
 
 // Constante para el costo de domicilio
 const COSTO_DOMICILIO = 15000;
@@ -291,6 +294,13 @@ export const updateOrderStatus = async (req, res) => {
       return res.status(404).json({ message: "Pedido no encontrado." });
     }
 
+    // Obtener información del cliente para el correo
+    const client = await Client.findById(order.clienteId);
+    if (!client) {
+      console.error(`Cliente con ID ${order.clienteId} no encontrado`);
+      return res.status(404).json({ message: "Cliente no encontrado." });
+    }
+
     // Validar que el estado proporcionado es válido
     const estadosPermitidos = ["pendiente", "confirmado", "rechazado"];
     if (!estadosPermitidos.includes(estado)) {
@@ -371,12 +381,22 @@ export const updateOrderStatus = async (req, res) => {
 
       await newSale.save();
       console.log(`✅ Venta creada para pedido confirmado: ${order.pedidoId}`);
-
-      // Opcional: Agregar referencia a la venta en el pedido
-      // order.ventaId = newSale._id;
     }
 
     await order.save();
+
+    // Enviar correo de notificación de cambio de estado
+    try {
+      await enviarCorreoCambioEstadoPedido(order, estado, client);
+      console.log(
+        `✅ Correo de cambio de estado de pedido enviado a ${client.correo}`
+      );
+    } catch (emailError) {
+      console.error(
+        `❌ Error al enviar correo de cambio de estado: ${emailError.message}`
+      );
+      // No devolvemos error al cliente, solo lo registramos
+    }
 
     res.status(200).json({
       message: `Estado del pedido actualizado a '${estado}' exitosamente`,
