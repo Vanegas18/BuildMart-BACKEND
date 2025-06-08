@@ -248,7 +248,7 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
                     <li style="margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                          <strong>${item.producto.nombre}</strong> x ${item.cantidad}
+                          <strong>${item.productos?.productoId?.nombre}</strong> x ${item.cantidad}
                   `;
 
                 // Si es una oferta, mostrar precios especiales
@@ -324,33 +324,12 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
           })()}
           
           <!-- Desglose de precios con IVA y domicilio -->
-          <div style="border-top: 2px solid #007bff; padding-top: 15px; margin-top: 15px;">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-              <span style="color: #666; font-size: 16px;">Subtotal (sin IVA):</span>
-              <span style="color: #333; font-size: 16px; font-weight: bold;">
-                ${formatearPrecio(order.subtotal)}
-              </span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-              <span style="color: #666; font-size: 16px;">IVA (8%):</span>
-              <span style="color: #333; font-size: 16px; font-weight: bold;">
-                ${formatearPrecio(order.iva)}
-              </span>
-            </div>
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
-              <span style="color: #666; font-size: 16px;">🚚 Domicilio:</span>
-              <span style="color: #333; font-size: 16px; font-weight: bold;">
-                ${formatearPrecio(order.domicilio)}
-              </span>
-            </div>
             
             <div style="border-top: 1px solid #ddd; padding-top: 12px;">
               <div style="display: flex; justify-content: space-between;">
                 <span style="font-weight: bold; font-size: 18px; color: #333;">Total a pagar:</span>
                 <span style="color: #007bff; font-weight: bold; font-size: 20px;">
-                  ${formatearPrecio(order.total)}
+                  ${formatearPrecio(order.subtotal)}
                 </span>
               </div>
             </div>
@@ -367,14 +346,6 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
           </p>
         </div>
         
-        <div style="background-color: #e7f3ff; border: 1px solid #b6d7ff; border-radius: 5px; padding: 15px; margin: 20px 0;">
-          <h4 style="color: #0056b3; margin-top: 0;">🚚 Información de entrega:</h4>
-          <p style="color: #0056b3; margin: 0; font-size: 14px;">
-            Tu pedido será entregado a domicilio por un costo de <strong>${formatearPrecio(
-              order.domicilio
-            )}</strong>
-          </p>
-        </div>
         
         <div style="text-align: center; margin: 25px 0;">
           <a href="${orderUrl}" 
