@@ -228,6 +228,9 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
   // Convertir a string y usar substring
   const clienteNombre = usuario?.nombre || usuario?.nombreNegocio || "Cliente";
 
+  // Usar productos en lugar de items
+  const productos = order.productos || order.items || [];
+
   return `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 10px;">
         <h2 style="color: #333; text-align: center;">¡Gracias por tu pedido en <span style="color: #007bff;">Build Mart</span>! 🛒</h2>
@@ -241,24 +244,28 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
         <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin: 20px 0;">
           <h3 style="color: #007bff; margin-top: 0;">Resumen de tu pedido:</h3>
           <ul style="padding-left: 20px; color: #555;">
-            ${order.items
+            ${productos
               .map((item) => {
                 // Construir el HTML del item
                 let itemHtml = `
                     <li style="margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                          <strong>${item.productoId?.nombre}</strong> x ${item.cantidad}
+                          <strong>${
+                            item.productoId?.nombre || "Producto"
+                          }</strong> x ${item.cantidad}
                   `;
 
                 // Si es una oferta, mostrar precios especiales
-                if (item.enOferta) {
+                if (item.enOferta || item.esOferta) {
+                  const descuento =
+                    item.infoOferta?.descuento || item.descuento || 0;
                   itemHtml += `
                           <div style="margin-top: 4px;">
                             <span style="color: #dc3545; font-weight: bold;">🏷️ EN OFERTA</span>
                             ${
-                              item.descuento > 0
-                                ? `<span style="color: #28a745; font-size: 12px; margin-left: 8px;">${item.infoOferta.descuento}% OFF</span>`
+                              descuento > 0
+                                ? `<span style="color: #28a745; font-size: 12px; margin-left: 8px;">${descuento}% OFF</span>`
                                 : ""
                             }
                           </div>
@@ -270,13 +277,17 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
                             </span>
                           </div>
                           <div style="color: #dc3545; font-weight: bold; font-size: 14px;">
-                            Precio oferta: ${formatearPrecio(item.precio)} c/u
+                            Precio oferta: ${formatearPrecio(
+                              item.precioUnitario || item.precio
+                            )} c/u
                           </div>
                     `;
                 } else {
                   itemHtml += `
                           <div style="margin-top: 4px; font-size: 14px;">
-                            Precio: ${formatearPrecio(item.precio)} c/u
+                            Precio: ${formatearPrecio(
+                              item.precioUnitario || item.precio
+                            )} c/u
                           </div>
                     `;
                 }
@@ -284,7 +295,9 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
                 itemHtml += `
                         </div>
                         <div style="text-align: right; font-weight: bold; color: #333;">
-                          ${formatearPrecio(item.subtotal)}
+                          ${formatearPrecio(
+                            item.subtotalProducto || item.subtotal
+                          )}
                         </div>
                       </div>
                     </li>
@@ -297,9 +310,11 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
           
           <!-- Mostrar resumen de ahorros si hay ofertas -->
           ${(() => {
-            const itemsConOferta = order.items.filter((item) => item.esOferta);
+            const itemsConOferta = productos.filter(
+              (item) => item.enOferta || item.esOferta
+            );
             if (itemsConOferta.length > 0) {
-              const totalSinOferta = order.items.reduce(
+              const totalSinOferta = productos.reduce(
                 (sum, item) => sum + item.precioOriginal * item.cantidad,
                 0
               );
@@ -329,7 +344,7 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
               <div style="display: flex; justify-content: space-between;">
                 <span style="font-weight: bold; font-size: 18px; color: #333;">Total a pagar:</span>
                 <span style="color: #007bff; font-weight: bold; font-size: 20px;">
-                  ${formatearPrecio(order.subtotal)}
+                  ${formatearPrecio(order.total)}
                 </span>
               </div>
             </div>

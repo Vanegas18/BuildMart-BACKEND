@@ -245,9 +245,14 @@ export const createOrder = async (req, res) => {
       total: newOrder.total,
     };
 
+    // Populate los datos del producto para el correo
+    const orderConProductos = await Order.findById(newOrder._id)
+      .populate("clienteId", "nombre correo telefono nombreNegocio")
+      .populate("productos.productoId", "nombre precio descripcion");
+
     // Enviar correo de confirmación
     try {
-      await enviarCorreoPedido(orderCompleta, client);
+      await enviarCorreoPedido(orderConProductos, client);
       console.log(`✅ Correo de confirmación enviado a ${client.correo}`);
     } catch (emailError) {
       console.error(
