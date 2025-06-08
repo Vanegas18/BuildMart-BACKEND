@@ -248,17 +248,17 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
                     <li style="margin-bottom: 12px; border-bottom: 1px solid #eee; padding-bottom: 8px;">
                       <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div>
-                          <strong>${item.productos?.productoId?.nombre}</strong> x ${item.cantidad}
+                          <strong>${item.productoId?.nombre}</strong> x ${item.cantidad}
                   `;
 
                 // Si es una oferta, mostrar precios especiales
-                if (item.esOferta) {
+                if (item.enOferta) {
                   itemHtml += `
                           <div style="margin-top: 4px;">
                             <span style="color: #dc3545; font-weight: bold;">🏷️ EN OFERTA</span>
                             ${
                               item.descuento > 0
-                                ? `<span style="color: #28a745; font-size: 12px; margin-left: 8px;">${item.descuento}% OFF</span>`
+                                ? `<span style="color: #28a745; font-size: 12px; margin-left: 8px;">${item.infoOferta.descuento}% OFF</span>`
                                 : ""
                             }
                           </div>
