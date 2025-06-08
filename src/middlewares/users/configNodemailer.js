@@ -344,7 +344,7 @@ export const generarHtmlCorreoPedido = (order, usuario) => {
               <div style="display: flex; justify-content: space-between;">
                 <span style="font-weight: bold; font-size: 18px; color: #333;">Total a pagar:</span>
                 <span style="color: #007bff; font-weight: bold; font-size: 20px;">
-                  ${formatearPrecio(order.total)}
+                  ${formatearPrecio(order.subtotal)}
                 </span>
               </div>
             </div>
