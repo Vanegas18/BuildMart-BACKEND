@@ -508,7 +508,7 @@ export const generarHtmlCambioEstadoPedido = (order, nuevoEstado, usuario) => {
         <p><strong>Estado:</strong> <span style="color: ${
           config.color
         }; font-weight: bold; text-transform: uppercase;">${nuevoEstado}</span></p>
-        <p><strong>Total:</strong> ${formatearPrecio(order.total)}</p>
+        <p><strong>Total:</strong> ${formatearPrecio(order.subtotal)}</p>
         <p style="margin-bottom: 0;"><strong>Fecha:</strong> ${new Date(
           order.createdAt
         ).toLocaleDateString("es-CO")}</p>
@@ -640,7 +640,7 @@ export const generarHtmlCambioEstadoVenta = (venta, nuevoEstado, usuario) => {
         <p><strong>Estado:</strong> <span style="color: ${
           config.color
         }; font-weight: bold; text-transform: uppercase;">${nuevoEstado}</span></p>
-        <p><strong>Total:</strong> ${formatearPrecio(venta.total)}</p>
+        <p><strong>Total:</strong> ${formatearPrecio(venta.subtotal)}</p>
         <p style="margin-bottom: 0;"><strong>Fecha:</strong> ${new Date(
           venta.createdAt
         ).toLocaleDateString("es-CO")}</p>
