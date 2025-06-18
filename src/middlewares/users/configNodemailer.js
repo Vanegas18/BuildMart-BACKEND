@@ -420,8 +420,7 @@ export const enviarCorreoConfiguracionAdmin = async (
     const token = generarTokenRecuperacion(usuarioId, emailDestino);
 
     // Usamos tu función existente pero con un mensaje adaptado para administradores
-    const baseUrl =
-      process.env.BASE_URL || "https://build-two-sage.vercel.app/login";
+    const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
     const resetUrl = `${baseUrl}/restablecer-contrasena?token=${token}`;
 
     const htmlCorreo = `
