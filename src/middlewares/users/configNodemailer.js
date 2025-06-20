@@ -223,7 +223,7 @@ export const enviarCorreoConfirmacionCambio = async (emailDestino) => {
 // Función para generar HTML dinámico del correo de confirmación de pedido
 export const generarHtmlCorreoPedido = (order, usuario) => {
   const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
-  const orderUrl = `${baseUrl}/orders/${order._id}`;
+  const orderUrl = `${baseUrl}/`;
 
   // Convertir a string y usar substring
   const clienteNombre = usuario?.nombre || usuario?.nombreNegocio || "Cliente";
@@ -473,7 +473,7 @@ export const enviarCorreoConfiguracionAdmin = async (
 
 export const generarHtmlCambioEstadoPedido = (order, nuevoEstado, usuario) => {
   const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
-  const orderUrl = `${baseUrl}/orders/${order._id}`;
+  const orderUrl = `${baseUrl}/`;
   const clienteNombre = usuario?.nombre || usuario?.nombreNegocio || "Cliente";
 
   // Configuración de estados con colores y mensajes
@@ -578,7 +578,7 @@ export const generarHtmlCambioEstadoPedido = (order, nuevoEstado, usuario) => {
 
 export const generarHtmlCambioEstadoVenta = (venta, nuevoEstado, usuario) => {
   const baseUrl = process.env.BASE_URL || "https://build-two-sage.vercel.app";
-  const ventaUrl = `${baseUrl}/sales/${venta._id}`;
+  const ventaUrl = `${baseUrl}/`;
   const clienteNombre = usuario?.nombre || usuario?.nombreNegocio || "Cliente";
 
   // Configuración de estados con colores y mensajes
